@@ -1,0 +1,371 @@
+/*
+ * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
+ * Click nbfs://nbhost/SystemFileSystem/Templates/GUIForms/JFrame.java to edit this template
+ */
+package deu.cse.lectureroomreservation2.client.view;
+
+import deu.cse.lectureroomreservation2.client.Client;
+import deu.cse.lectureroomreservation2.common.ReserveResult;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import javax.swing.JOptionPane;
+import javax.swing.SwingWorker;
+import javax.swing.table.DefaultTableModel;
+
+/**
+ *
+ * @author namw2
+ */
+public class MyReservationView extends javax.swing.JFrame {
+
+    Client client;
+    String userid;
+    String role;
+    private String startR, endR, roomR, dateR, dayR;
+    static String cancelreservation = "";
+    static String[] changereservation = {"", "", "", ""};
+    // String newRoomNumber,String newDate, String newDay, String role
+
+    /**
+     * Creates new form MyReservaitionView
+     */
+    public MyReservationView() {
+        loadMyData();
+        initComponents();
+    }
+
+    public MyReservationView(Client client, String userid, String role) {
+        setTitle("나의 예약 내역 조회");
+        this.client = client;
+        this.userid = userid;
+        this.role = role;
+        
+        loadMyData();
+        initComponents();
+        currentUserID.setText(userid);
+    }
+
+    public void loadMyData() {
+        SwingWorker<List<Object[]>, Void> worker = new SwingWorker<List<Object[]>, Void>() {
+            @Override
+            protected List<Object[]> doInBackground() {
+                List<Object[]> rowDataList = new ArrayList<>();
+                try {
+                    List<String> reservations = client.retrieveMyReserveInfo(userid, null, null);
+
+                    for (String reserve : reservations) {
+                        System.out.println("확인용reservation");
+                        System.out.println(reserve);
+                    }
+
+                    for (String res : reservations) {
+                        String[] parts = res.split("[/-]"); // 구분자로 나누기
+
+                        if (parts != null && parts.length >= 5) {
+                            String room = parts[0];
+                            String date = parts[1] + "/" + parts[2] + "/" + parts[3];
+                            String day = parts[5];
+
+                            String start = (parts[4].length() >= 5) ? parts[4].substring(1, 6) : "오류";
+                            String end = (parts[4].length() >= 4) ? parts[4].substring(parts[4].length() - 6) : "오류";
+
+                            System.out.println(Arrays.toString(parts)); // 확인용 출력
+                            rowDataList.add(new String[]{start, end, room, date, day});
+
+                            System.out.println(Arrays.deepToString(rowDataList.toArray())); // 리스트 출력
+                        } else {
+                            System.out.println("데이터 형식 오류: " + Arrays.toString(parts));
+                        }
+                    }
+
+                    if (rowDataList.isEmpty()) {
+                        rowDataList.add(new Object[]{"예약 없음", "", "", ""});
+                    }
+                } catch (Exception e) {
+                    rowDataList.clear();
+                    rowDataList.add(new String[]{"오류 발생", "", "", ""});
+                }
+
+                for (Object re : rowDataList) {
+                    System.out.println("확인용2rowdatalist");
+                    System.out.println(re);
+                    if (re instanceof String) {
+                        String str = (String) re;
+                        System.out.println("문자열 데이터: " + str);
+                    } else if (re instanceof Integer) {
+                        Integer num = (Integer) re;
+                        System.out.println("숫자 데이터: " + num);
+                    } else {
+                        System.out.println("기타 데이터: " + re);
+                    }
+                }
+
+                return rowDataList;
+            }
+
+            @Override
+            protected void done() {
+                try {
+                    List<Object[]> rowDataList = get();
+                    DefaultTableModel model = (DefaultTableModel) MyReservationTable.getModel();
+                    model.setRowCount(0);
+                    for (Object[] row : rowDataList) {
+                        model.addRow(row);
+                    }
+                } catch (Exception e) {
+                    JOptionPane.showMessageDialog(MyReservationView.this, "서버와 통신 중 오류가 발생했습니다.\n" + e.getMessage(), "오류",
+                            JOptionPane.ERROR_MESSAGE);
+                }
+            }
+        };
+        worker.execute();
+    }
+
+    /**
+     * This method is called from within the constructor to initialize the form.
+     * WARNING: Do NOT modify this code. The content of this method is always
+     * regenerated by the Form Editor.
+     */
+    @SuppressWarnings("unchecked")
+    // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
+    private void initComponents() {
+
+        jLabel1 = new javax.swing.JLabel();
+        jLabel2 = new javax.swing.JLabel();
+        currentUserID = new javax.swing.JLabel();
+        jScrollPane1 = new javax.swing.JScrollPane();
+        MyReservationTable = new javax.swing.JTable();
+        cancelReservationButton = new javax.swing.JButton();
+        goBackButton = new javax.swing.JButton();
+        changeReservationButton = new javax.swing.JButton();
+
+        setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
+
+        jLabel1.setFont(new java.awt.Font("맑은 고딕", 0, 18)); // NOI18N
+        jLabel1.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
+        jLabel1.setText("예약 조회");
+
+        jLabel2.setText("사용자:");
+
+        currentUserID.setText("000");
+
+        MyReservationTable.setModel(new javax.swing.table.DefaultTableModel(
+            new Object [][] {
+                {null, null, null, null, null},
+                {null, null, null, null, null},
+                {null, null, null, null, null},
+                {null, null, null, null, null}
+            },
+            new String [] {
+                "Start Time", "End Time", "Room", "Date", "Day"
+            }
+        )
+        {
+            @Override
+            public boolean isCellEditable(int row, int column) {
+                return false; // 모든 셀 편집 비활성화
+            }
+        }
+    );
+    jScrollPane1.setViewportView(MyReservationTable);
+    MyReservationTable.addMouseListener(new java.awt.event.MouseAdapter() {
+        @Override
+        public void mouseClicked(java.awt.event.MouseEvent evt) {
+            int row = MyReservationTable.rowAtPoint(evt.getPoint());
+
+            if (row != -1) {
+                startR = String.valueOf(MyReservationTable.getValueAt(row, 0));
+                endR = String.valueOf(MyReservationTable.getValueAt(row, 1));
+                roomR = String.valueOf(MyReservationTable.getValueAt(row, 2));
+                dateR = String.valueOf(MyReservationTable.getValueAt(row, 3));
+                dayR = String.valueOf(MyReservationTable.getValueAt(row, 4));
+                //String reserveInfo = "915 / 2025 / 06 / 03 / 09:00 10:00 / 화요일"
+                //915 / 2025 / 06 / 03 / 09:00 10:00 / 월요일
+                cancelreservation = roomR+ "/"+ dateR +"/ "+startR +" "+endR+"/"+ dayR;
+                System.out.println(cancelreservation);
+                System.out.println(
+                    "클릭한 행 정보:\n" +
+                    "시작 시간: " + startR + "\n" +
+                    "종료 시간: " + endR + "\n" +
+                    "강의실: " + roomR + "\n" +
+                    "날짜: " + dateR
+                );
+            }
+        }
+    });
+
+    cancelReservationButton.setText("예약 취소");
+    cancelReservationButton.setActionCommand("reservation");
+    cancelReservationButton.setPreferredSize(new java.awt.Dimension(100, 50));
+    cancelReservationButton.addActionListener(new java.awt.event.ActionListener() {
+        public void actionPerformed(java.awt.event.ActionEvent evt) {
+            cancelReservationButtonActionPerformed(evt);
+        }
+    });
+
+    goBackButton.setText("뒤로가기");
+    goBackButton.setActionCommand("goBack");
+    goBackButton.setPreferredSize(new java.awt.Dimension(100, 50));
+    goBackButton.addActionListener(new java.awt.event.ActionListener() {
+        public void actionPerformed(java.awt.event.ActionEvent evt) {
+            goBackButtonActionPerformed(evt);
+        }
+    });
+
+    changeReservationButton.setText("예약 변경");
+    changeReservationButton.setActionCommand("reservation");
+    changeReservationButton.setPreferredSize(new java.awt.Dimension(100, 50));
+    changeReservationButton.addActionListener(new java.awt.event.ActionListener() {
+        public void actionPerformed(java.awt.event.ActionEvent evt) {
+            changeReservationButtonActionPerformed(evt);
+        }
+    });
+
+    javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
+    getContentPane().setLayout(layout);
+    layout.setHorizontalGroup(
+        layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+        .addGroup(layout.createSequentialGroup()
+            .addContainerGap()
+            .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                .addGroup(layout.createSequentialGroup()
+                    .addComponent(jLabel1, javax.swing.GroupLayout.PREFERRED_SIZE, 140, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .addComponent(jLabel2, javax.swing.GroupLayout.PREFERRED_SIZE, 63, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                    .addComponent(currentUserID, javax.swing.GroupLayout.PREFERRED_SIZE, 63, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addGap(35, 35, 35))
+                .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
+                    .addGap(0, 0, Short.MAX_VALUE)
+                    .addComponent(cancelReservationButton, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                    .addComponent(changeReservationButton, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                    .addComponent(goBackButton, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addContainerGap())
+                .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
+                    .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 884, Short.MAX_VALUE)
+                    .addContainerGap())))
+    );
+    layout.setVerticalGroup(
+        layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+        .addGroup(layout.createSequentialGroup()
+            .addContainerGap()
+            .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                .addComponent(jLabel1, javax.swing.GroupLayout.PREFERRED_SIZE, 49, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addComponent(jLabel2, javax.swing.GroupLayout.PREFERRED_SIZE, 49, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addComponent(currentUserID, javax.swing.GroupLayout.PREFERRED_SIZE, 49, javax.swing.GroupLayout.PREFERRED_SIZE))
+            .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+            .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 465, Short.MAX_VALUE)
+            .addGap(18, 18, 18)
+            .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(cancelReservationButton, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(changeReservationButton, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addComponent(goBackButton, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+            .addContainerGap())
+    );
+
+    pack();
+    }// </editor-fold>//GEN-END:initComponents
+
+    private void cancelReservationButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_cancelReservationButtonActionPerformed
+        if (cancelreservation != null) {
+            try {
+                // TODO add your handling code here:
+                ReserveResult result = client.sendCancelReserveRequest(userid, cancelreservation);
+                if (result.getResult()) {
+                    JOptionPane.showMessageDialog(this, "예약 취소를 성공하였습니다!", "알림", JOptionPane.INFORMATION_MESSAGE);
+                } else {
+                    JOptionPane.showMessageDialog(this, "예약 취소를 실패하였습니다 \n" + result.getReason(), "실패", JOptionPane.ERROR_MESSAGE);
+                }
+            } catch (IOException ex) {
+                Logger.getLogger(MyReservationView.class.getName()).log(Level.SEVERE, null, ex);
+                this.dispose();
+            } catch (ClassNotFoundException ex) {
+                Logger.getLogger(MyReservationView.class.getName()).log(Level.SEVERE, null, ex);
+                this.dispose();
+            }
+            if (role.equals("S")) {
+                StudentMainMenu smenu = new StudentMainMenu(userid, client);
+                smenu.setVisible(true);
+            } else {
+                ProfessorMainMenu pmenu = new ProfessorMainMenu(userid, client);
+                pmenu.setVisible(true);
+            }
+            this.dispose();
+        }
+    }//GEN-LAST:event_cancelReservationButtonActionPerformed
+
+    private void goBackButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_goBackButtonActionPerformed
+        // TODO add your handling code here:
+        if (role.equals("S")) {
+            StudentMainMenu smenu = new StudentMainMenu(userid, client);
+            smenu.setVisible(true);
+        } else {
+            ProfessorMainMenu pmenu = new ProfessorMainMenu(userid, client);
+            pmenu.setVisible(true);
+        }
+        this.dispose();
+    }//GEN-LAST:event_goBackButtonActionPerformed
+
+    private void changeReservationButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_changeReservationButtonActionPerformed
+        // TODO add your handling code here:
+        ViewRoom viewroom = new ViewRoom(client, userid, role, "change");
+        viewroom.setVisible(true);
+        this.dispose();
+    }//GEN-LAST:event_changeReservationButtonActionPerformed
+
+    /**
+     * @param args the command line arguments
+     */
+    public static void main(String args[]) {
+        /* Set the Nimbus look and feel */
+        //<editor-fold defaultstate="collapsed" desc=" Look and feel setting code (optional) ">
+        /* If Nimbus (introduced in Java SE 6) is not available, stay with the default look and feel.
+         * For details see http://download.oracle.com/javase/tutorial/uiswing/lookandfeel/plaf.html 
+         */
+        try {
+            for (javax.swing.UIManager.LookAndFeelInfo info : javax.swing.UIManager.getInstalledLookAndFeels()) {
+                if ("Nimbus".equals(info.getName())) {
+                    javax.swing.UIManager.setLookAndFeel(info.getClassName());
+                    break;
+                }
+            }
+        } catch (ClassNotFoundException ex) {
+            java.util.logging.Logger.getLogger(MyReservationView.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
+        } catch (InstantiationException ex) {
+            java.util.logging.Logger.getLogger(MyReservationView.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
+        } catch (IllegalAccessException ex) {
+            java.util.logging.Logger.getLogger(MyReservationView.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
+        } catch (javax.swing.UnsupportedLookAndFeelException ex) {
+            java.util.logging.Logger.getLogger(MyReservationView.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
+        }
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+
+        /* Create and display the form */
+        java.awt.EventQueue.invokeLater(new Runnable() {
+            public void run() {
+                new MyReservationView().setVisible(true);
+            }
+        });
+    }
+
+    // Variables declaration - do not modify//GEN-BEGIN:variables
+    private javax.swing.JTable MyReservationTable;
+    private javax.swing.JButton cancelReservationButton;
+    private javax.swing.JButton changeReservationButton;
+    private javax.swing.JLabel currentUserID;
+    private javax.swing.JButton goBackButton;
+    private javax.swing.JLabel jLabel1;
+    private javax.swing.JLabel jLabel2;
+    private javax.swing.JScrollPane jScrollPane1;
+    // End of variables declaration//GEN-END:variables
+}
