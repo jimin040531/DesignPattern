@@ -26,6 +26,7 @@ public class receiveController {
     private static final String noticeFileName = filePath + File.separator + "noticeSave.txt";
     private static final String ScheduleInfoFileName = filePath + File.separator + "ScheduleInfo.txt";
     private static final String ReservationInfoFileName = filePath + File.separator + "ReservationInfo.txt";
+    private static final String BuildingInfoFileName = filePath + File.separator + "BuildingInfo.txt";
 
     static {
         // 디렉터리 없으면 생성
@@ -38,6 +39,7 @@ public class receiveController {
         copyResourceIfNotExists("noticeSave.txt", noticeFileName);
         copyResourceIfNotExists("ScheduleInfo.txt", ScheduleInfoFileName);
         copyResourceIfNotExists("ReservationInfo.txt", ReservationInfoFileName);
+        copyResourceIfNotExists("BuildingInfo.txt", BuildingInfoFileName);
     }
 
     private static void copyResourceIfNotExists(String resourceName, String destPath) {
@@ -73,6 +75,10 @@ public class receiveController {
         return ReservationInfoFileName;
     }
 
+    public static String getBuildingInfoFileName() {
+        return BuildingInfoFileName;
+    }
+    
     // 예약 요청 처리
     public ReserveResult handleReserve(ReserveRequest req) {
         /*

@@ -3,6 +3,8 @@ package deu.cse.lectureroomreservation2.server.control;
 import deu.cse.lectureroomreservation2.common.ReserveManageResult;
 import deu.cse.lectureroomreservation2.common.ReserveResult;
 import java.io.*;
+import java.time.DayOfWeek;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
@@ -14,10 +16,13 @@ public class ReserveManager {
     private static final String RESERVE_FILE = receiveController.getReservationInfoFileName();
     private static final String SCHEDULE_FILE = receiveController.getScheduleInfoFileName();
     private static final int MAX_RESERVE = 4; // 최대 예약 개수
-
     // 5번: 파일 접근 동기화용 락 객체 추가
     private static final Object FILE_LOCK = new Object();
 
+    private static final String[] TIME_SLOTS = {"09:00", "10:00", "11:00", "12:00", "13:00", "14:00", "15:00", "16:00", "17:00"};
+    private static final String[] END_SLOTS = {"09:50", "10:50", "11:50", "12:50", "13:50", "14:50", "15:50", "16:50", "17:50"};
+    private static final String[] KOR_DAYS = {"월", "화", "수", "목", "금"};
+    
     // 요일 변환: "월" → "월요일" 등으로 변환
     private static String toFullDayName(String shortDay) {
         if (shortDay == null) {
@@ -39,6 +44,92 @@ public class ReserveManager {
         }
     }
 
+    /**
+     * [신규] 주별 현황 API
+     * 특정 주의 월~금 / 9시~17시 상태를 Map으로 반환
+     * @param roomNum 강의실 번호
+     * @param monday 기준이 되는 주의 월요일
+     * @return Map<"09:00", ["정규수업", "", "교수예약", "", ""]> (월~금 순서)
+     */
+    public static Map<String, String[]> getWeeklySchedule(String roomNum, LocalDate monday) {
+        Map<String, String[]> weeklyData = new HashMap<>();
+
+        for (int timeIndex = 0; timeIndex < TIME_SLOTS.length; timeIndex++) {
+            String startTime = TIME_SLOTS[timeIndex];
+            String endTime = END_SLOTS[timeIndex];
+            String[] dayStates = new String[KOR_DAYS.length]; // [월, 화, 수, 목, 금]
+
+            for (int dayIndex = 0; dayIndex < KOR_DAYS.length; dayIndex++) { // 월(0) ~ 금(4)
+                LocalDate currentDay = monday.plusDays(dayIndex);
+                String dayOfWeek = KOR_DAYS[dayIndex];
+                
+                String year = String.valueOf(currentDay.getYear());
+                String month = String.format("%02d", currentDay.getMonthValue());
+                String dayOfMonth = String.format("%02d", currentDay.getDayOfMonth());
+                
+                String dateForApi = year + " / " + month + " / " + dayOfMonth + " / " + startTime + " " + endTime;
+
+                // 기존 getRoomState 메서드를 재활용
+                String state = getRoomState(roomNum, dayOfWeek, startTime, endTime, dateForApi);
+                
+                if (state.equals("예약가능") || state.equals(" 공실 ")) {
+                    dayStates[dayIndex] = ""; // 빈 칸
+                } else {
+                    dayStates[dayIndex] = state; // 정규수업, 교수예약 등
+                }
+            }
+            weeklyData.put(startTime, dayStates);
+        }
+        return weeklyData;
+    }
+
+    /**
+     * [신규] 월별 현황 API
+     * 특정 월의 1일~31일 상태를 Map으로 반환
+     * @param roomNum 강의실 번호
+     * @param year 년도
+     * @param month 월
+     * @return Map<"1", "예약있음">, Map<"2", "정규수업"> ...
+     */
+    public static Map<Integer, String> getMonthlySchedule(String roomNum, int year, int month) {
+        Map<Integer, String> monthlyData = new HashMap<>();
+        LocalDate date = LocalDate.of(year, month, 1);
+        int lastDay = date.lengthOfMonth();
+
+        for (int day = 1; day <= lastDay; day++) {
+            LocalDate currentDay = LocalDate.of(year, month, day);
+            DayOfWeek dow = currentDay.getDayOfWeek();
+            
+            // 토, 일은 건너뜀
+            if (dow == DayOfWeek.SATURDAY || dow == DayOfWeek.SUNDAY) {
+                continue; 
+            }
+            String dayOfWeek = KOR_DAYS[dow.getValue() - 1]; // 월~금
+            
+            String stateForDay = ""; // "정규수업"이 "예약있음"보다 우선순위가 높음
+            
+            for (int timeIndex = 0; timeIndex < TIME_SLOTS.length; timeIndex++) {
+                String start = TIME_SLOTS[timeIndex];
+                String end = END_SLOTS[timeIndex];
+                String dateForApi = year + " / " + String.format("%02d", month) + " / " + String.format("%02d", day) + " / " + start + " " + end;
+
+                String state = getRoomState(roomNum, dayOfWeek, start, end, dateForApi);
+                
+                if (state.equals("정규수업") || state.equals("교수예약")) {
+                    stateForDay = "수업/예약"; // 가장 높은 우선순위
+                    break; // 해당 날짜는 더 볼 필요 없음
+                } else if (!state.equals("예약가능") && !state.equals(" 공실 ")) {
+                    stateForDay = "예약있음"; // "예약초과" 등
+                }
+            }
+            
+            if (!stateForDay.isEmpty()) {
+                monthlyData.put(day, stateForDay);
+            }
+        }
+        return monthlyData;
+    }
+    
     /**
      * 예약 요청을 처리하는 메서드입니다.
      *
@@ -539,6 +630,8 @@ public class ReserveManager {
         }
         return slots;
     }
+    
+    
 
     /**
      * 예약 수정 요청을 처리하는 메서드

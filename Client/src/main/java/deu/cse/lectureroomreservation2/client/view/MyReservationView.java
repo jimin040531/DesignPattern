@@ -26,8 +26,8 @@ public class MyReservationView extends javax.swing.JFrame {
     String userid;
     String role;
     private String startR, endR, roomR, dateR, dayR;
-    static String cancelreservation = "";
-    static String[] changereservation = {"", "", "", ""};
+    public static String cancelreservation = "";
+    public static String[] changereservation = {"", "", "", ""};
     // String newRoomNumber,String newDate, String newDay, String role
 
     /**

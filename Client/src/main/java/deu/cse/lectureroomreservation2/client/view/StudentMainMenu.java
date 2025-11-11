@@ -51,7 +51,6 @@ public class StudentMainMenu extends javax.swing.JFrame {
         jLabel1 = new javax.swing.JLabel();
         reserv_time_check = new javax.swing.JButton();
         stu_pass_change = new javax.swing.JButton();
-        quick_booking = new javax.swing.JButton();
         reserv_check1 = new javax.swing.JButton();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
@@ -79,14 +78,6 @@ public class StudentMainMenu extends javax.swing.JFrame {
         stu_pass_change.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 stu_pass_changeActionPerformed(evt);
-            }
-        });
-
-        quick_booking.setFont(new java.awt.Font("맑은 고딕", 1, 18)); // NOI18N
-        quick_booking.setText("빠른 예약");
-        quick_booking.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                quick_bookingActionPerformed(evt);
             }
         });
 
@@ -119,9 +110,7 @@ public class StudentMainMenu extends javax.swing.JFrame {
                                     .addGap(37, 37, 37)
                                     .addComponent(reserv_time_check, javax.swing.GroupLayout.PREFERRED_SIZE, 235, javax.swing.GroupLayout.PREFERRED_SIZE)))
                             .addGroup(layout.createSequentialGroup()
-                                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING, false)
-                                    .addComponent(quick_booking, javax.swing.GroupLayout.DEFAULT_SIZE, 234, Short.MAX_VALUE)
-                                    .addComponent(reserv_check1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                                .addComponent(reserv_check1, javax.swing.GroupLayout.PREFERRED_SIZE, 234, javax.swing.GroupLayout.PREFERRED_SIZE)
                                 .addGap(1, 1, 1)))
                         .addGap(0, 27, Short.MAX_VALUE)))
                 .addContainerGap())
@@ -133,9 +122,7 @@ public class StudentMainMenu extends javax.swing.JFrame {
                 .addComponent(jLabel1, javax.swing.GroupLayout.PREFERRED_SIZE, 49, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addGap(60, 60, 60)
                 .addComponent(reserv_time_check, javax.swing.GroupLayout.PREFERRED_SIZE, 50, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addGap(33, 33, 33)
-                .addComponent(quick_booking, javax.swing.GroupLayout.PREFERRED_SIZE, 50, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addGap(33, 33, 33)
+                .addGap(116, 116, 116)
                 .addComponent(reserv_check1, javax.swing.GroupLayout.PREFERRED_SIZE, 50, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 60, Short.MAX_VALUE)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
@@ -173,13 +160,6 @@ public class StudentMainMenu extends javax.swing.JFrame {
         frame.setLocationRelativeTo(null);
         frame.setVisible(true);   
     }//GEN-LAST:event_stu_pass_changeActionPerformed
-
-    private void quick_bookingActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_quick_bookingActionPerformed
-        // TODO add your handling code here:
-        QuickViewRoom qvroom = new QuickViewRoom(client, userId, "S");
-        qvroom.setVisible(true);
-        this.dispose();
-    }//GEN-LAST:event_quick_bookingActionPerformed
 
     private void reserv_check1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_reserv_check1ActionPerformed
         // TODO add your handling code here:
@@ -247,7 +227,6 @@ public class StudentMainMenu extends javax.swing.JFrame {
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JLabel jLabel1;
-    private javax.swing.JButton quick_booking;
     private javax.swing.JButton reserv_check1;
     private javax.swing.JButton reserv_time_check;
     private javax.swing.JButton stu_logout;

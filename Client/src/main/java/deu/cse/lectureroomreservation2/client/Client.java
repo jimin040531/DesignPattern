@@ -18,6 +18,8 @@ import deu.cse.lectureroomreservation2.common.UserResult;
 import java.io.*;
 import java.net.Socket;
 import java.util.List;
+import java.time.LocalDate;
+import java.util.Map;
 
 /**
  * Client는 강의실 예약 시스템에서 뷰와 관련된 행위를 다룬다. 필요시 Server에 요청하여 필요한 작업을 수행할 수 있다.
@@ -323,6 +325,69 @@ public class Client {
         return (String) in.readObject();  // 올바른 반환값 타입
     }
 
+    /**
+     * [신규] 건물 목록 조회
+     */
+    public synchronized List<String> getBuildingList() throws IOException, ClassNotFoundException {
+        out.writeUTF("GET_BUILDINGS");
+        out.flush();
+        return (List<String>) in.readObject();
+    }
+    
+    /**
+     * [신규] 층 목록 조회
+     */
+    public synchronized List<String> getFloorList(String buildingName) throws IOException, ClassNotFoundException {
+        out.writeUTF("GET_FLOORS");
+        out.flush();
+        out.writeUTF(buildingName);
+        out.flush();
+        return (List<String>) in.readObject();
+    }
+    
+    /**
+     * [신규] 강의실 목록 조회 (반환 타입: List<String[]>)
+     */
+    public synchronized List<String[]> getRoomList(String buildingName, String floorName) throws IOException, ClassNotFoundException {
+        out.writeUTF("GET_ROOMS");
+        out.flush();
+        out.writeUTF(buildingName);
+        out.flush();
+        out.writeUTF(floorName);
+        out.flush();
+        return (List<String[]>) in.readObject();
+    }
+    
+    /**
+     * [신규] 주별 현황 API 호출
+     */
+    public synchronized Map<String, String[]> getWeeklySchedule(String roomNum, LocalDate monday) 
+            throws IOException, ClassNotFoundException {
+        out.writeUTF("GET_WEEKLY_SCHEDULE");
+        out.flush();
+        out.writeUTF(roomNum);
+        out.flush();
+        out.writeObject(monday); // LocalDate 객체 전송
+        out.flush();
+        return (Map<String, String[]>) in.readObject();
+    }
+    
+    /**
+     * [신규] 월별 현황 API 호출
+     */
+    public synchronized Map<Integer, String> getMonthlySchedule(String roomNum, int year, int month) 
+            throws IOException, ClassNotFoundException {
+        out.writeUTF("GET_MONTHLY_SCHEDULE");
+        out.flush();
+        out.writeUTF(roomNum);
+        out.flush();
+        out.writeInt(year);
+        out.flush();
+        out.writeInt(month);
+        out.flush();
+        return (Map<Integer, String>) in.readObject();
+    }
+    
     // 강의실 조회 state 요청 처리
     public synchronized String getRoomState(String room, String day, String start, String end, String date)
             throws IOException {
