@@ -9,9 +9,9 @@ import deu.cse.lectureroomreservation2.common.ReserveResult;
 import deu.cse.lectureroomreservation2.common.ReserveRequest;
 import java.io.*;
 import java.nio.file.*;
-
+import java.io.FileNotFoundException;
+import java.net.URL;
 import java.util.List;
-
 
 /**
  *
@@ -26,7 +26,7 @@ public class receiveController {
     private static final String noticeFileName = filePath + File.separator + "noticeSave.txt";
     private static final String ScheduleInfoFileName = filePath + File.separator + "ScheduleInfo.txt";
     private static final String ReservationInfoFileName = filePath + File.separator + "ReservationInfo.txt";
-    private static final String BuildingInfoFileName = filePath + File.separator + "BuildingInfo.txt";
+    //private static final String BuildingInfoFileName = filePath + File.separator + "BuildingInfo.txt";
 
     static {
         // 디렉터리 없으면 생성
@@ -39,7 +39,7 @@ public class receiveController {
         copyResourceIfNotExists("noticeSave.txt", noticeFileName);
         copyResourceIfNotExists("ScheduleInfo.txt", ScheduleInfoFileName);
         copyResourceIfNotExists("ReservationInfo.txt", ReservationInfoFileName);
-        copyResourceIfNotExists("BuildingInfo.txt", BuildingInfoFileName);
+        //copyResourceIfNotExists("BuildingInfo.txt", BuildingInfoFileName);
     }
 
     private static void copyResourceIfNotExists(String resourceName, String destPath) {
@@ -75,10 +75,35 @@ public class receiveController {
         return ReservationInfoFileName;
     }
 
+   /**
+     * BuildingInfo.txt 파일의 경로 반환
+     * 프로젝트 내부 리소스 폴더에서 직접 읽어옴
+     * @return "BuildingInfo.txt"의 실제 절대 경로
+     */
     public static String getBuildingInfoFileName() {
-        return BuildingInfoFileName;
+        return getResourcePath("BuildingInfo.txt");
     }
     
+    /**
+     * 리소스 파일의 실제 경로 반환
+     * @param resourceName 찾으려는 파일 이름 (예: "BuildingInfo.txt")
+     * @return 파일의 실제 절대 경로
+     */
+    private static String getResourcePath(String resourceName) {
+        try {
+            // 클래스 로더를 통해 리소스의 URL 검색
+            URL resourceUrl = receiveController.class.getClassLoader().getResource(resourceName);
+            if (resourceUrl == null) {
+                throw new FileNotFoundException("Resource not found in classpath: " + resourceName);
+            }
+            // URL을 실제 파일 경로로 변환하여 반환
+            return java.nio.file.Paths.get(resourceUrl.toURI()).toString();
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw new RuntimeException("Could not get resource path", e);
+        }
+    }
+
     // 예약 요청 처리
     public ReserveResult handleReserve(ReserveRequest req) {
         /*
