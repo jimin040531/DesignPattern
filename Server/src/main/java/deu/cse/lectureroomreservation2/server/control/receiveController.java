@@ -17,7 +17,7 @@ public class receiveController {
 
     // 1. 파일 경로 계산 (가장 먼저 실행됨)
     private static final String filePath = calculateResourcePath();
-    
+
     // 2. 세부 파일 경로 설정
     private static final String UserFileName = filePath + File.separator + "UserInfo.txt";
     private static final String noticeFileName = filePath + File.separator + "noticeSave.txt";
@@ -30,21 +30,25 @@ public class receiveController {
         String projectPath = System.getProperty("user.dir");
         // IDE나 실행 환경에 따라 'Server' 폴더 안일 수도, 밖일 수도 있음
         if (projectPath.endsWith("Server")) {
+            // Server가 현재 작업 디렉터리인 경우
             return projectPath + File.separator + "src" + File.separator + "main" + File.separator + "resources";
         } else {
-            return projectPath + File.separator + "Server" + File.separator + "src" + File.separator + "main" + File.separator + "resources";
+            // 전체 솔루션 루트에서 실행되는 경우
+            return projectPath + File.separator + "Server"
+                    + File.separator + "src" + File.separator + "main" + File.separator + "resources";
         }
     }
 
+    // 클래스 로딩 시 한 번만 실행
     static {
         System.out.println(">>> 현재 데이터 파일 경로: " + filePath);
-        
+
         // 디렉터리 없으면 생성
         File dir = new File(filePath);
         if (!dir.exists()) {
             dir.mkdirs();
         }
-        
+
         // 리소스 파일 복사 (파일이 없을 때만 복사하여 데이터 유지)
         copyResourceIfNotExists("UserInfo.txt", UserFileName);
         copyResourceIfNotExists("noticeSave.txt", noticeFileName);
@@ -53,9 +57,10 @@ public class receiveController {
         copyResourceIfNotExists("BuildingInfo.txt", BuildingInfoFileName);
     }
 
+    // 리소스 파일을 처음 한 번만 복사
     private static void copyResourceIfNotExists(String resourceName, String destPath) {
         File destFile = new File(destPath);
-        
+
         // 이미 파일이 존재하면 덮어쓰지 않고 유지
         if (destFile.exists()) {
             return;
@@ -75,12 +80,29 @@ public class receiveController {
     }
 
     // --- Getters ---
-    public static String getFilepath() { return filePath; }
-    public static String getUserFileName() { return UserFileName; }
-    public static String getNoticeFileName() { return noticeFileName; }
-    public static String getScheduleInfoFileName() { return ScheduleInfoFileName; }
-    public static String getReservationInfoFileName() { return ReservationInfoFileName; }
-    public static String getBuildingInfoFileName() { return BuildingInfoFileName; }
+    public static String getFilepath() {
+        return filePath;
+    }
+
+    public static String getUserFileName() {
+        return UserFileName;
+    }
+
+    public static String getNoticeFileName() {
+        return noticeFileName;
+    }
+
+    public static String getScheduleInfoFileName() {
+        return ScheduleInfoFileName;
+    }
+
+    public static String getReservationInfoFileName() {
+        return ReservationInfoFileName;
+    }
+
+    public static String getBuildingInfoFileName() {
+        return BuildingInfoFileName;
+    }
 
     // 예약 요청 처리
     public ReserveResult handleReserve(ReserveRequest req) {
@@ -90,7 +112,7 @@ public class receiveController {
                 .date(req.getDate())
                 .day(req.getDay())
                 .build();
-        
+
         // 2. ReserveManager에는 details 객체 하나만 전달
         return ReserveManager.reserve(details);
     }
