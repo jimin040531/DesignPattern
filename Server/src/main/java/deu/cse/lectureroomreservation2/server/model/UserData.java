@@ -41,7 +41,7 @@ public class UserData {
                         && fileId.equals(id.trim())
                         && PasswordUtil.matches(password.trim(), filePw)) {
 
-                    return Optional.of(new User(fileId, filePw, fileRole));
+                    return Optional.of(new User(fileId, filePw, fileRole, fileName));
                 }
             }
 
