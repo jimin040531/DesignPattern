@@ -5,11 +5,14 @@ D:\3-2\OOP_Modeling\Project\LRR\DesignPattern\Server\src\main\java\deu\cse\lectu
 D:\3-2\OOP_Modeling\Project\LRR\DesignPattern\Server\src\main\java\deu\cse\lectureroomreservation2\common\CheckMaxTimeResult.java
 D:\3-2\OOP_Modeling\Project\LRR\DesignPattern\Server\src\main\java\deu\cse\lectureroomreservation2\common\LoginStatus.java
 D:\3-2\OOP_Modeling\Project\LRR\DesignPattern\Server\src\main\java\deu\cse\lectureroomreservation2\common\UserResult.java
+D:\3-2\OOP_Modeling\Project\LRR\DesignPattern\Server\src\main\java\deu\cse\lectureroomreservation2\server\control\ProfessorReservationStrategy.java
 D:\3-2\OOP_Modeling\Project\LRR\DesignPattern\Server\src\main\java\deu\cse\lectureroomreservation2\server\control\UserRequestController.java
 D:\3-2\OOP_Modeling\Project\LRR\DesignPattern\Server\src\main\java\deu\cse\lectureroomreservation2\server\control\LoginController.java
 D:\3-2\OOP_Modeling\Project\LRR\DesignPattern\Server\src\main\java\deu\cse\lectureroomreservation2\server\ClientHandler.java
 D:\3-2\OOP_Modeling\Project\LRR\DesignPattern\Server\src\main\java\deu\cse\lectureroomreservation2\server\control\ChangePassController.java
 D:\3-2\OOP_Modeling\Project\LRR\DesignPattern\Server\src\main\java\deu\cse\lectureroomreservation2\Main.java
+D:\3-2\OOP_Modeling\Project\LRR\DesignPattern\Server\src\main\java\deu\cse\lectureroomreservation2\server\control\ReservationStrategy.java
+D:\3-2\OOP_Modeling\Project\LRR\DesignPattern\Server\src\main\java\deu\cse\lectureroomreservation2\server\control\StudentUpdateStrategy.java
 D:\3-2\OOP_Modeling\Project\LRR\DesignPattern\Server\src\main\java\deu\cse\lectureroomreservation2\server\control\TimeTableController.java
 D:\3-2\OOP_Modeling\Project\LRR\DesignPattern\Server\src\main\java\deu\cse\lectureroomreservation2\server\model\GetReservation.java
 D:\3-2\OOP_Modeling\Project\LRR\DesignPattern\Server\src\main\java\deu\cse\lectureroomreservation2\server\model\ScheduleManager.java
@@ -22,8 +25,10 @@ D:\3-2\OOP_Modeling\Project\LRR\DesignPattern\Server\src\main\java\deu\cse\lectu
 D:\3-2\OOP_Modeling\Project\LRR\DesignPattern\Server\src\main\java\deu\cse\lectureroomreservation2\common\ReserveManageResult.java
 D:\3-2\OOP_Modeling\Project\LRR\DesignPattern\Server\src\main\java\deu\cse\lectureroomreservation2\server\model\LectureRoom.java
 D:\3-2\OOP_Modeling\Project\LRR\DesignPattern\Server\src\main\java\deu\cse\lectureroomreservation2\server\control\BuildingManager.java
+D:\3-2\OOP_Modeling\Project\LRR\DesignPattern\Server\src\main\java\deu\cse\lectureroomreservation2\server\control\ProfessorUpdateStrategy.java
 D:\3-2\OOP_Modeling\Project\LRR\DesignPattern\Server\src\main\java\deu\cse\lectureroomreservation2\server\Server.java
 D:\3-2\OOP_Modeling\Project\LRR\DesignPattern\Server\src\main\java\deu\cse\lectureroomreservation2\common\ReserveRequest.java
+D:\3-2\OOP_Modeling\Project\LRR\DesignPattern\Server\src\main\java\deu\cse\lectureroomreservation2\server\control\ReservationDetails.java
 D:\3-2\OOP_Modeling\Project\LRR\DesignPattern\Server\src\main\java\deu\cse\lectureroomreservation2\common\UserRequest.java
 D:\3-2\OOP_Modeling\Project\LRR\DesignPattern\Server\src\main\java\deu\cse\lectureroomreservation2\server\model\UserFileManager.java
 D:\3-2\OOP_Modeling\Project\LRR\DesignPattern\Server\src\main\java\deu\cse\lectureroomreservation2\server\model\User.java
@@ -31,5 +36,7 @@ D:\3-2\OOP_Modeling\Project\LRR\DesignPattern\Server\src\main\java\deu\cse\lectu
 D:\3-2\OOP_Modeling\Project\LRR\DesignPattern\Server\src\main\java\deu\cse\lectureroomreservation2\server\control\noticeController.java
 D:\3-2\OOP_Modeling\Project\LRR\DesignPattern\Server\src\main\java\deu\cse\lectureroomreservation2\server\model\ScheduleFileManager.java
 D:\3-2\OOP_Modeling\Project\LRR\DesignPattern\Server\src\main\java\deu\cse\lectureroomreservation2\common\ReserveManageRequest.java
+D:\3-2\OOP_Modeling\Project\LRR\DesignPattern\Server\src\main\java\deu\cse\lectureroomreservation2\server\control\UpdateReservationStrategy.java
 D:\3-2\OOP_Modeling\Project\LRR\DesignPattern\Server\src\main\java\deu\cse\lectureroomreservation2\server\control\receiveController.java
 D:\3-2\OOP_Modeling\Project\LRR\DesignPattern\Server\src\main\java\deu\cse\lectureroomreservation2\server\control\TableRearrange.java
+D:\3-2\OOP_Modeling\Project\LRR\DesignPattern\Server\src\main\java\deu\cse\lectureroomreservation2\server\control\StudentReservationStrategy.java

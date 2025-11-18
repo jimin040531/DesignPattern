@@ -1,7 +1,7 @@
 // 파일 경로: deu/cse/lectureroomreservation2/client/view/ViewRoom.java
 package deu.cse.lectureroomreservation2.client.view;
 
-import com.toedter.calendar.JCalendar; 
+import com.toedter.calendar.JCalendar;
 import deu.cse.lectureroomreservation2.client.Client;
 import deu.cse.lectureroomreservation2.client.control.RoomController;
 import java.awt.BorderLayout;
@@ -19,7 +19,7 @@ public class ViewRoom extends javax.swing.JFrame {
     // [신규] 필터 영역 (탭 밖으로 이동)
     private JComboBox<String> buildingComboBox;
     private JComboBox<String> floorComboBox;
-    private JTable roomListTable; 
+    private JTable roomListTable;
     
     // [신규] 결과 탭 영역
     private JTabbedPane mainTabbedPane;
@@ -28,18 +28,19 @@ public class ViewRoom extends javax.swing.JFrame {
     private JComboBox<String> Year;
     private JComboBox<String> Month;
     private JComboBox<String> day;
-    private JComboBox<String> DayComboBox; 
+    private JComboBox<String> DayComboBox;
     private JTable ViewTimeTable;
-    private JLabel ChoosedDate; 
+    private JLabel ChoosedDate;
     
     // [탭 2: 주별] 컴포넌트
-    private JTable weeklyTable; 
+    private JTable weeklyTable;
     private JButton prevWeekButton;
     private JButton nextWeekButton;
     private JLabel weeklyDateLabel;
     
     // [탭 3: 월별] 컴포넌트
-    private JCalendar monthlyCalendar; 
+    private JCalendar monthlyCalendar;
+    private JComboBox<String> monthlyTimeSlotComboBox; // [신규] 월별 탭의 시간 선택 콤보박스
     
     // 하단 버튼
     private JButton reservationButton;
@@ -63,7 +64,7 @@ public class ViewRoom extends javax.swing.JFrame {
         this.check = check;
 
         this.controller = new RoomController(this, client);
-        initComponentsDynamic(); 
+        initComponentsDynamic();
         controller.initController();
         controller.loadBuildings();
         controller.initDateComboBoxes();
@@ -85,7 +86,7 @@ public class ViewRoom extends javax.swing.JFrame {
         buildingComboBox = new JComboBox<>();
         floorComboBox = new JComboBox<>();
         roomListTable = new JTable(new DefaultTableModel(new Object[]{"강의실", "유형", "수용인원"}, 0){
-             @Override public boolean isCellEditable(int row, int column) { return false; } 
+             @Override public boolean isCellEditable(int row, int column) { return false; }
         });
         
         Year = new JComboBox<>();
@@ -94,9 +95,9 @@ public class ViewRoom extends javax.swing.JFrame {
         DayComboBox = new JComboBox<>(new String[]{"월", "화", "수", "목", "금"});
         ChoosedDate = new JLabel("0000년00월00일");
         
-        ViewTimeTable = new JTable(); 
+        ViewTimeTable = new JTable();
         ViewTimeTable.setModel(new javax.swing.table.DefaultTableModel(
-            new Object [][] {}, 
+            new Object [][] {},
             new String [] {"Title Start", "Time End", "Room", "State", "Day"}
         ) {
             @Override public boolean isCellEditable(int row, int column) { return false; }
@@ -112,16 +113,16 @@ public class ViewRoom extends javax.swing.JFrame {
 
         // --- 3. [상단] 필터 패널 구성 (JTabbedPane 밖으로 이동) ---
         JPanel filterPanel = new JPanel(new BorderLayout(0, 5));
-        JPanel comboPanel = new JPanel(new FlowLayout(FlowLayout.LEFT)); 
-        comboPanel.add(new JLabel("   건물:"));
+        JPanel comboPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        comboPanel.add(new JLabel("  건물:"));
         comboPanel.add(buildingComboBox);
-        comboPanel.add(new JLabel("   층:"));
+        comboPanel.add(new JLabel("  층:"));
         comboPanel.add(floorComboBox);
         
         filterPanel.add(comboPanel, BorderLayout.NORTH);
         filterPanel.add(new JScrollPane(roomListTable), BorderLayout.CENTER);
         roomListTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-        filterPanel.setPreferredSize(new java.awt.Dimension(880, 250)); 
+        filterPanel.setPreferredSize(new java.awt.Dimension(880, 250));
         
         // [수정] 프레임의 상단(NORTH)에 필터 패널 추가
         this.add(filterPanel, BorderLayout.NORTH);
@@ -129,17 +130,17 @@ public class ViewRoom extends javax.swing.JFrame {
         // --- 4. [중앙] 탭 패널 구성 ---
         
         // 4-1. [탭 1: 일별 예약] 패널 구성
-        JPanel dailyPanel = new JPanel(new BorderLayout(10, 10)); 
+        JPanel dailyPanel = new JPanel(new BorderLayout(10, 10));
         
         JPanel centerPanel = new JPanel(new BorderLayout(0, 5));
         JPanel dateSelectPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
-        dateSelectPanel.add(new JLabel("   선택날짜:"));
+        dateSelectPanel.add(new JLabel("  선택날짜:"));
         dateSelectPanel.add(ChoosedDate);
-        dateSelectPanel.add(new JLabel("   날짜 변경:"));
+        dateSelectPanel.add(new JLabel("  날짜 변경:"));
         dateSelectPanel.add(Year);
         dateSelectPanel.add(Month);
         dateSelectPanel.add(day);
-        dateSelectPanel.add(new JLabel("   요일:"));
+        dateSelectPanel.add(new JLabel("  요일:"));
         dateSelectPanel.add(DayComboBox);
         
         centerPanel.add(dateSelectPanel, BorderLayout.NORTH);
@@ -147,7 +148,7 @@ public class ViewRoom extends javax.swing.JFrame {
 
         dailyPanel.add(centerPanel, BorderLayout.CENTER);
         
-        JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT)); 
+        JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
         buttonPanel.add(RefreshButton);
         buttonPanel.add(reservationButton);
         buttonPanel.add(goBackButton);
@@ -164,7 +165,7 @@ public class ViewRoom extends javax.swing.JFrame {
         weeklyNavPanel.add(prevWeekButton);
         weeklyNavPanel.add(weeklyDateLabel);
         weeklyNavPanel.add(nextWeekButton);
-        weeklyPanel.add(weeklyNavPanel, BorderLayout.NORTH); 
+        weeklyPanel.add(weeklyNavPanel, BorderLayout.NORTH);
 
         DefaultTableModel weeklyModel = new DefaultTableModel(
             new String [] {"Time", "월", "화", "수", "목", "금"}, 0
@@ -174,19 +175,33 @@ public class ViewRoom extends javax.swing.JFrame {
         weeklyTable = new JTable(weeklyModel);
         
         String[] timeSlots = {
-            "09:00 - 09:50", "10:00 - 10:50", "11:00 - 11:50", "12:00 - 12:50", 
+            "09:00 - 09:50", "10:00 - 10:50", "11:00 - 11:50", "12:00 - 12:50",
             "13:00 - 13:50", "14:00 - 14:50", "15:00 - 15:50", "16:00 - 16:50", "17:00 - 17:50"
         };
         for (String slot : timeSlots) {
             weeklyModel.addRow(new Object[]{slot, "", "", "", "", ""});
         }
-        weeklyPanel.add(new JScrollPane(weeklyTable), BorderLayout.CENTER); 
+        weeklyPanel.add(new JScrollPane(weeklyTable), BorderLayout.CENTER);
 
         // 4-3. [탭 3: 월별 현황] 패널 구성
-        JPanel monthlyPanel = new JPanel(new BorderLayout());
-        monthlyCalendar = new JCalendar(); 
+        JPanel monthlyPanel = new JPanel(new BorderLayout(0, 10)); // [수정] 레이아웃 간격 조정
+        
+        // [신규] 월별 탭용 시간 슬롯 콤보박스 생성
+        // (weeklyPanel에서 사용된 timeSlots 배열 재사용)
+        monthlyTimeSlotComboBox = new JComboBox<>(timeSlots);
+        
+        // [신규] 월별 탭 상단: 시간 선택 패널
+        JPanel monthlyControlPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        monthlyControlPanel.add(new JLabel("  시간대 선택:"));
+        monthlyControlPanel.add(monthlyTimeSlotComboBox);
+        
+        monthlyPanel.add(monthlyControlPanel, BorderLayout.NORTH); // 상단에 컨트롤 패널 추가
+        
+        monthlyCalendar = new JCalendar();
         monthlyPanel.add(monthlyCalendar, BorderLayout.CENTER);
-        monthlyPanel.add(new JLabel("날짜를 클릭하면 해당 날짜의 [일별 예약] 탭으로 이동합니다.", SwingConstants.CENTER), BorderLayout.SOUTH);
+        
+        // [수정] 안내 문구 변경
+        monthlyPanel.add(new JLabel("시간대를 선택하면 달력에 예약 가능 여부가 표시됩니다.", SwingConstants.CENTER), BorderLayout.SOUTH);
 
         // --- 5. 메인 탭에 패널들 추가 ---
         mainTabbedPane.addTab("  강의실 예약 (일별)  ", dailyPanel);
@@ -218,6 +233,9 @@ public class ViewRoom extends javax.swing.JFrame {
     public JButton getPrevWeekButton() { return prevWeekButton; }
     public JButton getNextWeekButton() { return nextWeekButton; }
     public JLabel getWeeklyDateLabel() { return weeklyDateLabel; }
+    
+    // [신규] 월별 시간대 콤보박스 Getter
+    public JComboBox<String> getMonthlyTimeSlotComboBox() { return monthlyTimeSlotComboBox; }
     
     // Getters for context
     public String getUserid() { return userid; }
