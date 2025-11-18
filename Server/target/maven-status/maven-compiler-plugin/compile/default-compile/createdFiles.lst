@@ -5,10 +5,11 @@ deu\cse\lectureroomreservation2\common\UserRequest.class
 deu\cse\lectureroomreservation2\server\control\ProfessorReservationStrategy.class
 deu\cse\lectureroomreservation2\server\Server.class
 deu\cse\lectureroomreservation2\server\model\ScheduleManager.class
+deu\cse\lectureroomreservation2\server\control\AbstractReservationChecker.class
 deu\cse\lectureroomreservation2\common\ReserveRequest.class
 deu\cse\lectureroomreservation2\common\ScheduleResult.class
+deu\cse\lectureroomreservation2\server\control\TextFileReservationChecker.class
 deu\cse\lectureroomreservation2\common\CheckMaxTimeRequest.class
-deu\cse\lectureroomreservation2\common\LoginStatus$LoginStatusBuilder.class
 deu\cse\lectureroomreservation2\server\control\TableRearrange.class
 deu\cse\lectureroomreservation2\server\control\AutoReserveCleaner.class
 deu\cse\lectureroomreservation2\server\control\ReservationDetails.class
@@ -37,9 +38,11 @@ deu\cse\lectureroomreservation2\common\CheckMaxTimeResult.class
 deu\cse\lectureroomreservation2\server\control\TableRearrange$1.class
 deu\cse\lectureroomreservation2\server\control\ReservationStrategy.class
 deu\cse\lectureroomreservation2\server\control\noticeController.class
+deu\cse\lectureroomreservation2\server\model\PasswordUtil.class
 deu\cse\lectureroomreservation2\server\control\UserRequestController.class
 deu\cse\lectureroomreservation2\server\control\UpdateReservationStrategy.class
 deu\cse\lectureroomreservation2\common\ReserveManageRequest.class
 deu\cse\lectureroomreservation2\server\model\DaysOfWeek.class
 deu\cse\lectureroomreservation2\server\control\BuildingManager.class
+deu\cse\lectureroomreservation2\server\model\EncryptedUserFileManager.class
 deu\cse\lectureroomreservation2\server\model\GetReservation.class

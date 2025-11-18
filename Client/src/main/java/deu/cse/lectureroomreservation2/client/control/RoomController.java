@@ -787,38 +787,50 @@ public class RoomController {
     /**
      * [탭 1]의 메인 시간표를 로드합니다. (이전 코드와 동일)
      */
+    /**
+     * [탭 1] 메인 시간표 로드 (09:00 ~ 17:00 고정 출력)
+     */
     public void loadRoomTimetable() {
         if (this.selectedRoom == null) {
             ((DefaultTableModel) view.getViewTimeTable().getModel()).setRowCount(0);
             return;
         }
 
-        updateChoosedDate();
-        String dayOfWeek = (String) view.getDayOfWeekComboBox().getSelectedItem();
+        updateChoosedDate(); // 선택된 날짜 갱신
+        String dayOfWeek = (String) view.getDayOfWeekComboBox().getSelectedItem(); // "월요일"
         String roomNum = this.selectedRoom;
+        
+        // 날짜 문자열 조합 (yyyy / MM / dd)
+        String y = (String) view.getYearComboBox().getSelectedItem();
+        String m = (String) view.getMonthComboBox().getSelectedItem();
+        String d = (String) view.getDayComboBox().getSelectedItem();
+        String fullDate = y + " / " + m + " / " + d; // 서버로 보낼 날짜
 
-        String year = (String) view.getYearComboBox().getSelectedItem();
-        String month = (String) view.getMonthComboBox().getSelectedItem();
-        String dayOfMonth = (String) view.getDayComboBox().getSelectedItem();
+        // 고정 시간대 배열 (9시 ~ 17시)
+        String[] timeSlots = {
+            "09:00", "10:00", "11:00", "12:00", "13:00", "14:00", "15:00", "16:00", "17:00"
+        };
 
         SwingWorker<List<Object[]>, Void> worker = new SwingWorker<>() {
             @Override
             protected List<Object[]> doInBackground() {
                 List<Object[]> rowDataList = new ArrayList<>();
                 try {
-                    List<String[]> slots = client.getRoomSlots(roomNum, dayOfWeek);
-
-                    for (String[] slot : slots) {
-                        String start = slot[0];
-                        String end = slot[1];
-                        String date = year + " / " + month + " / " + dayOfMonth + " / " + start + " " + end;
-                        String state = client.getRoomState(roomNum, dayOfWeek, start, end, date);
+                    // 각 시간대별로 서버에 상태를 물어봅니다.
+                    for (String start : timeSlots) {
+                        // 종료 시간 계산 (50분 수업 가정)
+                        String end = start.split(":")[0] + ":50"; 
+                        
+                        // 날짜 정보에 시간까지 포함해서 보냄
+                        String dateTime = fullDate + " / " + start + " " + end;
+                        
+                        // 서버에 상태 요청 (예약가능, 정규수업, 예약중 등)
+                        String state = client.getRoomState(roomNum, dayOfWeek, start, end, dateTime);
+                        
                         rowDataList.add(new Object[]{start, end, roomNum, state, dayOfWeek});
                     }
                 } catch (Exception e) {
                     e.printStackTrace();
-                    rowDataList.clear();
-                    rowDataList.add(new Object[]{"서버 오류", "", "", "", ""});
                 }
                 return rowDataList;
             }
@@ -828,12 +840,14 @@ public class RoomController {
                 try {
                     List<Object[]> rowDataList = get();
                     DefaultTableModel model = (DefaultTableModel) view.getViewTimeTable().getModel();
-                    model.setRowCount(0);
+                    model.setRowCount(0); // 기존 데이터 초기화
+                    
+                    // 9개의 행을 테이블에 추가
                     for (Object[] row : rowDataList) {
                         model.addRow(row);
                     }
                 } catch (Exception e) {
-                    JOptionPane.showMessageDialog(view, "시간표 로딩 중 오류: " + e.getMessage(), "오류", JOptionPane.ERROR_MESSAGE);
+                    e.printStackTrace();
                 }
             }
         };

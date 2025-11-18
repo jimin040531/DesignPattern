@@ -12,794 +12,324 @@ import java.util.*;
 
 public class ReserveManager {
 
-    // 사용자 정보 파일 경로 (예약 정보도 이 파일에 저장)
-    private static final String USER_FILE = receiveController.getUserFileName();
     private static final String RESERVE_FILE = receiveController.getReservationInfoFileName();
     private static final String SCHEDULE_FILE = receiveController.getScheduleInfoFileName();
-    private static final int MAX_RESERVE = 4;
     private static final Object FILE_LOCK = new Object();
 
-    // 요일 변환: "월" → "월요일" 등으로 변환
-    private static String toFullDayName(String shortDay) {
-        if (shortDay == null) {
-            return "";
-        }
-        switch (shortDay.trim()) {
-            case "월":
-                return "월요일";
-            case "화":
-                return "화요일";
-            case "수":
-                return "수요일";
-            case "목":
-                return "목요일";
-            case "금":
-                return "금요일";
-            default:
-                return shortDay.trim();
-        }
-    }
-
-    /**
-     * 예약 요청을 처리하는 메서드입니다. (Strategy + Builder Pattern 적용)
-     */
-    public static ReserveResult reserve(ReservationDetails details) {
-        synchronized (FILE_LOCK) {
-            // --- 1. 공통 전처리 (유효성 검사) ---
-            String date = details.getDate();
-            try {
-                String[] dateParts = date.split("/");
-                if (dateParts.length != 4) {
-                    return new ReserveResult(false, "예약 날짜/시간 형식이 올바르지 않습니다.");
-                }
-                String year = dateParts[0].trim();
-                String month = dateParts[1].trim();
-                String dayOfMonth = dateParts[2].trim();
-                String[] times = dateParts[3].trim().split(" ");
-                if (times.length != 2) {
-                    return new ReserveResult(false, "예약 시간 정보가 올바르지 않습니다.");
-                }
-                String startTime = times[0];
-                String endTime = times[1];
-
-                LocalDateTime startDateTime = LocalDateTime.parse(
-                        year + "-" + month + "-" + dayOfMonth + "T" + startTime,
-                        DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm"));
-                LocalDateTime endDateTime = LocalDateTime.parse(
-                        year + "-" + month + "-" + dayOfMonth + "T" + endTime,
-                        DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm"));
-
-                if (startDateTime.isBefore(LocalDateTime.now())) {
-                    return new ReserveResult(false, "과거 시간대에는 예약할 수 없습니다.");
-                }
-
-                long minutes = java.time.Duration.between(startDateTime, endDateTime).toMinutes();
-                if (!(minutes == 50 || minutes == 60)) {
-                    return new ReserveResult(false, "예약은 50분 또는 1시간 단위로만 가능합니다.");
-                }
-            } catch (Exception e) {
-                return new ReserveResult(false, "날짜/시간 형식 오류");
-            }
-
-            // --- 2. 전략(Strategy) 선택 ---
-            ReservationStrategy strategy;
-            if ("P".equals(details.getRole())) {
-                strategy = new ProfessorReservationStrategy();
-            } else if ("S".equals(details.getRole())) {
-                strategy = new StudentReservationStrategy();
-            } else {
-                return new ReserveResult(false, "알 수 없는 사용자 역할입니다.");
-            }
-
-            // --- 3. 선택된 전략 실행 ---
-            return strategy.execute(details);
-        }
-    }
-
-    // 예약 정보 생성(포맷 일관성 보장)
-    public static String makeReserveInfo(String roomNumber, String date, String day) {
-        return String.format("%s / %s / %s", roomNumber.trim(), date.trim(), toFullDayName(day));
-    }
-
-    // 예약 정보 비교(공백, 대소문자 무시)
-    public static boolean equalsReserveInfo(String info1, String info2) {
-        return info1.replaceAll("\\s+", " ").trim().equalsIgnoreCase(info2.replaceAll("\\s+", " ").trim());
-    }
-
-    /**
-     * id로 예약 정보 조회 - 클라이언트 요청 시 사용
-     */
-    public static List<String> getReserveInfoById(String id) {
-        synchronized (FILE_LOCK) {
-            List<String> reserves = new ArrayList<>();
-            try (BufferedReader br = new BufferedReader(new FileReader(USER_FILE))) {
-                String line;
-                while ((line = br.readLine()) != null) {
-                    String[] parts = line.split(",");
-                    if (parts.length >= 4 && parts[2].trim().equals(id)) {
-                        for (int i = 4; i < parts.length; i++) {
-                            reserves.add(parts[i].trim());
-                        }
-                        break;
-                    }
-                }
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-            return reserves;
-        }
-    }
-
-    /**
-     * 예약 정보 조회 (id, room, date 중 하나 이상 조건으로 조회)
-     */
-    public static List<String> getReserveInfoAdvanced(String id, String room, String date) {
-        List<String> result = new ArrayList<>();
-        synchronized (FILE_LOCK) {
-            try (BufferedReader br = new BufferedReader(new FileReader(USER_FILE))) {
-                String line;
-                while ((line = br.readLine()) != null) {
-                    String[] parts = line.split(",");
-                    if (parts.length < 5) {
-                        continue;
-                    }
-                    String userId = parts[2].trim();
-                    for (int i = 4; i < parts.length; i++) {
-                        String reserve = parts[i].trim();
-                        String[] reserveParts = reserve.split("/");
-                        if (reserveParts.length < 6) {
-                            continue;
-                        }
-                        String reserveRoom = reserveParts[0].trim();
-                        String reserveDate = reserveParts[1].trim() + " / " + reserveParts[2].trim() + " / "
-                                + reserveParts[3].trim();
-                        boolean match = true;
-                        if (id != null && !id.trim().equals(userId.trim())) {
-                            match = false;
-                        }
-                        if (room != null && !room.equals(reserveRoom)) {
-                            match = false;
-                        }
-                        if (date != null && !date.equals(reserveDate)) {
-                            match = false;
-                        }
-                        if (match) {
-                            result.add(userId + " / " + reserve);
-                        }
-                    }
-                }
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        }
-        return result;
-    }
-
-    /**
-     * 6번: 예약 정보로 예약한 사용자 id 목록 조회
-     */
-    public static List<String> getUserIdsByReserveInfo(String reserveInfo) {
-        synchronized (FILE_LOCK) {
-            List<String> userIds = new ArrayList<>();
-            try (BufferedReader br = new BufferedReader(new FileReader(USER_FILE))) {
-                String line;
-                while ((line = br.readLine()) != null) {
-                    String[] parts = line.split(",");
-                    if (parts.length >= 4) {
-                        String userId = parts[2].trim();
-                        for (int i = 4; i < parts.length; i++) {
-                            if (equalsReserveInfo(parts[i], reserveInfo)) {
-                                userIds.add(userId);
-                                break;
-                            }
-                        }
-                    }
-                }
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-            return userIds;
-        }
-    }
-
-    /**
-     * 예약 정보로 총 예약자 수 조회 - 클라이언트 요청 시 사용
-     */
-    public static int countUsersByReserveInfo(String reserveInfo) {
-        synchronized (FILE_LOCK) {
-            int count = 0;
-            try (BufferedReader br = new BufferedReader(new FileReader(USER_FILE))) {
-                String line;
-                while ((line = br.readLine()) != null) {
-                    String[] parts = line.split(",");
-                    for (int i = 4; i < parts.length; i++) {
-                        if (equalsReserveInfo(parts[i], reserveInfo)) {
-                            count++;
-                            break;
-                        }
-                    }
-                }
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-            return count;
-        }
-    }
-
-    public static ReserveResult cancelReserve(String id, String reserveInfo) {
-        synchronized (FILE_LOCK) {
-            List<String> lines = new ArrayList<>();
-            boolean updated = false;
-
-            try (BufferedReader br = new BufferedReader(new FileReader(USER_FILE))) {
-                String line;
-                while ((line = br.readLine()) != null) {
-                    String[] parts = line.split(",");
-                    if (parts.length >= 4 && parts[2].trim().equals(id)) {
-                        List<String> reserves = new ArrayList<>();
-                        for (int i = 4; i < parts.length; i++) {
-                            reserves.add(parts[i].trim());
-                        }
-                        if (!reserves.removeIf(r -> equalsReserveInfo(r, reserveInfo))) {
-                            return new ReserveResult(false, "해당 예약 정보를 찾을 수 없습니다.");
-                        }
-                        StringBuilder sb = new StringBuilder();
-                        for (int i = 0; i < 4; i++) {
-                            sb.append(parts[i]).append(i < 3 ? "," : "");
-                        }
-                        for (String r : reserves) {
-                            sb.append(",").append(r);
-                        }
-                        lines.add(sb.toString());
-                        updated = true;
-                    } else {
-                        lines.add(line);
-                    }
-                }
-            } catch (IOException e) {
-                e.printStackTrace();
-                return new ReserveResult(false, "파일 읽기 오류");
-            }
-
-            if (updated) {
-                try (BufferedWriter bw = new BufferedWriter(new FileWriter(USER_FILE))) {
-                    for (String l : lines) {
-                        bw.write(l);
-                        bw.newLine();
-                    }
-                } catch (IOException e) {
-                    e.printStackTrace();
-                    return new ReserveResult(false, "파일 저장 오류");
-                }
-                return new ReserveResult(true, "예약이 취소되었습니다.");
-            }
-            return new ReserveResult(false, "사용자 정보를 찾을 수 없습니다.");
-        }
-    }
-
-    // 교수 예약 여부 조회 - 클라이언트 요청 시 사용
-    public static boolean hasProfessorReserve(String reserveInfo) {
-        synchronized (FILE_LOCK) {
-            try (BufferedReader br = new BufferedReader(new FileReader(USER_FILE))) {
-                String line;
-                while ((line = br.readLine()) != null) {
-                    String[] parts = line.split(",");
-                    if (parts.length >= 4 && parts[0].trim().equalsIgnoreCase("P")) {
-                        for (int i = 4; i < parts.length; i++) {
-                            if (equalsReserveInfo(parts[i], reserveInfo)) {
-                                return true;
-                            }
-                        }
-                    }
-                }
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-            return false;
-        }
-    }
-
-    // 교수 예약 시 학생 예약 중복 취소 및 해당 학생 ID 리스트 반환
-    public static List<String> cancelStudentReservesForProfessor(String roomNumber, String date, String day) {
-        synchronized (FILE_LOCK) {
-            List<String> affectedStudentIds = new ArrayList<>();
-            String targetReserve = makeReserveInfo(roomNumber, date, day);
-            List<String> lines = new ArrayList<>();
-
-            try (BufferedReader br = new BufferedReader(new FileReader(USER_FILE))) {
-                String line;
-                while ((line = br.readLine()) != null) {
-                    String[] parts = line.split(",");
-                    if (parts.length >= 5 && "S".equals(parts[0].trim())) {
-                        List<String> reserves = new ArrayList<>();
-                        boolean removed = false;
-                        for (int i = 4; i < parts.length; i++) {
-                            if (equalsReserveInfo(parts[i], targetReserve)) {
-                                removed = true;
-                            } else {
-                                reserves.add(parts[i].trim());
-                            }
-                        }
-                        if (removed) {
-                            affectedStudentIds.add(parts[2].trim());
-                        }
-                        StringBuilder sb = new StringBuilder();
-                        for (int i = 0; i < 4; i++) {
-                            sb.append(parts[i]).append(i < 3 ? "," : "");
-                        }
-                        for (String r : reserves) {
-                            sb.append(",").append(r);
-                        }
-                        lines.add(sb.toString());
-                    } else {
-                        lines.add(line);
-                    }
-                }
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-
-            try (BufferedWriter bw = new BufferedWriter(new FileWriter(USER_FILE))) {
-                for (String l : lines) {
-                    bw.write(l);
-                    bw.newLine();
-                }
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-            return affectedStudentIds;
-        }
-    }
-
-    // 강의실 조회 - state (정규수업, 교수예약, 예약가능, 예약초과)
-    public static String getRoomState(String room, String day, String start, String end, String date) {
-        synchronized (FILE_LOCK) {
-            // 1. 정규수업 체크
-            try (BufferedReader br = new BufferedReader(new FileReader(SCHEDULE_FILE))) {
-                String line;
-                while ((line = br.readLine()) != null) {
-                    String[] parts = line.split(",");
-                    if (parts.length >= 6) {
-                        String fullDay = toFullDayName(parts[1].trim());
-                        if (parts[0].trim().equals(room) && fullDay.equals(toFullDayName(day))
-                                && parts[2].trim().equals(start) && parts[3].trim().equals(end)
-                                && parts[5].trim().equals("수업")) {
-                            return "정규수업";
-                        }
-                    }
-                }
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-
-            String reserveInfo = room + " / " + date + " / " + toFullDayName(day);
-
-            // 2. 교수예약 체크
-            if (hasProfessorReserve(reserveInfo)) {
-                return "교수예약";
-            }
-
-            // 3. 예약 가능/초과 체크
-            int count = countUsersByReserveInfo(reserveInfo);
-            if (count <= 39) {
-                return "예약가능";
-            } else {
-                return "예약초과";
-            }
-        }
-    }
-
-    // 강의실 조회 - 강의실 예약 시간대 조회
-    public static List<String[]> getRoomSlots(String room, String day) {
-        List<String[]> slots = new ArrayList<>();
-        try (BufferedReader br = new BufferedReader(new FileReader(RESERVE_FILE))) {
-            String line;
-            while ((line = br.readLine()) != null) {
-                String[] parts = line.split(",");
-                if (parts.length >= 4) {
-                    String fullDay = toFullDayName(parts[1].trim());
-                    if (parts[0].trim().equals(room) && fullDay.equals(toFullDayName(day))) {
-                        String start = parts[2].trim();
-                        String end = parts[3].trim();
-                        slots.add(new String[]{start, end});
-                    }
-                }
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        return slots;
-    }
-
-    /**
-     * 예약 수정 요청을 처리하는 메서드 (Strategy + Builder Pattern 적용)
-     */
-    public static ReserveResult updateReserve(ReservationDetails details) {
-        synchronized (FILE_LOCK) {
-
-            // --- 1. 전략(Strategy) 선택 ---
-            UpdateReservationStrategy strategy;
-            if ("P".equals(details.getRole())) {
-                strategy = new ProfessorUpdateStrategy();
-            } else if ("S".equals(details.getRole())) {
-                strategy = new StudentUpdateStrategy();
-            } else {
-                return new ReserveResult(false, "알 수 없는 사용자 역할입니다.");
-            }
-
-            // --- 2. 선택된 전략 실행 ---
-            return strategy.execute(details); // details 객체 통째로 전달
-        }
-    }
-
-    public static ReserveManageResult searchUserAndReservations(String userId, String room, String date) {
-        synchronized (FILE_LOCK) {
-            boolean userFound = false;
-            List<String[]> result = new ArrayList<>();
-
-            try (BufferedReader br = new BufferedReader(new FileReader(USER_FILE))) {
-                String line;
-                while ((line = br.readLine()) != null) {
-                    String[] parts = line.split(",");
-                    if (parts.length < 4) {
-                        continue;
-                    }
-
-                    String id = parts[2].trim();
-                    if (!userId.isEmpty() && !id.equals(userId)) {
-                        continue;
-                    }
-
-                    userFound = true;
-
-                    for (int i = 4; i < parts.length; i++) {
-                        String reserve = parts[i].trim();
-                        String[] tokens = reserve.split("/");
-                        if (tokens.length < 6) {
-                            continue;
-                        }
-
-                        String roomNum = tokens[0].trim();
-                        String y = tokens[1].trim();
-                        String m = tokens[2].trim();
-                        String d = tokens[3].trim();
-                        String fullDate = y + " / " + m + " / " + d;
-
-                        if (!room.isEmpty() && !roomNum.equals(room)) {
-                            continue;
-                        }
-                        if (!date.isEmpty() && !date.equals(fullDate)) {
-                            continue;
-                        }
-
-                        String[] times = tokens[4].trim().split(" ");
-                        String day = tokens[5].trim();
-
-                        result.add(new String[]{
-                            id, roomNum, y, m, d, times[0], times[1], day
-                        });
-                    }
-                }
-            } catch (IOException e) {
-                e.printStackTrace();
-                return new ReserveManageResult(false, "파일 읽기 오류", null);
-            }
-
-            if (!userFound) {
-                return new ReserveManageResult(false, "사용자 정보 없음", null);
-            } else if (result.isEmpty()) {
-                return new ReserveManageResult(true, "예약 없음", new ArrayList<>());
-            } else {
-                return new ReserveManageResult(true, "조회 성공", result);
-            }
-        }
-    }
-
-    /**
-     * [HELPER 1] 공통 예약 파일 쓰기 로직 (Strategy들이 호출)
-     */
-    public static ReserveResult writeReservationToFile(String id, String newReserve, String role) {
-        synchronized (FILE_LOCK) {
-            List<String> lines = new ArrayList<>();
-            boolean updated = false;
-
-            try (BufferedReader br = new BufferedReader(new FileReader(USER_FILE))) {
-                String line;
-                while ((line = br.readLine()) != null) {
-                    String[] parts = line.split(",");
-                    if (parts.length >= 4 && parts[2].trim().equals(id)) {
-                        List<String> reserves = new ArrayList<>();
-                        for (int i = 4; i < parts.length; i++) {
-                            reserves.add(parts[i].trim());
-                        }
-                        for (String r : reserves) {
-                            if (equalsReserveInfo(r, newReserve)) {
-                                return new ReserveResult(false, "이미 동일한 예약이 존재합니다.");
-                            }
-                        }
-                        if (reserves.size() >= MAX_RESERVE && !"P".equals(role)) {
-                            return new ReserveResult(false, "최대 예약 개수 초과");
-                        }
-                        reserves.add(newReserve);
-
-                        StringBuilder sb = new StringBuilder();
-                        for (int i = 0; i < 4; i++) {
-                            sb.append(parts[i]).append(i < 3 ? "," : "");
-                        }
-                        for (String r : reserves) {
-                            sb.append(",").append(r);
-                        }
-                        lines.add(sb.toString());
-                        updated = true;
-                    } else {
-                        lines.add(line);
-                    }
-                }
-            } catch (IOException e) {
-                e.printStackTrace();
-                return new ReserveResult(false, "파일 읽기 오류(write)");
-            }
-
-            if (updated) {
-                try (BufferedWriter bw = new BufferedWriter(new FileWriter(USER_FILE))) {
-                    for (String l : lines) {
-                        bw.write(l);
-                        bw.newLine();
-                    }
-                } catch (IOException e) {
-                    e.printStackTrace();
-                    return new ReserveResult(false, "파일 저장 오류(write)");
-                }
-                return new ReserveResult(true, "예약 성공");
-            }
-            return new ReserveResult(false, "사용자 정보를 찾을 수 없습니다.");
-        }
-    }
-
-    /**
-     * [HELPER 2] 자신을 제외한 다른 교수의 예약이 있는지 확인 (ProfessorStrategy가 호출)
-     */
-    public static boolean hasOtherProfessorReserve(String newReserve, String selfId) {
-        synchronized (FILE_LOCK) {
-            try (BufferedReader br = new BufferedReader(new FileReader(USER_FILE))) {
-                String line;
-                while ((line = br.readLine()) != null) {
-                    String[] parts = line.split(",");
-                    if (parts.length >= 4 && "P".equals(parts[0].trim()) && !parts[2].trim().equals(selfId)) {
-                        for (int i = 4; i < parts.length; i++) {
-                            if (equalsReserveInfo(parts[i], newReserve)) {
-                                return true; // 다른 교수가 예약함
-                            }
-                        }
-                    }
-                }
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-            return false; // 예약 없음
-        }
-    }
-
-    /**
-     * [HELPER 3] 예약 변경 실패 시 기존 예약을 복원 (롤백)
-     */
-    public static void restoreReservation(String id, String role, String oldReserveInfo) {
-        try {
-            String[] tokens = oldReserveInfo.split("/");
-            if (tokens.length >= 6) {
-                String oldRoom = tokens[0].trim();
-                String year = tokens[1].trim();
-                String month = tokens[2].trim();
-                String day = tokens[3].trim();
-                String[] times = tokens[4].trim().split(" ");
-                String oldDay = tokens[5].trim();
-                String restoreDate = year + " / " + month + " / " + day + " / " + times[0] + " " + times[1];
-
-                writeReservationToFile(id, makeReserveInfo(oldRoom, restoreDate, oldDay), role);
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
-
-    /**
-     * [Template Method Pattern (SFR-201: 월별 현황 조회)]
-     * @param roomNumber
-     */
+    // ---------------------------------------------------------
+    // [Read] 1. 월별 / 주별 조회 (Template Method 사용)
+    // ---------------------------------------------------------
+    // ★ [수정 1] 월별 조회 시 "AVAILABLE" -> "NONE"으로 변경하여 클라이언트로 전송
     public static List<String> getReservationStatusForMonth(String roomNumber, int year, int month, String startTime) {
         synchronized (FILE_LOCK) {
             List<String> monthlyStatus = new ArrayList<>();
             YearMonth yearMonth = YearMonth.of(year, month);
             int daysInMonth = yearMonth.lengthOfMonth();
 
+            System.out.println(">>> [ReserveManager] 월별 조회: " + roomNumber + ", " + year + "-" + month + ", 시간:" + startTime);
+
             for (int day = 1; day <= daysInMonth; day++) {
                 LocalDate currentDate = yearMonth.atDay(day);
-                // findDailyReservationType 호출 시 startTime 전달
-                String dayStatus = findDailyReservationType(roomNumber, currentDate, startTime); 
-                monthlyStatus.add(String.format("%d:%s", day, dayStatus));
+                String status = checkReservationStatus(roomNumber, currentDate, startTime);
+                
+                // 클라이언트(ViewRoom)는 "NONE"일 때만 초록색으로 칠합니다.
+                if ("AVAILABLE".equals(status)) {
+                    status = "NONE"; 
+                }
+                
+                monthlyStatus.add(day + ":" + status);
             }
             return monthlyStatus;
         }
     }
-
-    /**
-     * [신규 헬퍼] Template Method의 세부 단계(Sub-step)
-     */
-    private static String findDailyReservationType(String roomNumber, LocalDate date, String startTime) { 
-        // 1. 정규 수업 체크 (최우선)
-        if (isClassScheduled(roomNumber, date, startTime)) {
-            return "CLASS"; // 정규 수업이 있다면 CLASS 반환
-        }
-
-        // 2. 예약 정보 체크 (기존 로직 유지)
-        String dateString = date.format(DateTimeFormatter.ofPattern("yyyy / MM / dd"));
-
-        boolean professorReserved = false;
-        boolean studentReserved = false;
-
-        try (BufferedReader br = new BufferedReader(new FileReader(USER_FILE))) {
-            String line;
-            while ((line = br.readLine()) != null) {
-                String[] parts = line.split(",");
-                if (parts.length < 5) {
-                    continue;
-                }
-
-                String role = parts[0].trim();
-
-                for (int i = 4; i < parts.length; i++) {
-                    String reserve = parts[i].trim();
-                    // 해당 날짜 및 시간대(startTime)가 포함된 예약이 있는지 확인합니다.
-                    if (reserve.startsWith(roomNumber + " / " + dateString) && reserve.contains(startTime)) {
-                        if ("P".equals(role)) {
-                            professorReserved = true;
-                        } else if ("S".equals(role)) {
-                            studentReserved = true;
-                        }
-                    }
-                }
-
-                if (professorReserved) {
-                    break;
-                }
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-
-        // 3. 우선순위에 따라 반환 (CLASS는 이미 위에서 처리됨)
-        if (professorReserved) {
-            return "PROFESSOR";
-        } else if (studentReserved) {
-            return "STUDENT";
-        } else {
-            return "NONE"; // CLASS, PROFESSOR, STUDENT 모두 없으면 예약 가능
-        }
-    }
-
-    /**
-     * 특정 강의실, 날짜, 시작 시간에 정규 수업이 있는지 확인합니다.
-     *
-     * @return 정규 수업이 있으면 true
-     */
-    private static boolean isClassScheduled(String roomNumber, LocalDate date, String startTime) {
-        String endTime = calculateEndTime(startTime);
-        String fullDayName = date.getDayOfWeek().getDisplayName(TextStyle.FULL, Locale.KOREAN);
-
-        synchronized (FILE_LOCK) {
-            try (BufferedReader br = new BufferedReader(new FileReader(SCHEDULE_FILE))) {
-                String line;
-                while ((line = br.readLine()) != null) {
-                    String[] parts = line.split(",");
-                    if (parts.length >= 6) {
-                        String scheduleDay = toFullDayName(parts[1].trim());
-
-                        if (parts[0].trim().equals(roomNumber)
-                                && scheduleDay.equals(fullDayName)
-                                && parts[2].trim().equals(startTime)
-                                && parts[3].trim().equals(endTime)
-                                && parts[5].trim().equals("수업")) {
-                            return true;
-                        }
-                    }
-                }
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-            return false;
-        }
-    }
-
-    /**
-     * [Template Method Pattern (주간 현황 조회)] ClassCastException 방지를 위해 반환형을 Map으로
-     * 유지하고 로직만 정의합니다.
-     */
+    
     public static Map<String, List<String[]>> getWeeklySchedule(String roomNumber, LocalDate startMonday) {
         synchronized (FILE_LOCK) {
-            // 시간대 정의 (클라이언트의 ViewRoom.java에 맞춰서 9시부터 17시까지 50분 단위로 가정)
-            String[] timeSlots = {
-                "09:00", "10:00", "11:00", "12:00", "13:00", "14:00", "15:00", "16:00", "17:00"
-            };
-
-            Map<String, List<String[]>> weeklyData = new LinkedHashMap<>(); // 순서 보장
+            String[] timeSlots = {"09:00", "10:00", "11:00", "12:00", "13:00", "14:00", "15:00", "16:00", "17:00"};
+            Map<String, List<String[]>> weeklyData = new LinkedHashMap<>();
 
             for (String start : timeSlots) {
-                String end = calculateEndTime(start); // 50분 또는 1시간 후 끝 시간 계산 (구현 필요)
-
                 List<String[]> dailyStatus = new ArrayList<>();
-
-                for (int i = 0; i < 5; i++) { // 월요일(i=0)부터 금요일(i=4)까지
+                for (int i = 0; i < 5; i++) {
                     LocalDate currentDate = startMonday.plusDays(i);
-                    String dateString = currentDate.format(DateTimeFormatter.ofPattern("yyyy / MM / dd"));
-                    String dayName = currentDate.getDayOfWeek().getDisplayName(TextStyle.SHORT, Locale.KOREAN);
-
-                    // 주간 조회의 세부 단계: 특정 시간대의 상태를 확인
-                    String state = getRoomStateForWeekly(roomNumber, dayName, start, end, dateString);
-
-                    // { 날짜, 상태 } 형식으로 저장
-                    dailyStatus.add(new String[]{currentDate.format(DateTimeFormatter.ofPattern("MM/dd")), state});
+                    String status = checkReservationStatus(roomNumber, currentDate, start);
+                    String displayStatus = convertStatusToKorean(status);
+                    dailyStatus.add(new String[]{currentDate.format(DateTimeFormatter.ofPattern("MM/dd")), displayStatus});
                 }
-
-                weeklyData.put(start + "~" + end, dailyStatus); // Key를 "09:00~09:50" 형태로 변경하여 클라이언트 매핑 용이하게 함
+                weeklyData.put(start + "~" + calculateEndTime(start), dailyStatus);
             }
-
             return weeklyData;
         }
     }
 
-    /**
-     * [신규 헬퍼] 주간 조회를 위한 상태 확인 (정규수업, 교수, 학생, 가능) 이 메서드는 getRoomState를 단순화하고 주간
-     * 뷰에 맞게 반환형을 정의합니다.
-     */
-    private static String getRoomStateForWeekly(String room, String day, String start, String end, String date) {
-        synchronized (FILE_LOCK) {
-            // 1. 정규수업 체크
-            try (BufferedReader br = new BufferedReader(new FileReader(SCHEDULE_FILE))) {
-                String line;
-                while ((line = br.readLine()) != null) {
-                    String[] parts = line.split(",");
-                    if (parts.length >= 6) {
-                        if (parts[0].trim().equals(room) && toFullDayName(parts[1].trim()).equals(toFullDayName(day))
-                                && parts[2].trim().equals(start) && parts[3].trim().equals(end)
-                                && parts[5].trim().equals("수업")) {
-                            return "정규수업";
-                        }
-                    }
-                }
-            } catch (IOException e) {
-                /* 무시하고 다음 단계로 진행 */ }
-
-            // 예약 정보 문자열 생성 (makeReserveInfo 포맷에 맞춤)
-            String dateWithTime = date + " / " + start + " " + end;
-            String reserveInfo = makeReserveInfo(room, dateWithTime, day);
-
-            // 2. 교수 예약 체크
-            if (hasProfessorReserve(reserveInfo)) {
-                return "교수예약";
-            }
-
-            // 3. 학생 예약 체크
-            int count = countUsersByReserveInfo(reserveInfo);
-            if (count > 0) {
-                return "학생예약";
-            }
-
-            return "예약가능";
+    // ---------------------------------------------------------
+    // [Read] 2. 일별 조회
+    // ---------------------------------------------------------
+    public static String getRoomState(String room, String day, String start, String end, String date) {
+        try {
+            String[] parts = date.split("/");
+            String year = parts[0].trim();
+            String month = parts[1].trim();
+            String d = parts[2].trim();
+            LocalDate targetDate = LocalDate.of(Integer.parseInt(year), Integer.parseInt(month), Integer.parseInt(d));
+            String status = checkReservationStatus(room, targetDate, start);
+            return convertStatusToKorean(status);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return "오류";
         }
     }
 
-    /**
-     * [신규 헬퍼] 시작 시간에 따른 종료 시간 계산 (임시 구현)
-     */
+    // 강의실 시간표 슬롯 조회 (일별 조회 테이블의 시간대 리스트용)
+    public static List<String[]> getRoomSlots(String room, String day) {
+        List<String[]> slots = new ArrayList<>();
+        String shortDay = day.length() > 1 ? day.substring(0, 1) : day;
+        
+        // 1. 정규 수업 시간 가져오기 (ScheduleInfo.txt) - 10칸 포맷
+        // 년도(0), 학기(1), 건물(2), 강의실(3), 요일(4), 시작(5), 종료(6)...
+        try (BufferedReader br = new BufferedReader(new FileReader(SCHEDULE_FILE))) {
+            String line;
+            while ((line = br.readLine()) != null) {
+                String[] parts = line.split(",");
+                if (parts.length >= 10) {
+                    // [수정] 인덱스 3(강의실), 4(요일) 확인
+                    if (parts[3].trim().equals(room) && parts[4].trim().equals(shortDay)) {
+                        // [수정] 인덱스 5(시작), 6(종료) 저장
+                        slots.add(new String[]{parts[5].trim(), parts[6].trim()});
+                    }
+                }
+            }
+        } catch (IOException e) { e.printStackTrace(); }
+
+        // 2. 예약된 시간 가져오기 (ReservationInfo.txt) - 12칸 포맷
+        // 건물(0), 강의실(1), 날짜(2), 요일(3), 시작(4), 종료(5)...
+        try (BufferedReader br = new BufferedReader(new FileReader(RESERVE_FILE))) {
+            String line;
+            while ((line = br.readLine()) != null) {
+                String[] parts = line.split(",");
+                if (parts.length >= 11) {
+                    // [수정] 인덱스 1(강의실), 3(요일) 확인
+                    if (parts[1].trim().equals(room) && parts[3].trim().contains(shortDay)) {
+                         // [수정] 상태(10)가 REJECTED가 아니면 추가
+                         if(!"REJECTED".equals(parts[10].trim())) {
+                            // [수정] 인덱스 4(시작), 5(종료) 저장
+                            slots.add(new String[]{parts[4].trim(), parts[5].trim()});
+                         }
+                    }
+                }
+            }
+        } catch (IOException e) { e.printStackTrace(); }
+        
+        // 중복 제거 및 정렬
+        Set<String> uniqueSlots = new HashSet<>();
+        List<String[]> uniqueList = new ArrayList<>();
+        for(String[] s : slots) {
+            if(uniqueSlots.add(s[0] + s[1])) uniqueList.add(s);
+        }
+        uniqueList.sort(Comparator.comparing(o -> o[0]));
+
+        return uniqueList;
+    }
+
+    // ---------------------------------------------------------
+    // [Write] 예약 저장 (12칸 포맷)
+    // ---------------------------------------------------------
+    public static ReserveResult writeReservationToFile(String id, String csvLine, String role) {
+        synchronized (FILE_LOCK) {
+            try (BufferedWriter bw = new BufferedWriter(new FileWriter(RESERVE_FILE, true))) {
+                bw.write(csvLine);
+                bw.newLine();
+                return new ReserveResult(true, "예약 요청이 완료되었습니다.");
+            } catch (IOException e) {
+                e.printStackTrace();
+                return new ReserveResult(false, "저장 중 오류 발생");
+            }
+        }
+    }
+    
+    // ---------------------------------------------------------
+    // [Modify] 예약 취소 및 복구 (핵심 수정)
+    // ---------------------------------------------------------
+    
+    // 예약 취소 (파일에서 해당 줄 삭제)
+    public static ReserveResult cancelReserve(String id, String reserveInfo) {
+        synchronized (FILE_LOCK) {
+            File inputFile = new File(RESERVE_FILE);
+            File tempFile = new File(inputFile.getParent(), "temp_reserve.txt");
+            boolean deleted = false;
+
+            try (BufferedReader reader = new BufferedReader(new FileReader(inputFile));
+                 BufferedWriter writer = new BufferedWriter(new FileWriter(tempFile))) {
+                
+                String line;
+                while ((line = reader.readLine()) != null) {
+                    // CSV 파일의 한 줄(line)과 삭제하려는 예약정보(reserveInfo)가 일치하면 삭제
+                    // (공백 무시하고 비교)
+                    if (equalsReserveInfo(line, reserveInfo)) {
+                        deleted = true;
+                        continue; // 쓰지 않고 건너뜀 (삭제)
+                    }
+                    writer.write(line);
+                    writer.newLine();
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+                return new ReserveResult(false, "파일 처리 오류");
+            }
+
+            // 원본 파일 교체
+            if (deleted) {
+                if (inputFile.delete()) {
+                    tempFile.renameTo(inputFile);
+                    return new ReserveResult(true, "예약이 삭제되었습니다.");
+                } else {
+                    return new ReserveResult(false, "파일 교체 실패");
+                }
+            } else {
+                tempFile.delete();
+                return new ReserveResult(false, "해당 예약 정보를 찾을 수 없습니다.");
+            }
+        }
+    }
+
+    // ★ [수정] 예약 복구 (롤백용)
+    public static void restoreReservation(String id, String role, String oldReserveInfo) {
+        // 단순히 삭제했던 문자열을 다시 파일 끝에 추가함
+        writeReservationToFile(id, oldReserveInfo, role);
+    }
+    
+    // ---------------------------------------------------------
+    // [Check] 조건 확인 Helper
+    // ---------------------------------------------------------
+    
+    public static boolean hasProfessorReserve(String reserveInfo) {
+        // reserveInfo 포맷이 CSV 라인 형태여야 함 (전략에서 만들어진 newReserve)
+        // CSV 파싱하여 날짜/시간/강의실이 겹치고 역할이 'P'인 것이 있는지 확인
+        // (여기서는 CSV 문자열 비교가 어려우므로, checkReservationStatus 로직 등을 활용하거나
+        //  newReserve 문자열을 파싱해서 비교해야 함. 일단 간단히 파일 스캔)
+        
+        String[] target = reserveInfo.split(",");
+        if(target.length < 6) return false; // 포맷 안맞으면 패스
+        
+        String tRoom = target[1].trim();
+        String tDate = target[2].trim();
+        String tStart = target[4].trim();
+        
+        String status = checkReservationStatus(tRoom, 
+                LocalDate.parse(tDate, DateTimeFormatter.ofPattern("yyyy/MM/dd")), 
+                tStart);
+        
+        // 'PROFESSOR' 상태가 리턴되면 교수가 예약한 것임 (TextFileReservationChecker 로직상)
+        // 다만 checkReservationStatus는 내 예약인지 남의 예약인지 구분 안하므로 주의.
+        // TextFileReservationChecker를 직접 쓰지 않고 파일 스캔
+        
+        try (BufferedReader br = new BufferedReader(new FileReader(RESERVE_FILE))) {
+            String line;
+            while ((line = br.readLine()) != null) {
+                String[] parts = line.split(",");
+                if(parts.length >= 11) {
+                    if(parts[1].trim().equals(tRoom) && 
+                       parts[2].trim().equals(tDate) && 
+                       parts[4].trim().equals(tStart) &&
+                       parts[7].trim().equals("P") &&
+                       !"REJECTED".equals(parts[10].trim())) {
+                        return true;
+                    }
+                }
+            }
+        } catch(IOException e) { e.printStackTrace(); }
+        return false;
+    }
+    
+    public static int countUsersByReserveInfo(String reserveInfo) {
+        String[] target = reserveInfo.split(",");
+        if(target.length < 6) return 0;
+        
+        String tRoom = target[1].trim();
+        String tDate = target[2].trim();
+        String tStart = target[4].trim();
+        int count = 0;
+        
+        try (BufferedReader br = new BufferedReader(new FileReader(RESERVE_FILE))) {
+            String line;
+            while ((line = br.readLine()) != null) {
+                String[] parts = line.split(",");
+                if(parts.length >= 11) {
+                    if(parts[1].trim().equals(tRoom) && 
+                       parts[2].trim().equals(tDate) && 
+                       parts[4].trim().equals(tStart) &&
+                       !"REJECTED".equals(parts[10].trim())) {
+                        // 인원수(9번 인덱스)를 더해야 함 (SFR-202 40명 제한)
+                        try {
+                            count += Integer.parseInt(parts[9].trim());
+                        } catch(NumberFormatException e) {
+                            count++; // 인원 파싱 실패시 1명으로 간주
+                        }
+                    }
+                }
+            }
+        } catch(IOException e) { e.printStackTrace(); }
+        return count;
+    }
+    
+    // --- Helpers ---
+    
+    private static String checkReservationStatus(String room, LocalDate date, String startTime) {
+        String dateString = date.format(DateTimeFormatter.ofPattern("yyyy/MM/dd"));
+        String dayName = date.getDayOfWeek().getDisplayName(TextStyle.FULL, Locale.KOREAN);
+        AbstractReservationChecker checker = new TextFileReservationChecker();
+        return checker.checkStatus(room, dateString, dayName, startTime);
+    }
+
+    // ★ [수정 2] 한글 상태 메시지 변환 (일별 테이블용)
+    private static String convertStatusToKorean(String code) {
+        switch (code) {
+            case "CLASS": return "정규 수업";
+            case "RESERVED": return "예약 대기";
+            case "AVAILABLE": return "예약 가능";
+            default: return "";
+        }
+    }
+    
     private static String calculateEndTime(String startTime) {
-        // 실제 구현에서는 강의실 예약 단위(50분/60분)에 따라 달라질 수 있으나, 임시로 50분 뒤로 설정
-        // 클라이언트 코드(ViewRoom.java)의 타임 슬롯이 50분 단위일 가능성이 높으므로 50분으로 가정
         try {
             DateTimeFormatter formatter = DateTimeFormatter.ofPattern("HH:mm");
             LocalDateTime start = LocalDateTime.of(LocalDate.now(), java.time.LocalTime.parse(startTime, formatter));
             return start.plusMinutes(50).format(formatter);
-        } catch (Exception e) {
-            return "End"; // 오류 발생 시
-        }
+        } catch (Exception e) { return "End"; }
     }
+    
+    // --- Strategy 실행 ---
+    public static ReserveResult reserve(ReservationDetails details) {
+        ReservationStrategy strategy;
+        if ("P".equals(details.getRole())) strategy = new ProfessorReservationStrategy();
+        else if ("S".equals(details.getRole())) strategy = new StudentReservationStrategy();
+        else return new ReserveResult(false, "알 수 없는 역할");
+        return strategy.execute(details);
+    }
+
+    // --- Other Methods ---
+    
+    public static String makeReserveInfo(String room, String date, String day) { 
+        return String.format("%s,%s,%s", room, date, day); // 임시 포맷
+    } 
+    
+    public static boolean equalsReserveInfo(String info1, String info2) {
+        return info1.trim().equals(info2.trim());
+    }
+    
+    public static List<String> cancelStudentReservesForProfessor(String roomNumber, String date, String day) {
+        return new ArrayList<>();
+    }
+    
+    public static boolean hasOtherProfessorReserve(String newReserve, String selfId) {
+        return false;
+    }
+    
+    // 미사용 또는 클라이언트 호환용 (빈 구현)
+    public static List<String> getReserveInfoById(String id) { return new ArrayList<>(); }
+    public static List<String> getReserveInfoAdvanced(String i, String r, String d) { return new ArrayList<>(); }
+    public static ReserveResult updateReserve(ReservationDetails d) { return new ReserveResult(false, ""); }
+    public static ReserveManageResult searchUserAndReservations(String u, String r, String d) { return null; }
+    public static List<String> getUserIdsByReserveInfo(String r) { return new ArrayList<>(); }
 }
