@@ -46,63 +46,36 @@ public class RoomController {
      * View의 이벤트 리스너를 초기화합니다.
      */
     public void initController() {
-        // [필터 영역]
+        // ... (기존 필터 및 테이블 리스너 코드는 위와 동일하게 유지) ...
         view.getBuildingComboBox().addActionListener(e -> loadFloors());
         view.getFloorComboBox().addActionListener(e -> loadRooms());
 
-        // [강의실 목록]
         view.getRoomListTable().getSelectionModel().addListSelectionListener(e -> {
             if (!e.getValueIsAdjusting() && view.getRoomListTable().getSelectedRow() != -1) {
-                // 1. 선택된 강의실 저장
                 this.selectedRoom = view.getRoomListTable().getValueAt(view.getRoomListTable().getSelectedRow(), 0).toString();
-
-                // 2. [일별] 탭의 시간표 로드
                 loadRoomTimetable();
-
-                // 3. [주별], [월별] 탭 활성화
                 view.getMainTabbedPane().setEnabledAt(1, true);
                 view.getMainTabbedPane().setEnabledAt(2, true);
 
-                // 4. [신규] 강의실이 바뀌었을 때, 현재 탭에 맞춰 즉시 갱신
                 int selectedIndex = view.getMainTabbedPane().getSelectedIndex();
-                if (selectedIndex == 1) {
-                    loadWeeklyView();
-                } else if (selectedIndex == 2) {
-                    loadMonthlyView();
-                }
+                if (selectedIndex == 1) loadWeeklyView();
+                else if (selectedIndex == 2) loadMonthlyView();
             } else if (view.getRoomListTable().getSelectedRow() == -1) {
-                // 선택이 풀리면 탭 비활성화
                 this.selectedRoom = null;
                 view.getMainTabbedPane().setEnabledAt(1, false);
                 view.getMainTabbedPane().setEnabledAt(2, false);
             }
         });
-
-        // [탭 1: 일별 예약]
-        view.getYearComboBox().addActionListener(e -> {
-            if (!isProgrammaticChange) {
-                handleDateChange();
-            }
-        });
-        view.getMonthComboBox().addActionListener(e -> {
-            if (!isProgrammaticChange) {
-                handleDateChange();
-            }
-        });
-        view.getDayComboBox().addActionListener(e -> {
-            if (!isProgrammaticChange) {
-                updateDayOfWeek();
-            }
-        });
-        view.getDayOfWeekComboBox().addActionListener(e -> {
-            if (!isProgrammaticChange) {
-                updateDateByDayOfWeek();
-            }
-        });
-
+        
+        // [탭 1: 일별 예약] 리스너
+        view.getYearComboBox().addActionListener(e -> { if (!isProgrammaticChange) handleDateChange(); });
+        view.getMonthComboBox().addActionListener(e -> { if (!isProgrammaticChange) handleDateChange(); });
+        view.getDayComboBox().addActionListener(e -> { if (!isProgrammaticChange) updateDayOfWeek(); });
+        view.getDayOfWeekComboBox().addActionListener(e -> { if (!isProgrammaticChange) updateDateByDayOfWeek(); });
         view.getReservationButton().addActionListener(e -> handleReservationButton());
         view.getGoBackButton().addActionListener(e -> handleGoBackButton());
         view.getRefreshButton().addActionListener(e -> loadRoomTimetable());
+        
         view.getViewTimeTable().addMouseListener(new java.awt.event.MouseAdapter() {
             @Override
             public void mouseClicked(java.awt.event.MouseEvent evt) {
@@ -122,43 +95,54 @@ public class RoomController {
         view.getPrevWeekButton().addActionListener(e -> navigateWeek(-7));
         view.getNextWeekButton().addActionListener(e -> navigateWeek(7));
 
-        // [탭 2 & 3] 탭 변경 리스너
+        // 탭 변경 감지
         view.getMainTabbedPane().addChangeListener(e -> {
             int index = view.getMainTabbedPane().getSelectedIndex();
-            if (index == 1 && view.getMainTabbedPane().isEnabledAt(1)) {
-                loadWeeklyView();
-            } else if (index == 2 && view.getMainTabbedPane().isEnabledAt(2)) {
+            if (index == 1 && view.getMainTabbedPane().isEnabledAt(1)) loadWeeklyView();
+            else if (index == 2 && view.getMainTabbedPane().isEnabledAt(2)) loadMonthlyView();
+        });
+
+        // ============================================================
+        // ★ [핵심 수정] 월별 달력 완전 잠금 (클릭 반응 X, 색상 O) ★
+        // ============================================================
+        
+        // 1. 월/년 변경 감지 -> 데이터 새로고침 & 버튼 다시 잠그기
+        view.getMonthlyCalendar().addPropertyChangeListener("calendar", evt -> {
+            if (isProgrammaticChange) return;
+
+            Calendar oldCal = (Calendar) evt.getOldValue();
+            Calendar newCal = (Calendar) evt.getNewValue();
+            
+            // 월이나 년이 바뀌었을 때만 로직 수행
+            if (oldCal != null && newCal != null && 
+               (oldCal.get(Calendar.MONTH) != newCal.get(Calendar.MONTH) || 
+                oldCal.get(Calendar.YEAR) != newCal.get(Calendar.YEAR))) {
+                
                 loadMonthlyView();
+                
+                // ★ 중요: 달력이 다시 그려질 때 버튼 리스너가 재생성될 수 있으므로 다시 제거해줌
+                javax.swing.SwingUtilities.invokeLater(this::lockCalendarButtons);
             }
         });
-
-        // [탭 3: 월별 현황]
-        view.getMonthlyCalendar().addPropertyChangeListener("calendar", new PropertyChangeListener() {
-            @Override
-            public void propertyChange(PropertyChangeEvent evt) {
-                // [수정] 날짜(day) 클릭 리스너 제거! (handleCalendarDateClick 호출 제거)
-
-                // [유지] 월(month) 변경 리스너는 유지 (달력의 <, > 버튼 클릭 시)
-                if ("month".equals(evt.getPropertyName()) && !isProgrammaticChange) {
-                    loadMonthlyView();
-                }
-            }
-        });
-
-        // [신규] 월별 탭의 시간대 콤보박스 리스너 추가
+        
+        // 2. 시간대 변경 시 리로드
         view.getMonthlyTimeSlotComboBox().addActionListener(e -> {
-            // 콤보박스 변경 시, 월별 탭이 활성화 상태일 때만 갱신
             if (view.getMainTabbedPane().getSelectedIndex() == 2 && view.getMainTabbedPane().isEnabledAt(2)) {
                 loadMonthlyView();
             }
         });
-
-        // [신규] 최초 실행 시 [주별], [월별] 탭 비활성화
+        
+        // 3. 기타 설정
         view.getMainTabbedPane().setEnabledAt(1, false);
         view.getMainTabbedPane().setEnabledAt(2, false);
-
-        // [신규] 월별 캘린더 색칠용 평가기(Evaluator) 초기 설정
         setupCalendarEvaluators();
+        
+        // 4. 장식 제거
+        view.getMonthlyCalendar().getDayChooser().setDecorationBackgroundVisible(false);
+        view.getMonthlyCalendar().getDayChooser().setDecorationBordersVisible(false);
+        
+        // ★ [최초 실행] 버튼 잠그기 실행
+        lockCalendarButtons();
     }
 
     /**
@@ -465,7 +449,7 @@ public class RoomController {
         }
 
         new LRCompleteCheck(view.getUserid(), view.getRole(), roomR, fullDate, fullDay, client, oldReserveInfo).setVisible(true);
-        view.dispose();
+        //view.dispose();
     }
 
     private void updateChoosedDate() {
@@ -854,5 +838,80 @@ public class RoomController {
             }
         };
         worker.execute();
+    }
+
+    // 예약 화면 띄우기
+    private void goToReservationWindow(Calendar cal) {
+        // 1. 필요한 데이터 추출
+        String selectedRoom = this.selectedRoom; // 현재 선택된 강의실
+        String timeSlot = (String) view.getMonthlyTimeSlotComboBox().getSelectedItem(); // 예: "09:00 - 09:50"
+
+        if (selectedRoom == null || timeSlot == null) {
+            JOptionPane.showMessageDialog(view, "강의실과 시간을 먼저 선택해주세요.");
+            return;
+        }
+
+        // 2. 날짜 포맷팅 (YYYY / MM / DD)
+        int year = cal.get(Calendar.YEAR);
+        int month = cal.get(Calendar.MONTH) + 1;
+        int day = cal.get(Calendar.DAY_OF_MONTH);
+
+        String dateStr = String.format("%04d / %02d / %02d", year, month, day);
+
+        // 3. 시간 포맷팅 (09:00 09:50 형태로 분리)
+        String[] times = timeSlot.split(" - ");
+        String startTime = times[0];
+        String endTime = times[1];
+
+        // 4. 서버로 보낼 최종 날짜 문자열 조합
+        // 형식: "YYYY / MM / DD / HH:mm HH:mm"
+        String fullDate = dateStr + " / " + startTime + " " + endTime;
+
+        // 5. 요일 구하기
+        String[] daysKor = {"일", "월", "화", "수", "목", "금", "토"};
+        String dayOfWeek = daysKor[cal.get(Calendar.DAY_OF_WEEK) - 1] + "요일";
+
+        // 6. 예약 확인 창 띄우기
+        // LRCompleteCheck 생성자에 파라미터 전달
+        new LRCompleteCheck(
+                view.getUserid(),
+                view.getRole(),
+                selectedRoom,
+                fullDate,
+                dayOfWeek,
+                client,
+                null // 신규 예약이므로 oldReserveInfo는 null
+        ).setVisible(true);
+
+        // 현재 창 닫기 (선택 사항)
+        // view.dispose(); 
+    }
+    
+    // [신규 메서드] 달력 버튼의 클릭 기능을 제거하여 '단순 조회용'으로 만듦
+    private void lockCalendarButtons() {
+        // JCalendar 내부의 날짜 버튼들이 담긴 패널을 가져옴
+        javax.swing.JPanel dayPanel = view.getMonthlyCalendar().getDayChooser().getDayPanel();
+        
+        // 패널 안에 있는 모든 컴포넌트(날짜 버튼들)를 순회
+        for (java.awt.Component comp : dayPanel.getComponents()) {
+            if (comp instanceof javax.swing.JButton) {
+                javax.swing.JButton btn = (javax.swing.JButton) comp;
+                
+                // 1. 마우스 리스너 제거 (클릭해도 반응 안 함 -> 회색 안 바뀜)
+                for (java.awt.event.MouseListener ml : btn.getMouseListeners()) {
+                    btn.removeMouseListener(ml);
+                }
+                
+                // 2. 키보드 리스너 제거 (엔터 쳐도 반응 안 함)
+                for (java.awt.event.KeyListener kl : btn.getKeyListeners()) {
+                    btn.removeKeyListener(kl);
+                }
+
+                // 3. 포커스 및 호버 효과 제거
+                btn.setFocusable(false);       // 선택 테두리 제거
+                btn.setRolloverEnabled(false); // 마우스 올렸을 때 색 변화 제거
+                // btn.setEnabled(false); // <-- 이걸 쓰면 색깔이 흐려지므로 쓰지 않습니다!
+            }
+        }
     }
 }

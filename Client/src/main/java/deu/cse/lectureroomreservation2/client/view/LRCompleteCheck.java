@@ -88,7 +88,7 @@ public class LRCompleteCheck extends javax.swing.JFrame {
         jLabel4 = new javax.swing.JLabel();
         LastLRButton1 = new javax.swing.JButton();
 
-        setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
+        setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
 
         jLabel1.setText("예약 확인");
 
@@ -189,12 +189,12 @@ public class LRCompleteCheck extends javax.swing.JFrame {
 
     private void LastLRCancelActionPerformed(java.awt.event.ActionEvent evt) {// GEN-FIRST:event_LastLRCancelActionPerformed
         // TODO add your handling code here: 취소 버튼
-        if (role.equals("S")) {
+        /*if (role.equals("S")) {
             new StudentMainMenu(id, client).setVisible(true);
         }
         if (role.equals("P")) {
             new ProfessorMainMenu(id, client).setVisible(true);
-        }
+        }*/
         this.dispose();
     }// GEN-LAST:event_LastLRCancelActionPerformed
 
