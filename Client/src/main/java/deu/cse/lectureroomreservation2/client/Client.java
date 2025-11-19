@@ -73,12 +73,6 @@ public class Client {
             System.err.println(" logout Error : " + e.getMessage());
         }
     }
-        // 대기열 상태 확인 (ACTIVE / WAITING:n / NONE)
-    public synchronized String checkQueueStatus() throws IOException {
-        out.writeUTF("CHECK_QUEUE");
-        out.flush();
-        return in.readUTF();   // 서버에서 UTF 문자열 하나 돌려준다.
-    }
 
     public boolean isConnected() {
         return socket != null && socket.isConnected() && !socket.isClosed();
