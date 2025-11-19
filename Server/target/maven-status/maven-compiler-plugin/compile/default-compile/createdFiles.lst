@@ -22,6 +22,7 @@ deu\cse\lectureroomreservation2\Main.class
 deu\cse\lectureroomreservation2\common\LoginStatus.class
 deu\cse\lectureroomreservation2\server\control\ReserveManager.class
 deu\cse\lectureroomreservation2\server\model\User.class
+deu\cse\lectureroomreservation2\server\control\QueuedLoginProxy.class
 deu\cse\lectureroomreservation2\server\model\UserData.class
 deu\cse\lectureroomreservation2\common\ReserveResult.class
 deu\cse\lectureroomreservation2\server\control\receiveController.class
@@ -38,6 +39,7 @@ deu\cse\lectureroomreservation2\common\CheckMaxTimeResult.class
 deu\cse\lectureroomreservation2\server\control\TableRearrange$1.class
 deu\cse\lectureroomreservation2\server\control\ReservationStrategy.class
 deu\cse\lectureroomreservation2\server\control\noticeController.class
+deu\cse\lectureroomreservation2\server\control\AuthService.class
 deu\cse\lectureroomreservation2\server\model\PasswordUtil.class
 deu\cse\lectureroomreservation2\server\control\UserRequestController.class
 deu\cse\lectureroomreservation2\server\control\UpdateReservationStrategy.class

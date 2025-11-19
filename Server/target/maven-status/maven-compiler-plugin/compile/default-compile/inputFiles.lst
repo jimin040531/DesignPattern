@@ -15,6 +15,7 @@ D:\deu\3.2\DesignPattern\project\DesignPattern\Server\src\main\java\deu\cse\lect
 D:\deu\3.2\DesignPattern\project\DesignPattern\Server\src\main\java\deu\cse\lectureroomreservation2\server\control\AbstractReservationChecker.java
 D:\deu\3.2\DesignPattern\project\DesignPattern\Server\src\main\java\deu\cse\lectureroomreservation2\server\model\ScheduleFileManager.java
 D:\deu\3.2\DesignPattern\project\DesignPattern\Server\src\main\java\deu\cse\lectureroomreservation2\server\model\UserFileManager.java
+D:\deu\3.2\DesignPattern\project\DesignPattern\Server\src\main\java\deu\cse\lectureroomreservation2\server\control\AuthService.java
 D:\deu\3.2\DesignPattern\project\DesignPattern\Server\src\main\java\deu\cse\lectureroomreservation2\server\control\ProfessorReservationStrategy.java
 D:\deu\3.2\DesignPattern\project\DesignPattern\Server\src\main\java\deu\cse\lectureroomreservation2\server\control\ReservationDetails.java
 D:\deu\3.2\DesignPattern\project\DesignPattern\Server\src\main\java\deu\cse\lectureroomreservation2\server\control\TableRearrange.java
@@ -42,5 +43,6 @@ D:\deu\3.2\DesignPattern\project\DesignPattern\Server\src\main\java\deu\cse\lect
 D:\deu\3.2\DesignPattern\project\DesignPattern\Server\src\main\java\deu\cse\lectureroomreservation2\server\model\ScheduleManager.java
 D:\deu\3.2\DesignPattern\project\DesignPattern\Server\src\main\java\deu\cse\lectureroomreservation2\common\ReserveRequest.java
 D:\deu\3.2\DesignPattern\project\DesignPattern\Server\src\main\java\deu\cse\lectureroomreservation2\server\control\ReservationStrategy.java
+D:\deu\3.2\DesignPattern\project\DesignPattern\Server\src\main\java\deu\cse\lectureroomreservation2\server\control\QueuedLoginProxy.java
 D:\deu\3.2\DesignPattern\project\DesignPattern\Server\src\main\java\deu\cse\lectureroomreservation2\server\model\DaysOfWeek.java
 D:\deu\3.2\DesignPattern\project\DesignPattern\Server\src\main\java\deu\cse\lectureroomreservation2\server\model\UserData.java

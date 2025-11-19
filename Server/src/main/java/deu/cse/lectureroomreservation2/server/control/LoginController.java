@@ -14,7 +14,7 @@ import java.nio.file.Paths;
  *
  * @author skylo
  */
-public class LoginController {
+public class LoginController implements AuthService{
     
     private Path userFile;
     private final UserData userData = new UserData();
@@ -26,7 +26,8 @@ public class LoginController {
     public LoginController(Path testPath) {
         this.userFile = testPath; // 테스트용 생성자
     }
-
+    
+    @Override
     public LoginStatus authenticate(String id, String password, String selectedRole) {
         LoginStatus status = new LoginStatus();
         status.setLoginSuccess(false);
@@ -80,4 +81,5 @@ public class LoginController {
 
         return status;
     }
+    
 }
