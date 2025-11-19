@@ -8,6 +8,8 @@ import deu.cse.lectureroomreservation2.client.view.StudentMainMenu;
 import deu.cse.lectureroomreservation2.client.view.ProfessorMainMenu;
 import deu.cse.lectureroomreservation2.client.Client;
 import java.io.*;
+import javax.swing.SwingUtilities;
+
 
 /**
  *
@@ -209,20 +211,118 @@ public class LoginFrame extends javax.swing.JFrame {
                 }
 
                 // 로그인 성공 → 역할에 따라 메인 화면 분기
-                switch (status.getRole()) {
-                    case "STUDENT" -> {
-                        new StudentMainMenu(id, client).setVisible(true);
-                        client.checkAndShowNotices(this); // 공지사항 확인 및 팝업
-                    }
-                    case "PROFESSOR" ->
-                        new ProfessorMainMenu(id, client).setVisible(true);
-                    case "ADMIN" ->
-                        new AdminMainView(id, client).setVisible(true);
-                    default -> {
-                        javax.swing.JOptionPane.showMessageDialog(this, "알 수 없는 사용자 유형입니다.");
-                        return;
-                    }
+                String serverRole = status.getRole();      // STUDENT / PROFESSOR / ADMIN
+                String message = status.getMessage();      // "ACTIVE" 또는 "WAITING:n" 또는 null
+
+// 1) 바로 입장 가능한 상태 (ACTIVE 또는 message 없음)
+                if (message == null || message.isEmpty() || "ACTIVE".equals(message)) {
+                    openMainFrame(serverRole, id, client);
+                    return;
                 }
+
+// 2) 대기열 상태인 경우: "WAITING:n"
+                if (message.startsWith("WAITING:")) {
+                    String pos = message.substring("WAITING:".length());
+
+                    javax.swing.JOptionPane.showMessageDialog(
+                        this,
+                        "현재 서버 접속 인원이 가득 찼습니다.\n"
+                        + "현재 " + pos + "번째로 대기 중입니다.\n"
+                        + "자리가 나면 자동으로 입장합니다."
+                    );  
+
+                    final LoginFrame frame = this;
+
+                    Thread waitThread = new Thread(() -> {
+                        try {
+                            var out = client.getOutputStream();
+                            var in = client.getInputStream();
+
+                            while (true) {
+                                // 3초마다 상태 확인
+                                Thread.sleep(3000);
+                            
+                                synchronized (client) {
+                                    out.writeUTF("CHECK_QUEUE");
+                                    out.flush();
+                                
+                    String response = in.readUTF();   // ACTIVE / WAITING:n / NONE
+                    System.out.println("CHECK_QUEUE 응답: " + response);
+
+                    if ("ACTIVE".equals(response)) {
+    // 입장 가능 → EDT에서 원래 쓰던 코드 그대로 실행
+                        SwingUtilities.invokeLater(() -> {
+                            try {
+                                switch (serverRole) {
+                                    case "STUDENT" -> {
+                                        new StudentMainMenu(id, client).setVisible(true);
+                                    }
+                                    case "PROFESSOR" -> {
+                                        new ProfessorMainMenu(id, client).setVisible(true);
+                                    }
+                                    case "ADMIN" -> {
+                                        new AdminMainView(id, client).setVisible(true);
+                                    }
+                                    default -> {
+                                        javax.swing.JOptionPane.showMessageDialog(
+                                                frame, "알 수 없는 사용자 유형입니다.");
+                                        return;
+                                    }
+                                }
+                                frame.dispose();   // 로그인 창 닫기
+                            } catch (Exception ex) {
+                                ex.printStackTrace();
+                                javax.swing.JOptionPane.showMessageDialog(
+                                        frame,
+                                        "대기 중 입장 처리 중 오류가 발생했습니다. 다시 로그인해 주세요."
+                                );
+                            }
+                        });
+                        break;
+                    }
+
+
+                    if ("NONE".equals(response)) {
+                        // 대기열에서 제거됨
+                        SwingUtilities.invokeLater(() -> {
+                            javax.swing.JOptionPane.showMessageDialog(
+                                frame,
+                                "대기열에서 제거되었습니다. 다시 로그인해 주세요."
+                            );
+                        });
+                        client.logout();
+                        break;
+                    }
+
+                    // WAITING:n 이면 계속 루프
+                }
+            }
+        } catch (Exception ex) {
+                            ex.printStackTrace();
+                            SwingUtilities.invokeLater(() -> {
+                                javax.swing.JOptionPane.showMessageDialog(
+                                    frame,
+                                    "대기 중 오류가 발생했습니다. 다시 로그인해 주세요."
+                                );
+                            });
+                            try {
+                                client.logout();
+                            } catch (Exception ignore) {}
+                        }
+                    });
+
+                    waitThread.setDaemon(true);
+                    waitThread.start();
+                    return;
+                }
+
+                // 3) 그 외 이상한 상태
+                javax.swing.JOptionPane.showMessageDialog(
+                    this,
+                "알 수 없는 로그인 상태입니다: " + message
+                );
+                client.logout();
+
 
                 this.dispose();  // 현재 로그인 창 닫기
 
@@ -287,6 +387,28 @@ public class LoginFrame extends javax.swing.JFrame {
             }
         });
     }
+        // 로그인 성공 후, 역할에 따라 메인 화면 여는 공통 메서드
+    private void openMainFrame(String serverRole, String id, deu.cse.lectureroomreservation2.client.Client client) {
+        switch (serverRole) {
+            case "STUDENT" -> {
+                new StudentMainMenu(id, client).setVisible(true);
+            }
+            case "PROFESSOR" -> {
+                new ProfessorMainMenu(id, client).setVisible(true);
+            }
+            case "ADMIN" -> {
+                new AdminMainView(id, client).setVisible(true);
+            }
+            default -> {
+                javax.swing.JOptionPane.showMessageDialog(this, "알 수 없는 사용자 유형입니다.");
+                return;
+            }
+        }
+
+        // 로그인 창 닫기
+        this.dispose();
+    }
+
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JTextField IDtext;
