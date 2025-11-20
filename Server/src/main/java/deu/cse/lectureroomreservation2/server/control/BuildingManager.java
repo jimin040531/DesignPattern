@@ -23,7 +23,7 @@ public class BuildingManager {
     private final String filePath;
     
     // 2. 생성자를 private으로 막아 외부에서 new 금지
-    public BuildingManager() {
+    private BuildingManager() {
         // receiveController에서 파일 경로를 가져옴
         this.filePath = receiveController.getBuildingInfoFileName();
     }

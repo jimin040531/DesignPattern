@@ -46,7 +46,7 @@ public class ClientHandler implements Runnable {
     public ClientHandler(Socket socket, Server server) {
         this.socket = socket;
         this.server = server;
-        this.buildingManager = new BuildingManager();
+        this.buildingManager = BuildingManager.getInstance();
 
     }
 
@@ -65,15 +65,6 @@ public class ClientHandler implements Runnable {
             String password = in.readUTF();
             String role = in.readUTF();
 
-            /* 접속수 초과시 로그인 거절 코드 -> 자동 로그인으로 변경
-            // 세마포어 체크는 로그인 정보 받고 나서 수행
-            acquired = server.getConnectionLimiter().tryAcquire();
-            if (!acquired) {
-                System.out.println("Connection refused (Max count exceed): " + id);
-                out.writeObject(new LoginStatus(false, "WAIT", "현재 접속 인원이 가득 찼습니다. 잠시 후 다시 시도해 주세요."));
-                out.flush();
-                return;
-            }*/
             // 중복로그인 체크
             synchronized (server.getLoggedInUsers()) {
                 if (server.getLoggedInUsers().contains(id)) {
@@ -533,20 +524,5 @@ public class ClientHandler implements Runnable {
             }
         }
     }
-    /*
-     * private void handleStudent(ObjectInputStream in, ObjectOutputStream out,
-     * String id) {
-     * System.out.println("학생 기능 처리: " + id);
-     * }
-     * 
-     * private void handleProfessor(ObjectInputStream in, ObjectOutputStream out,
-     * String id) {
-     * System.out.println("교수 기능 처리: " + id);
-     * }
-     * 
-     * private void handleAdmin(ObjectInputStream in, ObjectOutputStream out, String
-     * id) {
-     * System.out.println("관리자 기능 처리: " + id);
-     * }
-     */
+
 }
