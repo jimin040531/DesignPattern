@@ -478,6 +478,25 @@ public class ClientHandler implements Runnable {
                                         );
                                         result = new ReserveManageResult(deleteRes.getResult(), deleteRes.getReason(), null);
                                     }
+                                    
+                                    case "APPROVE" -> {
+                                        result = ReserveManager.approveOrReject(
+                                            "APPROVE",
+                                            req.getUserId(),
+                                            req.getOldReserveInfo(),
+                                            null
+                                        );
+                                    }
+
+                                    case "REJECT" -> {
+                                        result = ReserveManager.approveOrReject(
+                                            "REJECT",
+                                            req.getUserId(),
+                                            req.getOldReserveInfo(),
+                                            req.getReserveInfo()
+                                        );
+                                    }
+
 
                                     default ->
                                         result = new ReserveManageResult(false, "알 수 없는 명령입니다", null);
