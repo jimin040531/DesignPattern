@@ -19,7 +19,7 @@ public class ReserveManager {
     // ---------------------------------------------------------
     // [Read] 1. 월별 / 주별 조회 (Template Method 사용)
     // ---------------------------------------------------------
-    // ★ [수정 1] 월별 조회 시 "AVAILABLE" -> "NONE"으로 변경하여 클라이언트로 전송
+    // 월별 조회 시 "AVAILABLE" -> "NONE"으로 변경하여 클라이언트로 전송
     public static List<String> getReservationStatusForMonth(String roomNumber, int year, int month, String startTime) {
         synchronized (FILE_LOCK) {
             List<String> monthlyStatus = new ArrayList<>();
@@ -132,6 +132,57 @@ public class ReserveManager {
     }
 
     // ---------------------------------------------------------
+    //예약 현황 통계 조회 (확정 인원, 대기 인원)
+    // ---------------------------------------------------------
+    public static int[] getReservationStats(String room, String dateOnly, String startTime) {
+        int currentTotalCount = 0; // 확정(APPROVED) + 대기(WAIT) 인원 합계
+
+        synchronized (FILE_LOCK) {
+            try (BufferedReader br = new BufferedReader(new FileReader(RESERVE_FILE))) {
+                String line;
+                while ((line = br.readLine()) != null) {
+                    String[] parts = line.split(",");
+                    // 포맷: 건물,강의실,날짜,요일,시작,종료,ID,역할,목적,인원,상태,사유
+                    if (parts.length < 11) continue;
+
+                    String rRoom = parts[1].trim();
+                    String rDate = parts[2].trim();  // yyyy/MM/dd
+                    String rStart = parts[4].trim(); // HH:mm
+                    String rStatus = parts[10].trim(); // APPROVED, WAIT, REJECTED
+                    
+                    int count = 1;
+                    try {
+                         count = Integer.parseInt(parts[9].trim());
+                    } catch(Exception e) {
+                        count = 1; // 파싱 실패시 기본 1명
+                    }
+
+                    // 날짜 포맷 통일 (입력이 2025-06-03 등으로 올 수 있으므로 /로 변환)
+                    String targetDate = dateOnly.replace("-", "/");
+
+                    // 조건 일치 확인 (강의실, 날짜, 시작시간)
+                    if (rRoom.equals(room) && rDate.equals(targetDate) && rStart.equals(startTime)) {
+                        // 거절된(REJECTED) 예약은 제외하고, 승인(APPROVED)과 대기(WAIT)를 모두 합산
+                        if ("APPROVED".equals(rStatus) || "WAIT".equals(rStatus)) {
+                            currentTotalCount += count;
+                        }
+                    }
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+
+        //[Singleton Pattern 적용]
+        // BuildingManager 클래스의 유일한 인스턴스를 가져와서 해당 강의실의 최대 수용 인원을 조회
+        // new BuildingManager()를 하지 않고 getInstance()를 사용.
+        int maxCapacity = BuildingManager.getInstance().getRoomCapacity(room);
+
+        // 결과 반환: [현재 예약된 총 인원, 최대 수용 인원]
+        return new int[]{currentTotalCount, maxCapacity};
+    }
+    
+    // ---------------------------------------------------------
     // [Write] 예약 저장 (12칸 포맷)
     // ---------------------------------------------------------
     public static ReserveResult writeReservationToFile(String id, String csvLine, String role) {
@@ -192,7 +243,8 @@ public class ReserveManager {
         }
     }
 
-    // ★ [수정] 예약 복구 (롤백용)
+    
+    // 예약 복구 (롤백용)
     public static void restoreReservation(String id, String role, String oldReserveInfo) {
         // 단순히 삭제했던 문자열을 다시 파일 끝에 추가함
         writeReservationToFile(id, oldReserveInfo, role);
@@ -281,7 +333,7 @@ public class ReserveManager {
         return checker.checkStatus(room, dateString, dayName, startTime);
     }
 
-    // ★ [수정 2] 한글 상태 메시지 변환 (일별 테이블용)
+    // 한글 상태 메시지 변환 (일별 테이블용)
     private static String convertStatusToKorean(String code) {
         switch (code) {
             case "CLASS": return "정규 수업";

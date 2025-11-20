@@ -111,6 +111,9 @@ public class receiveController {
                 .roomNumber(req.getRoomNumber())
                 .date(req.getDate())
                 .day(req.getDay())
+                // [수정] 아래 두 줄을 추가해야 클라이언트가 보낸 목적/인원수가 반영됩니다.
+                .purpose(req.getPurpose()) 
+                .userCount(req.getUserCount())
                 .build();
 
         // 2. ReserveManager에는 details 객체 하나만 전달

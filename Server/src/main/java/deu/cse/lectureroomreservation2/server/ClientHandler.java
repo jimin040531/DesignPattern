@@ -119,7 +119,21 @@ public class ClientHandler implements Runnable {
                         String command = in.readUTF();
 
                         System.out.println(">> 수신 명령: " + command); // 여기 추가
-
+                        
+                        // [신규] 예약 현황 통계 요청 처리
+                        if ("GET_RESERVATION_STATS".equals(command)) {
+                            String room = in.readUTF();
+                            String date = in.readUTF();
+                            String startTime = in.readUTF();
+                            
+                            // ReserveManager에서 통계 가져오기
+                            int[] stats = ReserveManager.getReservationStats(room, date, startTime);
+                            
+                            // 결과 전송 (int 배열: [확정수, 대기수])
+                            out.writeObject(stats);
+                            out.flush();
+                        }
+                        
                         if ("LOGOUT".equalsIgnoreCase(command)) {
                             System.out.println("User has log-out: " + id);
                             break;

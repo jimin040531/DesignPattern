@@ -178,23 +178,38 @@ public class LoginFrame extends javax.swing.JFrame {
         else if (profRadio.isSelected()) role = "P";
         else if (adminRadio.isSelected()) role = "A";
 
-        if (id == null || pw == null || role == null) {
-            javax.swing.JOptionPane.showMessageDialog(this, "해당 항목을 모두 입력하십시오.");
+        if (id.isEmpty() || pw.isEmpty() || role == null) {
+            javax.swing.JOptionPane.showMessageDialog(this, "ID, 비밀번호, 역할을 모두 입력해주세요.");
             return;
         }
 
-        // 2. 대기 알림창 생성
-        final javax.swing.JDialog waitDialog = new javax.swing.JDialog(this, "접속 대기 중", false); // false=다른창 선택가능(여기선 상관없음)
-        waitDialog.setSize(350, 150);
+        // ---------------------------------------------------------
+        // 2. [대기 알림창 UI 생성]
+        // ---------------------------------------------------------
+        final javax.swing.JDialog waitDialog = new javax.swing.JDialog(this, "접속 대기 중...", true); // true = 모달(다른 작업 불가)
+        waitDialog.setSize(400, 200);
         waitDialog.setLocationRelativeTo(this);
-        waitDialog.setDefaultCloseOperation(javax.swing.JDialog.DO_NOTHING_ON_CLOSE); // 닫기 버튼 막기 (강제 대기)
+        waitDialog.setDefaultCloseOperation(javax.swing.JDialog.DO_NOTHING_ON_CLOSE); // X 버튼 눌러도 안 닫히게 막음(강제 대기)
         
-        // 알림창 내부 UI 구성
+        // 대기창 내부 디자인
         javax.swing.JPanel panel = new javax.swing.JPanel(new java.awt.BorderLayout());
-        javax.swing.JLabel msgLabel = new javax.swing.JLabel("<html><center>현재 접속 인원이 많아 대기 중입니다.<br>순서가 되면 자동으로 로그인됩니다.<br>(잠시만 기다려주세요...)</center></html>", javax.swing.SwingConstants.CENTER);
-        msgLabel.setFont(new java.awt.Font("맑은 고딕", 1, 14));
-        panel.add(msgLabel, java.awt.BorderLayout.CENTER);
+        javax.swing.JLabel titleLabel = new javax.swing.JLabel("<html><h2 style='text-align:center;'>⏳ 접속 대기 중...</h2></html>", javax.swing.SwingConstants.CENTER);
+        javax.swing.JLabel descLabel = new javax.swing.JLabel("<html><div style='text-align:center;'>"
+                + "현재 접속 인원이 초과되었습니다.<br>"
+                + "서버에 대기열이 등록되었습니다.<br><br>"
+                + "<b><font color='blue'>빈자리가 생기면 자동으로 로그인됩니다.</font></b><br>"
+                + "(확인 버튼을 누르지 않아도 됩니다)</div></html>", javax.swing.SwingConstants.CENTER);
+        
+         // 취소 버튼 (기다리다 지쳐서 취소하고 싶을 때)
+        javax.swing.JButton cancelBtn = new javax.swing.JButton("대기 취소 / 종료");
+        cancelBtn.addActionListener(e -> System.exit(0)); // 프로그램 종료 (또는 소켓 끊기 구현 가능)
+        
+        panel.add(titleLabel, java.awt.BorderLayout.NORTH);
+        panel.add(descLabel, java.awt.BorderLayout.CENTER);
+        panel.add(cancelBtn, java.awt.BorderLayout.SOUTH);
+        panel.setBorder(javax.swing.BorderFactory.createEmptyBorder(20, 20, 20, 20));
         waitDialog.add(panel);
+
 
         // 사용될 변수들을 final 또는 effectively final로 사용하기 위해 로컬 변수에 할당
         final String finalRole = role;
@@ -203,49 +218,46 @@ public class LoginFrame extends javax.swing.JFrame {
         // 3.별도의 스레드에서 서버 접속 시도
         new Thread(() -> {
             try {
-                // TCP 서버에 접속
+                // (1) TCP  서버 연결 시도
                 deu.cse.lectureroomreservation2.client.Client client = new deu.cse.lectureroomreservation2.client.Client(serverIp, 5000);
+                
+                // (2) 로그인 요청 전송
                 client.sendLoginRequest(id, pw, finalRole);
 
-                // 여기서 대기 발생! (서버가 자리가 날 때까지 응답을 안 줌)
-                // 대기하는 동안 메인 화면은 'waitDialog'를 보여주고 있음
+                // (3) 응답 대기 (여기가 핵심!)
+                // 서버 프록시(Proxy)가 자리가 날 때까지 여기서 응답을 안 줍니다.
+                // 따라서 클라이언트는 이 줄에서 멈춰있게 됩니다. (Blocking)
                 deu.cse.lectureroomreservation2.common.LoginStatus status = client.receiveLoginStatus();
 
-                // 4. 서버 응답이 오면 (자리가 나서 로그인이 처리되면) 실행됨
-                // UI 업데이트는 반드시 EventDispatchThread에서 수행해야 함
+                /// ---------------------------------------------------------
+                // 4. [자동 로그인] 서버 응답이 오면 실행 (자리가 났다는 뜻)
+                // ---------------------------------------------------------
                 javax.swing.SwingUtilities.invokeLater(() -> {
                     waitDialog.dispose(); // 대기 알림창 닫기 (자동)
 
                     if (!status.isLoginSuccess()) {
-                        if ("DUPLICATE".equals(status.getRole())) {
-                            javax.swing.JOptionPane.showMessageDialog(LoginFrame.this, "이미 로그인 중인 계정입니다.");
-                        } else {
-                            javax.swing.JOptionPane.showMessageDialog(LoginFrame.this, "로그인 실패! ID, 비밀번호 또는 역할이 일치하지 않습니다.");
-                        }
+                        // 실패 시 메시지 처리
+                        String msg = "로그인 실패";
+                        if ("DUPLICATE".equals(status.getRole())) msg = "이미 로그인 중인 계정입니다.";
+                        else msg = "ID 또는 비밀번호가 일치하지 않습니다.";
+                        
+                        javax.swing.JOptionPane.showMessageDialog(LoginFrame.this, msg);
                         client.logout();
                         return;
                     }
 
-                    // 로그인 성공 처리 (화면 전환)
+                    // 로그인 성공 -> 메인 화면으로 자동 이동
                     try {
                         switch (status.getRole()) {
                             case "STUDENT" -> {
                                 new StudentMainMenu(id, client).setVisible(true);
-                                // 공지사항 체크는 별도 스레드나 invokeLater 안에서 처리 권장
+                                // 공지사항 확인 (별도 스레드 권장)
                                 new Thread(() -> {
-                                    try {
-                                        client.checkAndShowNotices(null); 
-                                    } catch (Exception e) { e.printStackTrace(); }
+                                    try { client.checkAndShowNotices(null); } catch (Exception e) {}
                                 }).start();
                             }
-                            case "PROFESSOR" ->
-                                new ProfessorMainMenu(id, client).setVisible(true);
-                            case "ADMIN" ->
-                                new AdminMainView(id, client).setVisible(true);
-                            default -> {
-                                javax.swing.JOptionPane.showMessageDialog(LoginFrame.this, "알 수 없는 사용자 유형입니다.");
-                                return;
-                            }
+                            case "PROFESSOR" -> new ProfessorMainMenu(id, client).setVisible(true);
+                            case "ADMIN" -> new AdminMainView(id, client).setVisible(true);
                         }
                         LoginFrame.this.dispose(); // 로그인 창 닫기
                     } catch (Exception e) {

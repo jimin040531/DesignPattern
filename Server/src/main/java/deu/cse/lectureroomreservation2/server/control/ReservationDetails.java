@@ -6,7 +6,7 @@ package deu.cse.lectureroomreservation2.server.control;
  */
 public class ReservationDetails {
 
-    // --- 필수 ---
+    // --- 사용자 확인 용 ---
     private final String id;
     private final String role;
 
@@ -14,17 +14,16 @@ public class ReservationDetails {
     private final String roomNumber;
     private final String date;
     private final String day;
+    private final int userCount;  // 사용 인원
+    private final String purpose; // 사용 목적
 
     // --- '예약 변경'용 ---
     private final String oldReserveInfo;
     private final String newRoomNumber;
     private final String newDate;
     private final String newDay;
-    
-    // (향후 SFR-204, 206에 따라 추가될 필드)
-    // private final int numberOfStudents; // SFR-204
-    // private final String purpose;         // SFR-206
 
+    
     // private 생성자 (Builder를 통해서만 생성)
     private ReservationDetails(Builder builder) {
         this.id = builder.id;
@@ -36,6 +35,10 @@ public class ReservationDetails {
         this.newRoomNumber = builder.newRoomNumber;
         this.newDate = builder.newDate;
         this.newDay = builder.newDay;
+        
+        // 추가
+        this.userCount = builder.userCount;
+        this.purpose = builder.purpose;
     }
 
     // --- Getters ---
@@ -48,7 +51,8 @@ public class ReservationDetails {
     public String getNewRoomNumber() { return newRoomNumber; }
     public String getNewDate() { return newDate; }
     public String getNewDay() { return newDay; }
-
+    public int getUserCount() { return userCount; }
+    public String getPurpose() { return purpose; }
     
     /**
      * The Builder Class
@@ -66,7 +70,11 @@ public class ReservationDetails {
         private String newRoomNumber;
         private String newDate;
         private String newDay;
-
+        
+        // 추가
+        private int userCount = 1; // 기본값 1
+        private String purpose = "-";
+        
         // 필수 파라미터는 Builder 생성자에서 받음
         public Builder(String id, String role) {
             this.id = id;
@@ -110,9 +118,15 @@ public class ReservationDetails {
             return this;
         }
         
-        // --- (향후 SFR-204, 206에 따라 추가될 메서드) ---
-        // public Builder numberOfStudents(int num) { ... }
-        // public Builder purpose(String p) { ... }
+        public Builder userCount(int userCount) {
+            this.userCount = userCount;
+            return this;
+        }
+        
+        public Builder purpose(String purpose) {
+            this.purpose = purpose;
+            return this;
+        }
 
         // build() 메서드
         public ReservationDetails build() {
