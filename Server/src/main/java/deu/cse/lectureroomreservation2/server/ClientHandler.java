@@ -506,7 +506,7 @@ public class ClientHandler implements Runnable, Observer {
                                         result = new ReserveManageResult(deleteRes.getResult(), deleteRes.getReason(), null);
                                     }
                                     
-                                    // ⭐ [팀원 기능 통합] 승인(APPROVE) 및 거절(REJECT) 기능 추가
+                                    // 승인(APPROVE) 및 거절(REJECT) 기능 추가
                                     case "APPROVE" -> {
                                         result = ReserveManager.approveOrReject(
                                             "APPROVE",
@@ -573,6 +573,5 @@ public class ClientHandler implements Runnable, Observer {
             }
         }
     }
-    
-    
+
 }
