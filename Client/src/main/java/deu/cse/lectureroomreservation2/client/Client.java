@@ -18,6 +18,9 @@ import deu.cse.lectureroomreservation2.common.UserResult;
 import java.io.*;
 import java.net.Socket;
 import java.util.List;
+import java.time.LocalDate;
+import java.util.Map;
+import java.util.Set;
 
 /**
  * Client는 강의실 예약 시스템에서 뷰와 관련된 행위를 다룬다. 필요시 Server에 요청하여 필요한 작업을 수행할 수 있다.
@@ -76,12 +79,14 @@ public class Client {
     }
 
     // 예약 요청 처리
-    public synchronized ReserveResult sendReserveRequest(String id, String role, String roomNumber, String date,
-            String day,
-            String notice)
+    public synchronized ReserveResult sendReserveRequest(String id, String role, String roomNumber, 
+            String date, String day, 
+            String purpose, int userCount) // <--- 여기 파라미터가 변경되었습니다!
             throws IOException, ClassNotFoundException {
-        // 예약 요청 객체 생성
-        ReserveRequest req = new ReserveRequest(id, role, roomNumber, date, day, notice);
+        
+        // [수정] 변경된 ReserveRequest 생성자 호출 (7개 파라미터)
+        ReserveRequest req = new ReserveRequest(id, role, roomNumber, date, day, purpose, userCount);
+        
         // 서버에 예약 명령 전송
         out.writeUTF("RESERVE");
         out.flush();
@@ -89,6 +94,32 @@ public class Client {
         out.flush();
         // 서버로부터 결과 수신
         return (ReserveResult) in.readObject();
+    }
+
+    /**
+     * [신규] 특정 강의실/월/시간대에 예약된 날짜(day) 목록을 서버에 요청합니다. (ObjectStream 버전에 맞게 수정됨)
+     */
+    public synchronized List<String> getMonthlyReservedDates(String roomNum, int year, int month, String startTime)
+            throws IOException, ClassNotFoundException {
+
+        // 1. 서버에 보낼 요청 프로토콜 (명령어)
+        out.writeUTF("GET_MONTHLY_RESERVED_DATES");
+        out.flush();
+
+        // 2. 파라미터 전송
+        out.writeUTF(roomNum);
+        out.flush();
+        out.writeInt(year);
+        out.flush();
+        out.writeInt(month);
+        out.flush();
+        out.writeUTF(startTime);
+        out.flush();
+
+        // 3. 서버로부터 Set<Integer> 객체 자체를 수신
+        // (서버는 {3, 5, 10} 같은 Set 객체를 new HashSet<>()으로 만들어
+        //  out.writeObject()로 보내야 합니다.)
+        return (List<String>) in.readObject();
     }
 
     // 최대 예약 시간 체크 요청 처리
@@ -176,8 +207,9 @@ public class Client {
     public synchronized void checkAndShowNotices(javax.swing.JFrame parentFrame) throws IOException {
         while (true) {
             String msgType = in.readUTF();
-            if ("NOTICE_END".equals(msgType))
+            if ("NOTICE_END".equals(msgType)) {
                 break;
+            }
             if ("NOTICE".equals(msgType)) {
                 String noticeText = in.readUTF();
                 javax.swing.JOptionPane.showMessageDialog(parentFrame, noticeText, "공지사항",
@@ -236,6 +268,7 @@ public class Client {
         out.flush();
         return in.readInt();
     }
+
     // 클라이언트에서 사용예시, 응답예시
     /*
      * String reserveInfo = "915 / 2025 / 05 / 21 / 00:00 01:00 / 화요일";
@@ -254,6 +287,7 @@ public class Client {
         out.flush();
         return (List<String>) in.readObject();
     }
+
     // 사용 예시
     /*
      * String reserveInfo = "915 / 2025 / 05 / 21 / 00:00 01:00 / 화요일";
@@ -323,6 +357,71 @@ public class Client {
         return (String) in.readObject();  // 올바른 반환값 타입
     }
 
+    /**
+     * [신규] 건물 목록 조회
+     */
+    public synchronized List<String> getBuildingList() throws IOException, ClassNotFoundException {
+        out.writeUTF("GET_BUILDINGS");
+        out.flush();
+        return (List<String>) in.readObject();
+    }
+
+    /**
+     * [신규] 층 목록 조회
+     */
+    public synchronized List<String> getFloorList(String buildingName) throws IOException, ClassNotFoundException {
+        out.writeUTF("GET_FLOORS");
+        out.flush();
+        out.writeUTF(buildingName);
+        out.flush();
+        return (List<String>) in.readObject();
+    }
+
+    /**
+     * [신규] 강의실 목록 조회 (반환 타입: List<String[]>)
+     */
+    public synchronized List<String[]> getRoomList(String buildingName, String floorName) throws IOException, ClassNotFoundException {
+        out.writeUTF("GET_ROOMS");
+        out.flush();
+        out.writeUTF(buildingName);
+        out.flush();
+        out.writeUTF(floorName);
+        out.flush();
+        return (List<String[]>) in.readObject();
+    }
+
+    /**
+     * [신규] 주별 현황 API 호출
+     */
+    public synchronized Map<String, List<String[]>> getWeeklySchedule(String roomNum, LocalDate monday)
+            throws IOException, ClassNotFoundException {
+
+        out.writeUTF("GET_WEEKLY_SCHEDULE");
+        out.flush();
+        out.writeUTF(roomNum);
+        out.flush();
+        out.writeObject(monday); // LocalDate 객체 전송
+        out.flush();
+
+        return (Map<String, List<String[]>>) in.readObject();
+    }
+
+    /**
+     * [신규] 월별 현황 API 호출
+     */
+    public synchronized Map<Integer, String> getMonthlySchedule(String roomNum, int year, int month)
+            throws IOException, ClassNotFoundException {
+        out.writeUTF("GET_MONTHLY_SCHEDULE");
+        out.flush();
+        out.writeUTF(roomNum);
+        out.flush();
+        out.writeInt(year);
+        out.flush();
+        out.writeInt(month);
+        out.flush();
+        return (Map<Integer, String>) in.readObject();
+    }
+
     // 강의실 조회 state 요청 처리
     public synchronized String getRoomState(String room, String day, String start, String end, String date)
             throws IOException {
@@ -340,6 +439,7 @@ public class Client {
         out.flush();
         return in.readUTF();
     }
+
     // 클라이언트에서 사용예시, 응답예시
     /*
      * String room = "908";
@@ -369,10 +469,39 @@ public class Client {
         for (int i = 0; i < size; i++) {
             String start = in.readUTF();
             String end = in.readUTF();
-            slots.add(new String[] { start, end });
+            slots.add(new String[]{start, end});
         }
         return slots;
     }
+    
+    // ---------------------------------------------------------
+    // 예약 현황 통계 요청 (강의실, 날짜, 시작시간)
+    // ---------------------------------------------------------
+    public synchronized int[] getReservationStats(String room, String date, String startTime) {
+        try {
+            // 1. 서버와 약속된 명령어 전송
+            out.writeUTF("GET_RESERVATION_STATS"); 
+            out.flush();
+
+            // 2. 파라미터 전송 (순서 중요: 방 -> 날짜 -> 시간)
+            out.writeUTF(room);
+            out.flush();
+            out.writeUTF(date);
+            out.flush();
+            out.writeUTF(startTime);
+            out.flush();
+            
+            // 3. 서버로부터 결과 수신 (int배열: [현재인원, 최대인원])
+            // readObject()로 받은 뒤 캐스팅합니다.
+            return (int[]) in.readObject();
+
+        } catch (IOException | ClassNotFoundException e) {
+            e.printStackTrace();
+            // 통신 오류 시 기본값 [0, 0] 반환하여 에러 방지
+            return new int[]{0, 0}; 
+        }
+    }
+
     // 클라이언트에서 사용예시, 응답예시
     /*
      * java.util.List<String[]> slots = client.getRoomSlots(selectedRoom,
@@ -383,8 +512,8 @@ public class Client {
      * // ...
      * }
      */
-
-
+    
+    
     public static void main(String[] args) {
         try {
             Client c = new Client("localhost", 5000);  // 서버 컴퓨터의 IP 주소
@@ -400,3 +529,4 @@ public class Client {
     }
 
 }
+

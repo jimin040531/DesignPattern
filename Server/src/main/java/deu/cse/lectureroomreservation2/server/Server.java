@@ -7,6 +7,8 @@ package deu.cse.lectureroomreservation2.server;
 import deu.cse.lectureroomreservation2.server.control.AutoReserveCleaner;
 import deu.cse.lectureroomreservation2.common.LoginStatus;
 import deu.cse.lectureroomreservation2.server.control.LoginController;
+import deu.cse.lectureroomreservation2.server.control.AuthService;
+import deu.cse.lectureroomreservation2.server.control.QueuedLoginProxy;
 import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
@@ -19,16 +21,17 @@ import java.util.*;
  */
 public class Server {
 
-    private final LoginController controller;
+    private final AuthService controller;
     private static final int MAX_CLIENTS = 3;   // 최대 동시접속 가능 인원 수 3명.
     private final Semaphore connectionLimiter = new Semaphore(MAX_CLIENTS); // 최대 3명까지
 
     private final Set<String> loggedInUsers = Collections.synchronizedSet(new HashSet<>());
 
     public Server() {
-        controller = new LoginController();
+        // LoginController를 프록시로 감싸서 생성
+        controller = new QueuedLoginProxy(new LoginController(), connectionLimiter);
         
-        // 예약 정보 자동 삭제 스레드 시작
+       // 예약 정보 자동 삭제 스레드 시작
         new AutoReserveCleaner().start();
     }
 

@@ -26,23 +26,52 @@ import deu.cse.lectureroomreservation2.common.UserResult;
 import deu.cse.lectureroomreservation2.server.control.TimeTableController;
 import deu.cse.lectureroomreservation2.server.control.UserRequestController;
 import deu.cse.lectureroomreservation2.server.control.ChangePassController;
+import deu.cse.lectureroomreservation2.server.control.BuildingManager;
+import deu.cse.lectureroomreservation2.server.control.ReservationDetails;
+
+// [Observer 패턴] 1. Observer 임포트
+import deu.cse.lectureroomreservation2.server.control.Observer;
+import deu.cse.lectureroomreservation2.server.control.NotificationService;
 
 import java.io.*;
 import java.net.Socket;
+import java.time.LocalDate;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
-public class ClientHandler implements Runnable {
+public class ClientHandler implements Runnable, Observer {
 
     private final Socket socket;
     private final Server server;
-
+    private final BuildingManager buildingManager;
+    
+    // [Observer 패턴] 3. 출력 스트림을 멤버 변수로 승격 (update 메서드에서 쓰기 위해)
+    private ObjectOutputStream out;
+    
     public ClientHandler(Socket socket, Server server) {
         this.socket = socket;
         this.server = server;
+        this.buildingManager = BuildingManager.getInstance();
     }
-
+    
+    // [Observer 패턴] 4. 알림 수신 시 실행될 메서드 구현
+    @Override
+    public void update(String message) {
+        try {
+            if (out != null) {
+                // 클라이언트(Client.java)의 checkAndShowNotices 메서드가 "NOTICE" 헤더를 기다림
+                out.writeUTF("NOTICE");
+                out.flush();
+                out.writeUTF(message);
+                out.flush();
+            }
+        } catch (IOException e) {
+            System.err.println("알림 전송 실패: " + e.getMessage());
+        }
+    }
+    
     @Override
     public void run() {
         boolean acquired = false;
@@ -50,22 +79,15 @@ public class ClientHandler implements Runnable {
 
         try {
             System.out.println("Client Connection request received: " + socket.getInetAddress());
-            ObjectOutputStream out = new ObjectOutputStream(socket.getOutputStream());
+            
+            // 멤버 변수 out 초기화
+            out = new ObjectOutputStream(socket.getOutputStream());
             ObjectInputStream in = new ObjectInputStream(socket.getInputStream());
 
             // 사용자 정보 먼저 받음
             id = in.readUTF();
             String password = in.readUTF();
             String role = in.readUTF();
-
-            // 세마포어 체크는 로그인 정보 받고 나서 수행
-            acquired = server.getConnectionLimiter().tryAcquire();
-            if (!acquired) {
-                System.out.println("Connection refused (Max count exceed): " + id);
-                out.writeObject(new LoginStatus(false, "WAIT", "현재 접속 인원이 가득 찼습니다. 잠시 후 다시 시도해 주세요."));
-                out.flush();
-                return;
-            }
 
             // 중복로그인 체크
             synchronized (server.getLoggedInUsers()) {
@@ -79,9 +101,15 @@ public class ClientHandler implements Runnable {
 
             LoginStatus status = server.requestAuth(id, password, role); // 인증
             if (status.isLoginSuccess()) {
+                acquired = true;
+            }
+            if (status.isLoginSuccess()) {
                 synchronized (server.getLoggedInUsers()) {
                     server.getLoggedInUsers().add(id); // 로그인 성공한 사용자 등록
                 }
+                
+                // [Observer 패턴] 5. 로그인 성공 시 알림 서비스에 등록 (구독 시작)
+                NotificationService.getInstance().registerObserver(id, this);
             }
 
             out.writeObject(status);
@@ -89,7 +117,7 @@ public class ClientHandler implements Runnable {
 
             // 로그인 성공한 경우 명령 수신 루프
             if (status.isLoginSuccess()) {
-                // 공지사항 수신 및 표시
+                // 쌓여있던(오프라인) 공지사항 전송
                 System.out.println("로그인 성공 하여 역할 " + status.getRole() + "를 가집니다.");
                 if ("STUDENT".equals(status.getRole())) {
                     List<String> notices = noticeController.getNotices(id);
@@ -109,7 +137,21 @@ public class ClientHandler implements Runnable {
                         String command = in.readUTF();
 
                         System.out.println(">> 수신 명령: " + command); // 여기 추가
-
+                        
+                        // [신규] 예약 현황 통계 요청 처리
+                        if ("GET_RESERVATION_STATS".equals(command)) {
+                            String room = in.readUTF();
+                            String date = in.readUTF();
+                            String startTime = in.readUTF();
+                            
+                            // ReserveManager에서 통계 가져오기
+                            int[] stats = ReserveManager.getReservationStats(room, date, startTime);
+                            
+                            // 결과 전송 (int 배열: [확정수, 대기수])
+                            out.writeObject(stats);
+                            out.flush();
+                        }
+                        
                         if ("LOGOUT".equalsIgnoreCase(command)) {
                             System.out.println("User has log-out: " + id);
                             break;
@@ -161,13 +203,13 @@ public class ClientHandler implements Runnable {
 
                             if (Objects.isNull(room) && Objects.isNull(date)) {
                                 List<String> reserves = ReserveManager.getReserveInfoById(userid);
-                            out.writeObject(reserves);
-                            out.flush();
+                                out.writeObject(reserves);
+                                out.flush();
                             } else {
                                 List<String> result = ReserveManager.getReserveInfoAdvanced(userid, room, date);
                                 out.writeObject(result);
                                 out.flush();
-                        }
+                            }
                         }
                         // 클라이언트 요청 - 예약 정보로 총 예약자 수 조회 요청 받는 부분
                         if ("COUNT_RESERVE_USERS".equals(command)) {
@@ -193,25 +235,26 @@ public class ClientHandler implements Runnable {
                         }
                         // 클라이언트 요청 - 기존 예약 정보를 새 예약 정보로 변경
                         if ("MODIFY_RESERVE".equals(command)) {
+                            // 1. 파라미터 읽기
                             String userId = in.readUTF();
                             String oldReserveInfo = in.readUTF();
                             String newRoomNumber = in.readUTF();
                             String newDate = in.readUTF();
                             String newDay = in.readUTF();
+                            String giverole = in.readUTF(); // 역할
 
-                            // 1. 기존 예약 취소
-                            ReserveResult cancelResult = ReserveManager.cancelReserve(userId, oldReserveInfo);
-                            if (!cancelResult.getResult()) {
-                                out.writeObject(cancelResult);
-                                out.flush();
-                                continue;
-                            }
-                            // 2. 새 예약 시도 (role은 기존 예약에서 추출하거나, 클라이언트에서 같이 보내도 됨)
-                            // 여기서는 클라이언트에서 role도 같이 보내는 것이 안전하다고 판단
-                            String giverole = in.readUTF();
-                            ReserveResult reserveResult = ReserveManager.reserve(userId, giverole, newRoomNumber,
-                                    newDate,
-                                    newDay);
+                            // 2. [Builder 적용] ReservationDetails 객체 생성
+                            // Note: ReserveManager.updateReserve는 이제 ReservationDetails 객체 하나만 받습니다.
+                            ReservationDetails details = new ReservationDetails.Builder(userId, giverole)
+                                    .oldReserveInfo(oldReserveInfo)
+                                    .newRoomNumber(newRoomNumber)
+                                    .newDate(newDate)
+                                    .newDay(newDay)
+                                    .build();
+
+                            // 3. ReserveManager에는 details 객체 하나만 전달
+                            ReserveResult reserveResult = ReserveManager.updateReserve(details);
+
                             out.writeObject(reserveResult);
                             out.flush();
                         }
@@ -222,6 +265,65 @@ public class ClientHandler implements Runnable {
                             out.writeBoolean(found);
                             out.flush();
                         }
+                        // [신규 API] 건물 목록 요청
+                        if ("GET_BUILDINGS".equals(command)) {
+                            List<String> buildings = buildingManager.getBuildingList();
+                            out.writeObject(buildings);
+                            out.flush();
+                        }
+
+                        // [신규 API] 층 목록 요청
+                        if ("GET_FLOORS".equals(command)) {
+                            String buildingName = in.readUTF();
+                            List<String> floors = buildingManager.getFloorList(buildingName);
+                            out.writeObject(floors);
+                            out.flush();
+                        }
+
+                        // [신규 API] 강의실 목록 요청
+                        if ("GET_ROOMS".equals(command)) {
+                            String buildingName = in.readUTF();
+                            String floorName = in.readUTF();
+                            List<String[]> rooms = buildingManager.getRoomList(buildingName, floorName);
+                            out.writeObject(rooms);
+                            out.flush();
+                        }
+
+                        // 클라이언트가 이 요청을 보내고 오류가 났으므로, 응답을 추가하여 연결을 유지합니다.
+                        if ("GET_WEEKLY_SCHEDULE".equals(command)) {
+                            String roomNum = in.readUTF();
+                            // 클라이언트가 LocalDate 객체를 보내는지 확인 (주간 현황은 보통 주 시작 날짜를 보냅니다)
+                            try {
+                                @SuppressWarnings("unchecked")
+                                LocalDate monday = (LocalDate) in.readObject(); // 주 시작일 (LocalDate)
+                                // ReserveManager.getWeeklySchedule(roomNum, monday) 호출 (ClassCastException 방지 위해 Map 전송)
+                                Map<String, List<String[]>> weeklySchedule = ReserveManager.getWeeklySchedule(roomNum, monday);
+                                out.writeObject(weeklySchedule);
+                            } catch (Exception e) {
+                                // 파라미터가 잘못되거나 ReserveManager의 메서드가 없으면 빈 Map 응답
+                                System.err.println("GET_WEEKLY_SCHEDULE 처리 중 오류: " + e.getMessage());
+                                out.writeObject(new HashMap<String, List<String[]>>());
+                            }
+                            out.flush();
+                        }
+
+                        // "월별 현황 조회" 요청 처리
+                        if ("GET_MONTHLY_STATUS".equals(command) || "GET_MONTHLY_RESERVED_DATES".equals(command)) { // <-- 명령 추가
+                            System.out.println(">> 월별 현황 조회 명령 수신됨: " + command);
+
+                            // 클라이언트가 보내는 파라미터는 Room, Year, Month 순서여야 합니다.
+                            String room = in.readUTF();
+                            int year = in.readInt(); // 이 부분에서 int 대신 String(915)을 읽으려다 오류날 수 있음
+                            int month = in.readInt();
+                            String startTime = in.readUTF();
+
+                            // 템플릿 메서드 호출: "월별로 예약 상태를 조회한다"
+                            List<String> result = ReserveManager.getReservationStatusForMonth(room, year, month, startTime);
+
+                            out.writeObject(result);
+                            out.flush();
+                        }
+
                         // 클라이언트 요청 - 강의실 조회 state 요청 받는 부분
                         if ("GET_ROOM_STATE".equals(command)) {
                             String room = in.readUTF();
@@ -286,7 +388,8 @@ public class ClientHandler implements Runnable {
                                     result = new ScheduleResult(updated, updated ? "수정 성공" : "수정 실패", null);
                                 }
 
-                                default -> result = new ScheduleResult(false, "알 수 없는 명령입니다", null);
+                                default ->
+                                    result = new ScheduleResult(false, "알 수 없는 명령입니다", null);
                             }
 
                             // 처리 결과를 클라이언트로 전송
@@ -308,26 +411,29 @@ public class ClientHandler implements Runnable {
 
                                 if (null == cmd) {
                                     result = new UserResult(false, "알 수 없는 사용자 명령입니다", null);
-                                } else switch (cmd) {
-                                    case "ADD" -> {
-                                        try {
-                                            List<String[]> added = controller.saveUserAndGetSingleUser(
-                                                    new String[]{req.getRole(), req.getName(), req.getId(), req.getPassword()}
-                                            );
-                                            result = new UserResult(true, "사용자 등록 성공", added);
-                                        } catch (Exception e) {
-                                            result = new UserResult(false, "등록 실패: " + e.getMessage(), null);
+                                } else {
+                                    switch (cmd) {
+                                        case "ADD" -> {
+                                            try {
+                                                List<String[]> added = controller.saveUserAndGetSingleUser(
+                                                        new String[]{req.getRole(), req.getName(), req.getId(), req.getPassword()}
+                                                );
+                                                result = new UserResult(true, "사용자 등록 성공", added);
+                                            } catch (Exception e) {
+                                                result = new UserResult(false, "등록 실패: " + e.getMessage(), null);
+                                            }
                                         }
+                                        case "DELETE" -> {
+                                            boolean deleted = controller.deleteUser(req.getRole(), req.getId());
+                                            result = new UserResult(deleted, deleted ? "사용자 삭제 성공" : "삭제 실패", null);
+                                        }
+                                        case "SEARCH" -> {
+                                            List<String[]> users = controller.handleSearchRequest(req.getRole(), req.getNameFilter());
+                                            result = new UserResult(true, "사용자 검색 성공", users);
+                                        }
+                                        default ->
+                                            result = new UserResult(false, "알 수 없는 사용자 명령입니다", null);
                                     }
-                                    case "DELETE" -> {
-                                        boolean deleted = controller.deleteUser(req.getRole(), req.getId());
-                                        result = new UserResult(deleted, deleted ? "사용자 삭제 성공" : "삭제 실패", null);
-                                    }
-                                    case "SEARCH" -> {
-                                        List<String[]> users = controller.handleSearchRequest(req.getRole(), req.getNameFilter());
-                                        result = new UserResult(true, "사용자 검색 성공", users);
-                                    }
-                                    default -> result = new UserResult(false, "알 수 없는 사용자 명령입니다", null);
                                 }
 
                                 // 3. 결과 전송
@@ -376,19 +482,20 @@ public class ClientHandler implements Runnable {
                                 String cmd = req.getCommand();
 
                                 switch (cmd) {
-                                    case "SEARCH" -> result = ReserveManager.searchUserAndReservations(
+                                    case "SEARCH" ->
+                                        result = ReserveManager.searchUserAndReservations(
                                                 req.getUserId(), req.getRoom(), req.getDate()
                                         );
 
                                     case "UPDATE" -> {
-                                        ReserveResult updateRes = ReserveManager.updateReserve(
-                                                req.getUserId(),
-                                                req.getRole(),
-                                                req.getOldReserveInfo(),
-                                                req.getNewRoom(),
-                                                req.getNewDate(),
-                                                req.getNewDay()
-                                        );
+                                        // [수정] Builder 패턴 적용
+                                        ReservationDetails details = new ReservationDetails.Builder(req.getUserId(), req.getRole())
+                                                .oldReserveInfo(req.getOldReserveInfo())
+                                                .newRoomNumber(req.getNewRoom())
+                                                .newDate(req.getNewDate())
+                                                .newDay(req.getNewDay())
+                                                .build();
+                                        ReserveResult updateRes = ReserveManager.updateReserve(details);
                                         result = new ReserveManageResult(updateRes.getResult(), updateRes.getReason(), null);
                                     }
 
@@ -399,7 +506,8 @@ public class ClientHandler implements Runnable {
                                         result = new ReserveManageResult(deleteRes.getResult(), deleteRes.getReason(), null);
                                     }
 
-                                    default -> result = new ReserveManageResult(false, "알 수 없는 명령입니다", null);
+                                    default ->
+                                        result = new ReserveManageResult(false, "알 수 없는 명령입니다", null);
                                 }
 
                                 // 결과 전송 (SEARCH / UPDATE / DELETE)
@@ -434,6 +542,9 @@ public class ClientHandler implements Runnable {
                 synchronized (server.getLoggedInUsers()) {
                     server.getLoggedInUsers().remove(id); // 로그아웃 처리
                 }
+                
+                //연결 종료시 알림 구독 해지
+                NotificationService.getInstance().removeObserver(id);
             }
 
             try {
@@ -443,20 +554,5 @@ public class ClientHandler implements Runnable {
             }
         }
     }
-    /*
-     * private void handleStudent(ObjectInputStream in, ObjectOutputStream out,
-     * String id) {
-     * System.out.println("학생 기능 처리: " + id);
-     * }
-     * 
-     * private void handleProfessor(ObjectInputStream in, ObjectOutputStream out,
-     * String id) {
-     * System.out.println("교수 기능 처리: " + id);
-     * }
-     * 
-     * private void handleAdmin(ObjectInputStream in, ObjectOutputStream out, String
-     * id) {
-     * System.out.println("관리자 기능 처리: " + id);
-     * }
-     */
+
 }

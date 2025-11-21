@@ -42,7 +42,6 @@
               <EmptySpace pref="37" max="32767" attributes="0"/>
               <Group type="103" groupAlignment="1" attributes="0">
                   <Component id="resev_check" alignment="1" min="-2" pref="234" max="-2" attributes="0"/>
-                  <Component id="quick_booking" alignment="1" min="-2" pref="234" max="-2" attributes="0"/>
                   <Component id="reserv_time_check" alignment="1" min="-2" pref="235" max="-2" attributes="0"/>
               </Group>
               <EmptySpace min="-2" pref="33" max="-2" attributes="0"/>
@@ -56,9 +55,7 @@
               <Component id="jLabel1" min="-2" pref="49" max="-2" attributes="0"/>
               <EmptySpace min="-2" pref="60" max="-2" attributes="0"/>
               <Component id="reserv_time_check" min="-2" pref="50" max="-2" attributes="0"/>
-              <EmptySpace min="-2" pref="33" max="-2" attributes="0"/>
-              <Component id="quick_booking" min="-2" pref="50" max="-2" attributes="0"/>
-              <EmptySpace min="-2" pref="33" max="-2" attributes="0"/>
+              <EmptySpace min="-2" pref="116" max="-2" attributes="0"/>
               <Component id="resev_check" min="-2" pref="50" max="-2" attributes="0"/>
               <EmptySpace pref="60" max="32767" attributes="0"/>
               <Group type="103" groupAlignment="3" attributes="0">
@@ -108,17 +105,6 @@
       </Properties>
       <Events>
         <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="reserv_time_checkActionPerformed"/>
-      </Events>
-    </Component>
-    <Component class="javax.swing.JButton" name="quick_booking">
-      <Properties>
-        <Property name="font" type="java.awt.Font" editor="org.netbeans.beaninfo.editors.FontEditor">
-          <Font name="&#xb9d1;&#xc740; &#xace0;&#xb515;" size="18" style="1"/>
-        </Property>
-        <Property name="text" type="java.lang.String" value="&#xbe60;&#xb978; &#xc608;&#xc57d;"/>
-      </Properties>
-      <Events>
-        <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="quick_bookingActionPerformed"/>
       </Events>
     </Component>
     <Component class="javax.swing.JButton" name="prof_pass_change">

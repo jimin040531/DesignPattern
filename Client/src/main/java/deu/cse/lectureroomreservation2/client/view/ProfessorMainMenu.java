@@ -51,7 +51,6 @@ public class ProfessorMainMenu extends javax.swing.JFrame {
         resev_check = new javax.swing.JButton();
         prof_LogOut = new javax.swing.JButton();
         reserv_time_check = new javax.swing.JButton();
-        quick_booking = new javax.swing.JButton();
         prof_pass_change = new javax.swing.JButton();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
@@ -83,14 +82,6 @@ public class ProfessorMainMenu extends javax.swing.JFrame {
             }
         });
 
-        quick_booking.setFont(new java.awt.Font("맑은 고딕", 1, 18)); // NOI18N
-        quick_booking.setText("빠른 예약");
-        quick_booking.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                quick_bookingActionPerformed(evt);
-            }
-        });
-
         prof_pass_change.setText("비밀번호 변경");
         prof_pass_change.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
@@ -117,7 +108,6 @@ public class ProfessorMainMenu extends javax.swing.JFrame {
                 .addContainerGap(37, Short.MAX_VALUE)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
                     .addComponent(resev_check, javax.swing.GroupLayout.PREFERRED_SIZE, 234, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(quick_booking, javax.swing.GroupLayout.PREFERRED_SIZE, 234, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(reserv_time_check, javax.swing.GroupLayout.PREFERRED_SIZE, 235, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addGap(33, 33, 33))
         );
@@ -128,9 +118,7 @@ public class ProfessorMainMenu extends javax.swing.JFrame {
                 .addComponent(jLabel1, javax.swing.GroupLayout.PREFERRED_SIZE, 49, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addGap(60, 60, 60)
                 .addComponent(reserv_time_check, javax.swing.GroupLayout.PREFERRED_SIZE, 50, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addGap(33, 33, 33)
-                .addComponent(quick_booking, javax.swing.GroupLayout.PREFERRED_SIZE, 50, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addGap(33, 33, 33)
+                .addGap(116, 116, 116)
                 .addComponent(resev_check, javax.swing.GroupLayout.PREFERRED_SIZE, 50, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 60, Short.MAX_VALUE)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
@@ -171,13 +159,6 @@ public class ProfessorMainMenu extends javax.swing.JFrame {
         vroom.setVisible(true);
         this.dispose();
     }//GEN-LAST:event_reserv_time_checkActionPerformed
-
-    private void quick_bookingActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_quick_bookingActionPerformed
-        // TODO add your handling code here:
-        QuickViewRoom qvroom = new QuickViewRoom(client, userId, "P");
-        qvroom.setVisible(true);
-        this.dispose();
-    }//GEN-LAST:event_quick_bookingActionPerformed
 
     private void resev_checkActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_resev_checkActionPerformed
         // TODO add your handling code here:
@@ -228,7 +209,6 @@ public class ProfessorMainMenu extends javax.swing.JFrame {
     private javax.swing.JLabel jLabel1;
     private javax.swing.JButton prof_LogOut;
     private javax.swing.JButton prof_pass_change;
-    private javax.swing.JButton quick_booking;
     private javax.swing.JButton reserv_time_check;
     private javax.swing.JButton resev_check;
     // End of variables declaration//GEN-END:variables

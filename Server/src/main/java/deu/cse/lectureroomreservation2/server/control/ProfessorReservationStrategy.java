@@ -1,0 +1,111 @@
+package deu.cse.lectureroomreservation2.server.control;
+
+import deu.cse.lectureroomreservation2.common.ReserveResult;
+import deu.cse.lectureroomreservation2.server.model.Notification;
+import deu.cse.lectureroomreservation2.server.model.Reservation;
+import deu.cse.lectureroomreservation2.server.model.ReservationIterator;
+import java.util.List;
+
+/**
+ * Strategy Pattern: 교수 예약 전략 (SFR-208) [적용된 패턴] 1. Builder: 알림 객체 생성 2.
+ * Iterator: 학생 예약 탐색 3. Observer: 알림 전송
+ */
+public class ProfessorReservationStrategy implements ReservationStrategy {
+
+    // [Builder Pattern] 4. Client가 AbstractBuilder를 사용
+    private NotificationBuilder notificationBuilder;
+
+    public ProfessorReservationStrategy() {
+        // [Builder Pattern] 3. 구상 빌더 주입
+        this.notificationBuilder = new StudentCancellationBuilder();
+    }
+
+    @Override
+    public ReserveResult execute(ReservationDetails details) {
+
+        String profId = details.getId();
+        String room = details.getRoomNumber();
+        String date = details.getDate(); // "yyyy / MM / dd / HH:mm HH:mm"
+        String day = details.getDay();
+
+        // 1. 날짜 및 시간 파싱
+        String[] tokens = date.split("/");
+        // "2025 / 06 / 03" 형태로 변환 (공백 제거)
+        String dateOnly = tokens[0].trim() + "/" + tokens[1].trim() + "/" + tokens[2].trim();
+
+        String[] times = tokens[3].trim().split(" ");
+        String startTime = times[0];
+        String endTime = times[1];
+
+        // 2. 포맷팅된 예약 문자열 생성
+        String newReserve = ReserveManager.makeReserveInfo(room, dateOnly, day);
+
+        // 3. 다른 교수 예약 중복 확인 (기존 로직 유지)
+        if (ReserveManager.isSlotTakenByOtherProfessor(room, dateOnly, startTime, profId)) {
+            return new ReserveResult(false, "이미 다른 교수가 해당 시간에 예약했습니다.");
+        }
+
+        // ============================================================
+        // [Iterator Pattern] 겹치는 학생 예약 탐색 및 취소
+        // ============================================================
+        // 1. 전체 예약 데이터 가져오기
+        List<String> allLines = ReserveManager.getAllReservations();
+
+        // [Iterator Question 1] Aggregate 생성 (컬렉션 은닉)
+        ReservationAggregate reservationList = new StudentReservationList(allLines);
+
+        // [Iterator Question 2] Iterator 획득
+        ReservationIterator iterator = reservationList.iterator();
+
+        // [Iterator Question 3] Iterator를 사용하여 순회
+        while (iterator.hasNext()) {
+            Reservation res = iterator.next();
+
+            // 조건: 같은 방, 같은 날짜, 같은 시작 시간이고 '학생' 예약인 경우
+            // (교수는 3시간 예약 가능하지만, 여기선 단순화를 위해 시작 시간이 같은 경우만 처리하거나
+            //  필요하면 시간대 포함 여부 로직을 추가할 수 있음. 일단 '시작 시간 일치'로 구현)
+            if (res.getRoom().equals(room)
+                    && res.getDate().equals(dateOnly)
+                    && res.getStart().equals(startTime)
+                    && res.isValidStudentReservation()) {
+
+                // -> 학생 예약 취소 실행
+                ReserveManager.cancelReserve(res.getUserId(), res.getRawLine());
+                System.out.println(">> [교수 예약 권한] 학생 예약 취소됨: " + res.getUserId());
+
+                // ============================================================
+                // [Builder Pattern] 알림 객체 생성 (복잡한 객체 조립)
+                // ============================================================
+                notificationBuilder.createNewNotification();
+                notificationBuilder.buildRecipientInfo(res.getUserId(), "S");
+                notificationBuilder.buildMessageContent(room, dateOnly, startTime);
+                notificationBuilder.buildPriority();
+
+                // 완성된 알림 객체 가져오기
+                Notification notification = notificationBuilder.getNotification();
+
+                //디버그: 알림이 정상 생성되었는지 서버 콘솔에서 확인
+                System.out.println(">> [DEBUG] 취소 알림 생성됨: " + notification.getFormattedMessage());
+                System.out.println(">> [DEBUG] 대상 사용자 ID: " + notification.getTargetUserId());
+
+                // ============================================================
+                // [Observer Pattern] 알림 전송 (로그인 여부에 따라 자동 처리)
+                // ============================================================
+                NotificationService.getInstance().notifyObserver(
+                        notification.getTargetUserId(),
+                        notification.getFormattedMessage()
+                );
+            }
+        }
+
+        // 4. 교수 예약 확정 (대기 없이 바로 APPROVED)
+        // 포맷: 건물,강의실,날짜,요일,시작,끝,ID,P,목적,인원(0),APPROVED,-
+        String building = BuildingManager.getInstance().getBuildingName(room);
+        String csvLine = String.format("%s,%s,%s,%s,%s,%s,%s,%s,%s,%d,%s,%s",
+                building, room, dateOnly, day, startTime, endTime,
+                profId, "P", details.getPurpose(), details.getUserCount(), "APPROVED", "-"
+        );
+
+        return ReserveManager.writeReservationToFile(profId, csvLine, "P");
+    }
+}
