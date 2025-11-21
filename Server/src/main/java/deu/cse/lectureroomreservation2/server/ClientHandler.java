@@ -29,6 +29,10 @@ import deu.cse.lectureroomreservation2.server.control.ChangePassController;
 import deu.cse.lectureroomreservation2.server.control.BuildingManager;
 import deu.cse.lectureroomreservation2.server.control.ReservationDetails;
 
+// [Observer 패턴] 1. Observer 임포트
+import deu.cse.lectureroomreservation2.server.control.Observer;
+import deu.cse.lectureroomreservation2.server.control.NotificationService;
+
 import java.io.*;
 import java.net.Socket;
 import java.time.LocalDate;
@@ -37,19 +41,37 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
-public class ClientHandler implements Runnable {
+public class ClientHandler implements Runnable, Observer {
 
     private final Socket socket;
     private final Server server;
     private final BuildingManager buildingManager;
-
+    
+    // [Observer 패턴] 3. 출력 스트림을 멤버 변수로 승격 (update 메서드에서 쓰기 위해)
+    private ObjectOutputStream out;
+    
     public ClientHandler(Socket socket, Server server) {
         this.socket = socket;
         this.server = server;
         this.buildingManager = BuildingManager.getInstance();
-
     }
-
+    
+    // [Observer 패턴] 4. 알림 수신 시 실행될 메서드 구현
+    @Override
+    public void update(String message) {
+        try {
+            if (out != null) {
+                // 클라이언트(Client.java)의 checkAndShowNotices 메서드가 "NOTICE" 헤더를 기다림
+                out.writeUTF("NOTICE");
+                out.flush();
+                out.writeUTF(message);
+                out.flush();
+            }
+        } catch (IOException e) {
+            System.err.println("알림 전송 실패: " + e.getMessage());
+        }
+    }
+    
     @Override
     public void run() {
         boolean acquired = false;
@@ -57,7 +79,9 @@ public class ClientHandler implements Runnable {
 
         try {
             System.out.println("Client Connection request received: " + socket.getInetAddress());
-            ObjectOutputStream out = new ObjectOutputStream(socket.getOutputStream());
+            
+            // 멤버 변수 out 초기화
+            out = new ObjectOutputStream(socket.getOutputStream());
             ObjectInputStream in = new ObjectInputStream(socket.getInputStream());
 
             // 사용자 정보 먼저 받음
@@ -83,6 +107,9 @@ public class ClientHandler implements Runnable {
                 synchronized (server.getLoggedInUsers()) {
                     server.getLoggedInUsers().add(id); // 로그인 성공한 사용자 등록
                 }
+                
+                // [Observer 패턴] 5. 로그인 성공 시 알림 서비스에 등록 (구독 시작)
+                NotificationService.getInstance().registerObserver(id, this);
             }
 
             out.writeObject(status);
@@ -90,7 +117,7 @@ public class ClientHandler implements Runnable {
 
             // 로그인 성공한 경우 명령 수신 루프
             if (status.isLoginSuccess()) {
-                // 공지사항 수신 및 표시
+                // 쌓여있던(오프라인) 공지사항 전송
                 System.out.println("로그인 성공 하여 역할 " + status.getRole() + "를 가집니다.");
                 if ("STUDENT".equals(status.getRole())) {
                     List<String> notices = noticeController.getNotices(id);
@@ -479,6 +506,7 @@ public class ClientHandler implements Runnable {
                                         result = new ReserveManageResult(deleteRes.getResult(), deleteRes.getReason(), null);
                                     }
                                     
+                                    // ⭐ [팀원 기능 통합] 승인(APPROVE) 및 거절(REJECT) 기능 추가
                                     case "APPROVE" -> {
                                         result = ReserveManager.approveOrReject(
                                             "APPROVE",
@@ -496,8 +524,7 @@ public class ClientHandler implements Runnable {
                                             req.getReserveInfo()
                                         );
                                     }
-
-
+                                    
                                     default ->
                                         result = new ReserveManageResult(false, "알 수 없는 명령입니다", null);
                                 }
@@ -534,6 +561,9 @@ public class ClientHandler implements Runnable {
                 synchronized (server.getLoggedInUsers()) {
                     server.getLoggedInUsers().remove(id); // 로그아웃 처리
                 }
+                
+                //연결 종료시 알림 구독 해지
+                NotificationService.getInstance().removeObserver(id);
             }
 
             try {
@@ -543,5 +573,6 @@ public class ClientHandler implements Runnable {
             }
         }
     }
-
+    
+    
 }

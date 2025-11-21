@@ -512,7 +512,8 @@ public class Client {
      * // ...
      * }
      */
-
+    
+    
     public static void main(String[] args) {
         try {
             Client c = new Client("localhost", 5000);  // 서버 컴퓨터의 IP 주소
@@ -528,3 +529,4 @@ public class Client {
     }
 
 }
+

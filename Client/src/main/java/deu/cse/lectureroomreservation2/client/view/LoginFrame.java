@@ -248,6 +248,7 @@ public class LoginFrame extends javax.swing.JFrame {
 
                     // 로그인 성공 -> 메인 화면으로 자동 이동
                     try {
+                        
                         switch (status.getRole()) {
                             case "STUDENT" -> {
                                 new StudentMainMenu(id, client).setVisible(true);
