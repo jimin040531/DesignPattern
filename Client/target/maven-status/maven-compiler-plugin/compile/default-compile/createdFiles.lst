@@ -7,6 +7,7 @@ deu\cse\lectureroomreservation2\client\view\AdminMainView$2.class
 deu\cse\lectureroomreservation2\client\view\RoomScheduleManagementView$3.class
 deu\cse\lectureroomreservation2\client\view\UserManagementView$7.class
 deu\cse\lectureroomreservation2\client\view\LoginFrame$3.class
+deu\cse\lectureroomreservation2\client\view\ReservationHistoryView$8.class
 deu\cse\lectureroomreservation2\common\CheckMaxTimeRequest.class
 deu\cse\lectureroomreservation2\client\control\RoomController$5.class
 deu\cse\lectureroomreservation2\client\view\LoginFrame.class
@@ -97,6 +98,7 @@ deu\cse\lectureroomreservation2\client\view\ChangePassView$1.class
 deu\cse\lectureroomreservation2\client\view\RoomScheduleManagementView$2.class
 deu\cse\lectureroomreservation2\client\view\RoomScheduleManagementView$9.class
 deu\cse\lectureroomreservation2\client\view\UserManagementView$6.class
+deu\cse\lectureroomreservation2\client\view\ReservationHistoryView$9.class
 deu\cse\lectureroomreservation2\client\view\ReservationHistoryView$2.class
 deu\cse\lectureroomreservation2\client\view\MyReservationView$1.class
 deu\cse\lectureroomreservation2\common\ReserveManageRequest.class

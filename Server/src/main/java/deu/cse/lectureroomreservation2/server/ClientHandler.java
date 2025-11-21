@@ -505,7 +505,26 @@ public class ClientHandler implements Runnable, Observer {
                                         );
                                         result = new ReserveManageResult(deleteRes.getResult(), deleteRes.getReason(), null);
                                     }
+                                    
+                                    // ⭐ [팀원 기능 통합] 승인(APPROVE) 및 거절(REJECT) 기능 추가
+                                    case "APPROVE" -> {
+                                        result = ReserveManager.approveOrReject(
+                                            "APPROVE",
+                                            req.getUserId(),
+                                            req.getOldReserveInfo(),
+                                            null
+                                        );
+                                    }
 
+                                    case "REJECT" -> {
+                                        result = ReserveManager.approveOrReject(
+                                            "REJECT",
+                                            req.getUserId(),
+                                            req.getOldReserveInfo(),
+                                            req.getReserveInfo()
+                                        );
+                                    }
+                                    
                                     default ->
                                         result = new ReserveManageResult(false, "알 수 없는 명령입니다", null);
                                 }
@@ -554,5 +573,6 @@ public class ClientHandler implements Runnable, Observer {
             }
         }
     }
-
+    
+    
 }
