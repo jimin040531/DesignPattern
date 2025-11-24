@@ -42,7 +42,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.ArrayList;
 
-public class ClientHandler implements Runnable, Observer { // Observer 인터페이스 추가
+public class ClientHandler implements Runnable {
 
     private final Socket socket;
     private final Server server;
@@ -50,7 +50,7 @@ public class ClientHandler implements Runnable, Observer { // Observer 인터페
 
     // [Observer 패턴] 3. 출력 스트림을 멤버 변수로 승격 (update 메서드에서 쓰기 위해)
     private ObjectOutputStream out;
-
+    
     public ClientHandler(Socket socket, Server server) {
         this.socket = socket;
         this.server = server;
@@ -80,7 +80,7 @@ public class ClientHandler implements Runnable, Observer { // Observer 인터페
 
         try {
             System.out.println("Client Connection request received: " + socket.getInetAddress());
-
+            
             // 멤버 변수 out 초기화
             out = new ObjectOutputStream(socket.getOutputStream());
             ObjectInputStream in = new ObjectInputStream(socket.getInputStream());
@@ -108,7 +108,7 @@ public class ClientHandler implements Runnable, Observer { // Observer 인터페
                 synchronized (server.getLoggedInUsers()) {
                     server.getLoggedInUsers().add(id); // 로그인 성공한 사용자 등록
                 }
-
+                
                 // [Observer 패턴] 5. 로그인 성공 시 알림 서비스에 등록 (구독 시작)
                 NotificationService.getInstance().registerObserver(id, this);
             }
@@ -144,10 +144,10 @@ public class ClientHandler implements Runnable, Observer { // Observer 인터페
                             String room = in.readUTF();
                             String date = in.readUTF();
                             String startTime = in.readUTF();
-
+                            
                             // ReserveManager에서 통계 가져오기
                             int[] stats = ReserveManager.getReservationStats(room, date, startTime);
-
+                            
                             // 결과 전송 (int 배열: [확정수, 대기수])
                             out.writeObject(stats);
                             out.flush();
@@ -511,7 +511,7 @@ public class ClientHandler implements Runnable, Observer { // Observer 인터페
                         }
 
                         if ("RESERVE_MANAGE".equals(command)) {
-
+                                
                             System.out.println(">> RESERVE_MANAGE 명령 수신됨");
 
                             try {
@@ -545,25 +545,30 @@ public class ClientHandler implements Runnable, Observer { // Observer 인터페
                                         );
                                         result = new ReserveManageResult(deleteRes.getResult(), deleteRes.getReason(), null);
                                     }
-                                    
+
+                                    default ->
+                                        result = new ReserveManageResult(false, "알 수 없는 명령입니다", null);
+                                }
+
+                                // 승인(APPROVE) 및 거절(REJECT) 기능 추가
                                     case "APPROVE" -> {
                                         result = ReserveManager.approveOrReject(
-                                                "APPROVE",
-                                                req.getUserId(),
-                                                req.getOldReserveInfo(),
-                                                null
+                                            "APPROVE",
+                                            req.getUserId(),
+                                            req.getOldReserveInfo(),
+                                            null
                                         );
                                     }
 
                                     case "REJECT" -> {
                                         result = ReserveManager.approveOrReject(
-                                                "REJECT",
-                                                req.getUserId(),
-                                                req.getOldReserveInfo(),
-                                                req.getReserveInfo()
+                                            "REJECT",
+                                            req.getUserId(),
+                                            req.getOldReserveInfo(),
+                                            req.getReserveInfo()
                                         );
                                     }
-
+                                    
                                     default ->
                                         result = new ReserveManageResult(false, "알 수 없는 명령입니다", null);
                                 }
@@ -582,13 +587,13 @@ public class ClientHandler implements Runnable, Observer { // Observer 인터페
                         }
 
                         // ===========================
-                        // 📁 강의실 시간표 백업 요청
+                        //  📁 강의실 시간표 백업 요청
                         // ===========================
                         if ("SCHEDULE_BACKUP".equals(command)) {
                             System.out.println(">> SCHEDULE_BACKUP 명령 수신됨");
 
                             // 클라이언트에서 보낸 백업 파일 이름 받기
-                            String backupName = in.readUTF();    // 예: "ScheduleInfo_backup.txt"
+                            String backupName = in.readUTF();   // 예: "ScheduleInfo_backup.txt"
 
                             TimeTableController controller = new TimeTableController();
                             boolean ok = controller.backupSchedule(backupName);
@@ -603,13 +608,13 @@ public class ClientHandler implements Runnable, Observer { // Observer 인터페
                         }
 
                         // ===========================
-                        // 🔄 강의실 시간표 복원 요청
+                        //  🔄 강의실 시간표 복원 요청
                         // ===========================
                         if ("SCHEDULE_RESTORE".equals(command)) {
                             System.out.println(">> SCHEDULE_RESTORE 명령 수신됨");
 
                             // 클라이언트에서 보낸 백업 파일 이름 받기
-                            String backupName = in.readUTF();    // 예: "ScheduleInfo_backup.txt"
+                            String backupName = in.readUTF();   // 예: "ScheduleInfo_backup.txt"
 
                             TimeTableController controller = new TimeTableController();
                             boolean ok = controller.restoreSchedule(backupName);
@@ -622,18 +627,16 @@ public class ClientHandler implements Runnable, Observer { // Observer 인터페
                             out.writeObject(result);
                             out.flush();
                         }
-                    } catch (IOException e) { // 이 catch 블록이 while(true) 안의 try 블록을 닫습니다.
+
+                    } catch (IOException e) {
                         System.out.println("Client Connection Error or Terminated. " + e.getMessage());
                         e.printStackTrace();
                         break;
-                    } catch (ClassNotFoundException e) { // ObjectInputStream.readObject() 호출에 대한 catch 추가
-                        System.err.println("Deserialization Error: " + e.getMessage());
-                        e.printStackTrace();
                     }
                 }
             }
 
-        } catch (Exception e) { // run() 메서드 전체를 감싸는 try 블록의 catch
+        } catch (Exception e) {
             e.printStackTrace();
         } finally {
             if (acquired) {
@@ -653,4 +656,20 @@ public class ClientHandler implements Runnable, Observer { // Observer 인터페
             }
         }
     }
+    /*
+     * private void handleStudent(ObjectInputStream in, ObjectOutputStream out,
+     * String id) {
+     * System.out.println("학생 기능 처리: " + id);
+     * }
+     * 
+     * private void handleProfessor(ObjectInputStream in, ObjectOutputStream out,
+     * String id) {
+     * System.out.println("교수 기능 처리: " + id);
+     * }
+     * 
+     * private void handleAdmin(ObjectInputStream in, ObjectOutputStream out, String
+     * id) {
+     * System.out.println("관리자 기능 처리: " + id);
+     * }
+     */
 }
