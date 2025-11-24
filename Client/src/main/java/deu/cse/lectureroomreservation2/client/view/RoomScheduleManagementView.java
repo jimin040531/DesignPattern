@@ -45,7 +45,7 @@ public class RoomScheduleManagementView extends javax.swing.JFrame {
 
         // (4) 강의실 선택시 시간표 자동 로드
         loadTimetableOnRoomSelect();
-      
+
         // 🔹 기본 전략: 1학기 전략
         this.semesterStrategy = new FirstSemesterStrategy();
 
@@ -292,24 +292,23 @@ public class RoomScheduleManagementView extends javax.swing.JFrame {
     }
 
     private void validateTimeSelection() {
-    String start = (String) cmbStartTime.getSelectedItem();
-    String end = (String) cmbEndTime.getSelectedItem();
+        String start = (String) cmbStartTime.getSelectedItem();
+        String end = (String) cmbEndTime.getSelectedItem();
 
-    // 전략이 아직 설정 안 됐을 경우를 대비한 방어 코드
-    if (semesterStrategy == null) {
-        semesterStrategy = new FirstSemesterStrategy();
+        // 전략이 아직 설정 안 됐을 경우를 대비한 방어 코드
+        if (semesterStrategy == null) {
+            semesterStrategy = new FirstSemesterStrategy();
+        }
+
+        // 🔹 전략에게 검증을 위임
+        String errorMessage = semesterStrategy.validateTimeRange(start, end);
+
+        // 🔹 에러가 있으면 메시지 띄우고 종료 시간 초기화
+        if (errorMessage != null) {
+            JOptionPane.showMessageDialog(this, errorMessage);
+            cmbEndTime.setSelectedIndex(-1);
+        }
     }
-
-    // 🔹 전략에게 검증을 위임
-    String errorMessage = semesterStrategy.validateTimeRange(start, end);
-
-    // 🔹 에러가 있으면 메시지 띄우고 종료 시간 초기화
-    if (errorMessage != null) {
-        JOptionPane.showMessageDialog(this, errorMessage);
-        cmbEndTime.setSelectedIndex(-1);
-    }
-}
-
 
     /**
      * This method is called from within the constructor to initialize the form.
@@ -341,7 +340,6 @@ public class RoomScheduleManagementView extends javax.swing.JFrame {
         btnEdit = new javax.swing.JButton();
         cmbRoomSelect = new javax.swing.JComboBox<>();
         rbLecture = new javax.swing.JRadioButton();
-        rbBlock = new javax.swing.JRadioButton();
         txtContent = new javax.swing.JLabel();
         txtYear = new javax.swing.JLabel();
         jTextField1 = new javax.swing.JTextField();
@@ -351,6 +349,8 @@ public class RoomScheduleManagementView extends javax.swing.JFrame {
         cmbBuilding = new javax.swing.JComboBox<>();
         btnBackup = new javax.swing.JButton();
         btnRestore = new javax.swing.JButton();
+        lblProfessor = new javax.swing.JLabel();
+        txtProfessor = new javax.swing.JTextField();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
 
@@ -452,9 +452,6 @@ public class RoomScheduleManagementView extends javax.swing.JFrame {
             }
         });
 
-        buttonGroup1.add(rbBlock);
-        rbBlock.setText("강의실 제한");
-
         txtContent.setText("과목명/제한사유 :");
 
         txtYear.setText("년도");
@@ -486,6 +483,15 @@ public class RoomScheduleManagementView extends javax.swing.JFrame {
         btnRestore.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 btnRestoreActionPerformed(evt);
+            }
+        });
+
+        lblProfessor.setText("교수 입력 :");
+
+        txtProfessor.setColumns(8);
+        txtProfessor.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                txtProfessorActionPerformed(evt);
             }
         });
 
@@ -524,38 +530,46 @@ public class RoomScheduleManagementView extends javax.swing.JFrame {
                         .addGap(0, 0, Short.MAX_VALUE))
                     .addComponent(jScrollPane1)
                     .addGroup(layout.createSequentialGroup()
-                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
+                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                             .addGroup(layout.createSequentialGroup()
-                                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                                .addGap(11, 11, 11)
+                                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
+                                    .addComponent(btnBackup, javax.swing.GroupLayout.PREFERRED_SIZE, 76, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                    .addComponent(btnRestore, javax.swing.GroupLayout.PREFERRED_SIZE, 76, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                            .addGroup(layout.createSequentialGroup()
+                                .addComponent(rbLecture)
+                                .addGap(18, 18, 18)
+                                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
                                     .addGroup(layout.createSequentialGroup()
-                                        .addComponent(rbLecture)
-                                        .addGap(18, 18, 18)
+                                        .addComponent(lblProfessor)
+                                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                                        .addComponent(txtProfessor, javax.swing.GroupLayout.PREFERRED_SIZE, 71, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                        .addGap(36, 36, 36))
+                                    .addGroup(layout.createSequentialGroup()
                                         .addComponent(lblDayOfWeek)
                                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                        .addComponent(cmbDayOfWeek, javax.swing.GroupLayout.PREFERRED_SIZE, 58, javax.swing.GroupLayout.PREFERRED_SIZE))
-                                    .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
-                                        .addComponent(btnBackup, javax.swing.GroupLayout.PREFERRED_SIZE, 76, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                        .addComponent(rbBlock)
-                                        .addComponent(btnRestore, javax.swing.GroupLayout.PREFERRED_SIZE, 76, javax.swing.GroupLayout.PREFERRED_SIZE)))
-                                .addGap(18, 18, 18)
-                                .addComponent(lblStartTime))
-                            .addComponent(txtContent))
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
-                            .addGroup(layout.createSequentialGroup()
+                                        .addComponent(cmbDayOfWeek, javax.swing.GroupLayout.PREFERRED_SIZE, 58, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                        .addGap(18, 18, 18)
+                                        .addComponent(lblStartTime)))
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                                 .addComponent(cmbStartTime, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                                 .addGap(18, 18, 18)
-                                .addComponent(lblEndTime))
-                            .addComponent(txtSubject, javax.swing.GroupLayout.PREFERRED_SIZE, 142, javax.swing.GroupLayout.PREFERRED_SIZE))
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                                .addComponent(lblEndTime)))
+                        .addGap(66, 66, 66)
                         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                             .addComponent(btnDelete, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.PREFERRED_SIZE, 72, javax.swing.GroupLayout.PREFERRED_SIZE)
                             .addComponent(lblTableTitle, javax.swing.GroupLayout.Alignment.TRAILING)
-                            .addComponent(btnEdit, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.PREFERRED_SIZE, 72, javax.swing.GroupLayout.PREFERRED_SIZE)
                             .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
                                 .addComponent(cmbEndTime, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 27, Short.MAX_VALUE)
-                                .addComponent(btnAdd, javax.swing.GroupLayout.PREFERRED_SIZE, 72, javax.swing.GroupLayout.PREFERRED_SIZE)))))
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                                .addComponent(btnAdd, javax.swing.GroupLayout.PREFERRED_SIZE, 72, javax.swing.GroupLayout.PREFERRED_SIZE))))
+                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
+                        .addGap(0, 0, Short.MAX_VALUE)
+                        .addComponent(txtContent)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                        .addComponent(txtSubject, javax.swing.GroupLayout.PREFERRED_SIZE, 142, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addGap(48, 48, 48)
+                        .addComponent(btnEdit, javax.swing.GroupLayout.PREFERRED_SIZE, 72, javax.swing.GroupLayout.PREFERRED_SIZE)))
                 .addContainerGap())
         );
         layout.setVerticalGroup(
@@ -564,12 +578,30 @@ public class RoomScheduleManagementView extends javax.swing.JFrame {
                 .addContainerGap()
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
                     .addGroup(layout.createSequentialGroup()
-                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                            .addComponent(lblTitle)
-                            .addComponent(btnBack))
-                        .addGap(18, 18, 18)
-                        .addComponent(lblSubject)
-                        .addGap(70, 70, 70))
+                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
+                            .addGroup(layout.createSequentialGroup()
+                                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                                    .addComponent(lblTitle)
+                                    .addComponent(btnBack))
+                                .addGap(18, 18, 18)
+                                .addComponent(lblSubject)
+                                .addGap(70, 70, 70))
+                            .addGroup(layout.createSequentialGroup()
+                                .addComponent(btnAdd)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)))
+                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addGroup(layout.createSequentialGroup()
+                                .addComponent(btnEdit)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addComponent(btnDelete)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                                .addComponent(lblTableTitle, javax.swing.GroupLayout.PREFERRED_SIZE, 17, javax.swing.GroupLayout.PREFERRED_SIZE))
+                            .addGroup(layout.createSequentialGroup()
+                                .addGap(18, 18, 18)
+                                .addComponent(btnBackup)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                                .addComponent(btnRestore)))
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED))
                     .addGroup(layout.createSequentialGroup()
                         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                             .addComponent(txtYear)
@@ -589,28 +621,13 @@ public class RoomScheduleManagementView extends javax.swing.JFrame {
                             .addComponent(cmbStartTime, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                             .addComponent(lblEndTime)
                             .addComponent(cmbEndTime, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                        .addGap(7, 7, 7)
-                        .addComponent(rbBlock))
-                    .addGroup(layout.createSequentialGroup()
-                        .addComponent(btnAdd)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)))
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addGroup(layout.createSequentialGroup()
-                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                                .addComponent(txtContent)
-                                .addComponent(txtSubject, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                            .addComponent(btnEdit))
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(btnDelete)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                        .addComponent(lblTableTitle, javax.swing.GroupLayout.PREFERRED_SIZE, 17, javax.swing.GroupLayout.PREFERRED_SIZE))
-                    .addGroup(layout.createSequentialGroup()
                         .addGap(18, 18, 18)
-                        .addComponent(btnBackup)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                        .addComponent(btnRestore)))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                            .addComponent(txtSubject, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addComponent(txtContent)
+                            .addComponent(lblProfessor)
+                            .addComponent(txtProfessor, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                        .addGap(74, 74, 74)))
                 .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 211, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addContainerGap())
         );
@@ -639,7 +656,16 @@ public class RoomScheduleManagementView extends javax.swing.JFrame {
         String startTime = cmbStartTime.getSelectedItem().toString().trim();
         String endTime = cmbEndTime.getSelectedItem().toString().trim();
         String type = rbLecture.isSelected() ? "수업" : "제한";
-        String professor = "-"; // 필요하면 나중에 입력 필드 추가
+        String professor;
+        if (rbLecture.isSelected()) {               // 수업일 때만 교수명 필수
+            professor = txtProfessor.getText().trim();
+            if (professor.isEmpty()) {
+                JOptionPane.showMessageDialog(this, "교수명을 입력해 주세요.");
+                return;
+            }
+        } else {                                    // 제한일 때는 굳이 필요 없으니 "-"
+            professor = "-";
+        }
 
         if (year.isEmpty() || semester == null || building == null
                 || selectedRoom.isEmpty() || subject.isEmpty() || dayOfWeek.isEmpty()
@@ -686,14 +712,22 @@ public class RoomScheduleManagementView extends javax.swing.JFrame {
         String year = jTextField1.getText().trim();
         String semester = (String) cmbSemester.getSelectedItem();
         String building = (String) cmbBuilding.getSelectedItem();
-        String professor = "-";    // 아직 교수 입력 칸 없으면 임시로 "-"
-
         String selectedRoom = cmbRoomSelect.getSelectedItem().toString().trim();
         String subject = txtSubject.getText().trim();
         String dayOfWeek = cmbDayOfWeek.getSelectedItem().toString().trim();
         String startTime = cmbStartTime.getSelectedItem().toString().trim();
         String endTime = cmbEndTime.getSelectedItem().toString().trim();
         String type = rbLecture.isSelected() ? "수업" : "제한";
+        String professor;
+        if (rbLecture.isSelected()) {
+            professor = txtProfessor.getText().trim();
+            if (professor.isEmpty()) {
+                JOptionPane.showMessageDialog(this, "교수명을 입력해 주세요.");
+                return;
+            }
+        } else {
+            professor = "-";
+        }
 
         // 🔹 유효성 검사에 year/semester/building도 추가
         if (year.isEmpty() || semester == null || building == null) {
@@ -857,6 +891,10 @@ public class RoomScheduleManagementView extends javax.swing.JFrame {
         }
     }//GEN-LAST:event_btnRestoreActionPerformed
 
+    private void txtProfessorActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_txtProfessorActionPerformed
+        // TODO add your handling code here:
+    }//GEN-LAST:event_txtProfessorActionPerformed
+
     /**
      * @param args the command line arguments
      */
@@ -882,15 +920,16 @@ public class RoomScheduleManagementView extends javax.swing.JFrame {
     private javax.swing.JTextField jTextField1;
     private javax.swing.JLabel lblDayOfWeek;
     private javax.swing.JLabel lblEndTime;
+    private javax.swing.JLabel lblProfessor;
     private javax.swing.JLabel lblRoomSelect;
     private javax.swing.JLabel lblStartTime;
     private javax.swing.JLabel lblSubject;
     private javax.swing.JLabel lblTableTitle;
     private javax.swing.JLabel lblTitle;
-    private javax.swing.JRadioButton rbBlock;
     private javax.swing.JRadioButton rbLecture;
     private javax.swing.JTable tblTimetable;
     private javax.swing.JLabel txtContent;
+    private javax.swing.JTextField txtProfessor;
     private javax.swing.JTextField txtSubject;
     private javax.swing.JLabel txtYear;
     // End of variables declaration//GEN-END:variables
