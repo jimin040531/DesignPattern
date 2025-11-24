@@ -275,7 +275,6 @@ public class Client {
      * int userCount = client.requestReserveUserCount(reserveInfo);
      * System.out.println("해당 예약 정보로 예약한 사용자 수: " + userCount);
      */
-
     // 예약 정보로 예약한 사용자 id 목록 요청 처리 (6번 기능)
     @SuppressWarnings("unchecked")
 
@@ -296,7 +295,6 @@ public class Client {
      * System.out.println("예약자 ID: " + userId);
      * }
      */
-
     // 예약 정보로 교수 예약 여부 조회 요청 처리
     public synchronized boolean hasProfessorReserve(String reserveInfo) throws IOException {
         out.writeUTF("FIND_PROFESSOR_BY_RESERVE");
@@ -455,7 +453,6 @@ public class Client {
      * // 응답 예시
      * // 정규수업, 교수예약, 예약 가능, 예약 초과
      */
-
     // 강의실 예약 가능 시간대 조회 요청 처리
     public synchronized java.util.List<String[]> getRoomSlots(String room, String day) throws IOException {
         out.writeUTF("GET_ROOM_SLOTS");
@@ -473,7 +470,7 @@ public class Client {
         }
         return slots;
     }
-    
+
     // ---------------------------------------------------------
     // 예약 현황 통계 요청 (강의실, 날짜, 시작시간)
     // ---------------------------------------------------------
@@ -512,8 +509,48 @@ public class Client {
      * // ...
      * }
      */
-    
-    
+    /**
+     * [신규] 시간표 파일 백업 요청 서버에 "SCHEDULE_BACKUP" 명령과 백업 파일 이름을 보내고, ScheduleResult
+     * 로 성공/실패 메시지를 돌려받는다.
+     *
+     * @param backupName 생성할 백업 파일 이름 (예: "ScheduleInfo_backup.txt")
+     */
+    public synchronized ScheduleResult sendScheduleBackupRequest(String backupName)
+            throws IOException, ClassNotFoundException {
+
+        // 1. 백업 명령 문자열 전송
+        out.writeUTF("SCHEDULE_BACKUP");
+        out.flush();
+
+        // 2. 백업 파일 이름 전송
+        out.writeUTF(backupName);
+        out.flush();
+
+        // 3. 서버에서 ScheduleResult 응답 수신
+        return (ScheduleResult) in.readObject();
+    }
+
+    /**
+     * [신규] 시간표 파일 복원 요청 서버에 "SCHEDULE_RESTORE" 명령과 사용할 백업 파일 이름을 보내고,
+     * ScheduleResult 로 성공/실패 메시지를 돌려받는다.
+     *
+     * @param backupName 사용할 백업 파일 이름 (예: "ScheduleInfo_backup.txt")
+     */
+    public synchronized ScheduleResult sendScheduleRestoreRequest(String backupName)
+            throws IOException, ClassNotFoundException {
+
+        // 1. 복원 명령 문자열 전송
+        out.writeUTF("SCHEDULE_RESTORE");
+        out.flush();
+
+        // 2. 백업 파일 이름 전송
+        out.writeUTF(backupName);
+        out.flush();
+
+        // 3. 서버에서 ScheduleResult 응답 수신
+        return (ScheduleResult) in.readObject();
+    }
+
     public static void main(String[] args) {
         try {
             Client c = new Client("localhost", 5000);  // 서버 컴퓨터의 IP 주소
@@ -529,4 +566,3 @@ public class Client {
     }
 
 }
-

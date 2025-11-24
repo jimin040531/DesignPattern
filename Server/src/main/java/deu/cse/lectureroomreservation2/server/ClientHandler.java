@@ -40,22 +40,23 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.ArrayList;
 
 public class ClientHandler implements Runnable, Observer {
 
     private final Socket socket;
     private final Server server;
     private final BuildingManager buildingManager;
-    
+
     // [Observer 패턴] 3. 출력 스트림을 멤버 변수로 승격 (update 메서드에서 쓰기 위해)
     private ObjectOutputStream out;
-    
+
     public ClientHandler(Socket socket, Server server) {
         this.socket = socket;
         this.server = server;
         this.buildingManager = BuildingManager.getInstance();
     }
-    
+
     // [Observer 패턴] 4. 알림 수신 시 실행될 메서드 구현
     @Override
     public void update(String message) {
@@ -71,7 +72,7 @@ public class ClientHandler implements Runnable, Observer {
             System.err.println("알림 전송 실패: " + e.getMessage());
         }
     }
-    
+
     @Override
     public void run() {
         boolean acquired = false;
@@ -137,7 +138,7 @@ public class ClientHandler implements Runnable, Observer {
                         String command = in.readUTF();
 
                         System.out.println(">> 수신 명령: " + command); // 여기 추가
-                        
+
                         // [신규] 예약 현황 통계 요청 처리
                         if ("GET_RESERVATION_STATS".equals(command)) {
                             String room = in.readUTF();
@@ -151,7 +152,7 @@ public class ClientHandler implements Runnable, Observer {
                             out.writeObject(stats);
                             out.flush();
                         }
-                        
+
                         if ("LOGOUT".equalsIgnoreCase(command)) {
                             System.out.println("User has log-out: " + id);
                             break;
@@ -472,6 +473,7 @@ public class ClientHandler implements Runnable, Observer {
                         }
 
                         if ("RESERVE_MANAGE".equals(command)) {
+                                
                             System.out.println(">> RESERVE_MANAGE 명령 수신됨");
 
                             try {
@@ -505,7 +507,7 @@ public class ClientHandler implements Runnable, Observer {
                                         );
                                         result = new ReserveManageResult(deleteRes.getResult(), deleteRes.getReason(), null);
                                     }
-                                    
+
                                     // 승인(APPROVE) 및 거절(REJECT) 기능 추가
                                     case "APPROVE" -> {
                                         result = ReserveManager.approveOrReject(
@@ -524,7 +526,7 @@ public class ClientHandler implements Runnable, Observer {
                                             req.getReserveInfo()
                                         );
                                     }
-                                    
+
                                     default ->
                                         result = new ReserveManageResult(false, "알 수 없는 명령입니다", null);
                                 }
@@ -540,6 +542,48 @@ public class ClientHandler implements Runnable, Observer {
                                 out.writeObject(errorResult);
                                 out.flush();
                             }
+                        }
+
+                        // ===========================
+                        //  📁 강의실 시간표 백업 요청
+                        // ===========================
+                        if ("SCHEDULE_BACKUP".equals(command)) {
+                            System.out.println(">> SCHEDULE_BACKUP 명령 수신됨");
+
+                            // 클라이언트에서 보낸 백업 파일 이름 받기
+                            String backupName = in.readUTF();   // 예: "ScheduleInfo_backup.txt"
+
+                            TimeTableController controller = new TimeTableController();
+                            boolean ok = controller.backupSchedule(backupName);
+
+                            ScheduleResult result = new ScheduleResult(
+                                    ok,
+                                    ok ? "백업 성공" : "백업 실패",
+                                    null
+                            );
+                            out.writeObject(result);
+                            out.flush();
+                        }
+
+                        // ===========================
+                        //  🔄 강의실 시간표 복원 요청
+                        // ===========================
+                        if ("SCHEDULE_RESTORE".equals(command)) {
+                            System.out.println(">> SCHEDULE_RESTORE 명령 수신됨");
+
+                            // 클라이언트에서 보낸 백업 파일 이름 받기
+                            String backupName = in.readUTF();   // 예: "ScheduleInfo_backup.txt"
+
+                            TimeTableController controller = new TimeTableController();
+                            boolean ok = controller.restoreSchedule(backupName);
+
+                            ScheduleResult result = new ScheduleResult(
+                                    ok,
+                                    ok ? "복원 성공" : "복원 실패",
+                                    null
+                            );
+                            out.writeObject(result);
+                            out.flush();
                         }
 
                     } catch (IOException e) {
@@ -561,9 +605,6 @@ public class ClientHandler implements Runnable, Observer {
                 synchronized (server.getLoggedInUsers()) {
                     server.getLoggedInUsers().remove(id); // 로그아웃 처리
                 }
-                
-                //연결 종료시 알림 구독 해지
-                NotificationService.getInstance().removeObserver(id);
             }
 
             try {
@@ -573,5 +614,20 @@ public class ClientHandler implements Runnable, Observer {
             }
         }
     }
-
+    /*
+     * private void handleStudent(ObjectInputStream in, ObjectOutputStream out,
+     * String id) {
+     * System.out.println("학생 기능 처리: " + id);
+     * }
+     * 
+     * private void handleProfessor(ObjectInputStream in, ObjectOutputStream out,
+     * String id) {
+     * System.out.println("교수 기능 처리: " + id);
+     * }
+     * 
+     * private void handleAdmin(ObjectInputStream in, ObjectOutputStream out, String
+     * id) {
+     * System.out.println("관리자 기능 처리: " + id);
+     * }
+     */
 }
