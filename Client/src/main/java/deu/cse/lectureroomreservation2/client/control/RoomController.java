@@ -81,37 +81,12 @@ public class RoomController {
             public void mouseClicked(java.awt.event.MouseEvent evt) {
                 int row = view.getViewTimeTable().rowAtPoint(evt.getPoint());
                 if (row != -1) {
-                    // 1. 기존 로직 (선택된 값 저장)
                     startR = String.valueOf(view.getViewTimeTable().getValueAt(row, 0));
                     endR = String.valueOf(view.getViewTimeTable().getValueAt(row, 1));
                     roomR = String.valueOf(view.getViewTimeTable().getValueAt(row, 2));
                     stateR = String.valueOf(view.getViewTimeTable().getValueAt(row, 3));
                     dayR = String.valueOf(view.getViewTimeTable().getValueAt(row, 4));
-                    updateChoosedDate(); // 날짜 갱신
-
-                    // -------------------------------------------------------
-                    // [신규 기능] 클릭 시 서버에 실시간 인원 현황 요청 및 UI 업데이트
-                    // -------------------------------------------------------
-                    if (choosedDate != null) {
-                        // 날짜 포맷 정리 (예: "2025 / 06 / 03 / " -> "2025/06/03")
-                        String[] dateParts = choosedDate.split("/");
-                        String dateSimple = dateParts[0].trim() + "/" + dateParts[1].trim() + "/" + dateParts[2].trim();
-
-                        // 서버 요청 (Client.java에 추가한 메서드 호출)
-                        int[] stats = client.getReservationStats(roomR, dateSimple, startR);
-                        int currentCount = stats[0]; // 현재 예약된 인원 (대기+확정)
-                        int maxCapacity = stats[1];  // 강의실 최대 수용 인원
-                        
-                        // 50% 제한 인원 계산
-                        int limit50 = (int)(maxCapacity * 0.5); 
-
-                        // 라벨 텍스트 업데이트
-                        // 표시 예: "예약 현황: 5 / 25 명 (정원 50명)"
-                        String statusText = String.format("<html>예약 현황: <font color='red'>%d</font> / %d 명 (총 정원 %d명)</html>", 
-                                                          currentCount, limit50, maxCapacity);
-                        view.getUserCountLabel().setText(statusText);
-                    }
-                    // -------------------------------------------------------
+                    updateChoosedDate();
                 }
             }
         });

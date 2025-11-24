@@ -32,7 +32,7 @@ public class Main {
     }
 
     public static void main(String[] args) {
-        //클라이언트 실행시 뒤 에 서버 주소를 넣으면 해당 주소로 연결됨
+        //클라이언트 실행시 뒤에 서버 주소를 넣으면 해당 주소로 연결됨
         SwingUtilities.invokeLater(() -> {
             try {
                 UIManager.setLookAndFeel("javax.swing.plaf.nimbus.NimbusLookAndFeel");

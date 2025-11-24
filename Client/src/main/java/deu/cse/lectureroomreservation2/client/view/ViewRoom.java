@@ -47,8 +47,6 @@ public class ViewRoom extends javax.swing.JFrame {
     private JButton goBackButton;
     private JButton RefreshButton;
     
-    // 예약 인원 현황 표시 라벨
-    private JLabel lblUserCountStatus;
     // 3. Context
     Client client;
     String userid;
@@ -151,13 +149,6 @@ public class ViewRoom extends javax.swing.JFrame {
         dailyPanel.add(centerPanel, BorderLayout.CENTER);
         
         JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
-        // [라벨 초기화 및 스타일 설정
-        lblUserCountStatus = new JLabel("예약 현황: - / -");
-        lblUserCountStatus.setFont(new java.awt.Font("맑은 고딕", 1, 14));
-        lblUserCountStatus.setForeground(java.awt.Color.BLUE);
-        
-        // 버튼 패널에 라벨 추가
-        buttonPanel.add(lblUserCountStatus);
         buttonPanel.add(RefreshButton);
         buttonPanel.add(reservationButton);
         buttonPanel.add(goBackButton);
@@ -251,5 +242,4 @@ public class ViewRoom extends javax.swing.JFrame {
     public String getRole() { return role; }
     public String getCheck() { return check; }
     public Client getClient() { return client; }
-    public JLabel getUserCountLabel() { return lblUserCountStatus; }
 }

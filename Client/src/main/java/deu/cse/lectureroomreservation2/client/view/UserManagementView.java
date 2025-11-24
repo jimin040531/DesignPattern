@@ -464,21 +464,13 @@ public class UserManagementView extends javax.swing.JFrame {
 
             if (result.isSuccess()) {
 
-                DefaultTableModel profModel = (DefaultTableModel) tblProfessors.getModel();
-                DefaultTableModel studModel = (DefaultTableModel) tblStudents.getModel();
-
-                // 테이블 모두 초기화
-                profModel.setRowCount(0);
-                studModel.setRowCount(0);
-
+                // 🔹 검색창 초기화
                 txtSearch.setText("");
 
-                // 등록된 역할 테이블에만 한 줄 추가
-                if (roleCode.equals("P")) {
-                    profModel.addRow(new Object[]{roleCode, name, id, password});
-                } else {
-                    studModel.addRow(new Object[]{roleCode, name, id, password});
-                }
+                // 🔹 방금 추가한 사용자까지 포함해서
+                //    서버의 UserInfo.txt 를 다시 읽어와 테이블을 채우게 함
+                //    (SEARCH → handleSearchRequest → EncryptedUserFileManager → 해시된 비밀번호)
+                refreshTable(roleCode);
 
                 JOptionPane.showMessageDialog(this, "사용자가 등록되었습니다.");
 
@@ -490,7 +482,8 @@ public class UserManagementView extends javax.swing.JFrame {
                 tblStudents.clearSelection();
                 tblProfessors.clearSelection();
 
-                jDialog1.setVisible(false);
+                // 혹시 추가 팝업(jDialog1)을 쓰고 있으면 닫기
+                // jDialog1.setVisible(false);
             } else {
                 JOptionPane.showMessageDialog(this, result.getMessage());
             }

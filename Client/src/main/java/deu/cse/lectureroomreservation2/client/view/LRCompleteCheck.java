@@ -17,20 +17,8 @@ public class LRCompleteCheck extends javax.swing.JFrame {
     String notice = "기본 공지사항 내용";
     private Client client;
     String IsChange;
-    // UI 컴포넌트 추가 선언
-    private javax.swing.JTextField txtUserId;
-    private javax.swing.JTextField txtPurpose;
-    private javax.swing.JTextField txtUserCount;
-    private javax.swing.JLabel lblUserId;
-    private javax.swing.JLabel lblPurpose;
-    private javax.swing.JLabel lblUserCount;
-    
-    // 기본 생성자 (테스트용)
+
     public LRCompleteCheck() {
-        this("20203139", "S", "915", "2025 05 15 15:00 16:00", "목요일", null, null);
-    }
-    
-    /*public LRCompleteCheck() {
         initComponents();
 
         setLocationRelativeTo(null);
@@ -54,31 +42,40 @@ public class LRCompleteCheck extends javax.swing.JFrame {
 
         viewSelectRoom.setEditable(false);
         viewSelectTime.setEditable(false);
-    }*/
+    }
 
     public LRCompleteCheck(String id, String role, String roomNumber, String date, String day, Client client, String IsChange) {
-        setTitle("강의실 예약 확인");
+        setTitle("강의실 예약");
+        // id : 사용자 아이디, role : 사용자 역할("P" 또는 "S"), roomNumber : 강의실 번호, date : 년 월 일
+        // 시작(시간:분) 끝(시간:분), day : 요일, client 클라이언트 넘겨주기
         this.client = client;
+
+        initComponents();
         this.id = id;
         this.role = role;
         this.roomNumber = roomNumber;
-        this.date = date; // 예: "2025 / 06 / 03 / 10:00 10:50"
+        this.date = date;
         this.day = day;
         this.IsChange = IsChange;
 
-        initComponents(); // UI 초기화
-        
-        // 데이터 세팅
-        viewSelectRoom.setText(roomNumber);
-        viewSelectTime.setText(date + " (" + day + ")");
-        txtUserId.setText(id); // 학번 자동 입력
+        if(IsChange != null) {
+            System.out.println("예약 변경 모드로 실행됨: " + IsChange);
+            System.out.println("역할 정보 : " + role);
+        } else {
+            System.out.println("IsChange 가 null 이라서 신규 예약 모드로 실행됨");
+            System.out.println("역할 정보 : " + role);
+        }
+        System.out.println();
 
-        // 읽기 전용 설정
-        viewSelectRoom.setEditable(false);
-        viewSelectTime.setEditable(false);
-        txtUserId.setEditable(false);
+        showDate = date + " / " + day;
 
         setLocationRelativeTo(null);
+
+        viewSelectRoom.setText(roomNumber);
+        viewSelectTime.setText(showDate);
+
+        viewSelectRoom.setEditable(false);
+        viewSelectTime.setEditable(false);
     }
 
     @SuppressWarnings("unchecked")
@@ -87,100 +84,101 @@ public class LRCompleteCheck extends javax.swing.JFrame {
         jLabel1 = new javax.swing.JLabel();
         viewSelectRoom = new javax.swing.JTextField();
         viewSelectTime = new javax.swing.JTextField();
-        
-        // 추가된 컴포넌트 초기화
-        lblUserId = new javax.swing.JLabel("학번:");
-        txtUserId = new javax.swing.JTextField();
-        lblPurpose = new javax.swing.JLabel("사용 목적:");
-        txtPurpose = new javax.swing.JTextField();
-        lblUserCount = new javax.swing.JLabel("사용 인원:");
-        txtUserCount = new javax.swing.JTextField();
-
         LastLRCancel = new javax.swing.JButton();
         jLabel4 = new javax.swing.JLabel();
         LastLRButton1 = new javax.swing.JButton();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
 
-        jLabel1.setFont(new java.awt.Font("맑은 고딕", 1, 18));
-        jLabel1.setText("예약 정보 입력");
+        jLabel1.setText("예약 확인");
 
-        LastLRCancel.setText("취소");
-        LastLRCancel.addActionListener(evt -> this.dispose());
-
-        jLabel4.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
-        jLabel4.setText("위 정보로 예약하시겠습니까?");
-
-        LastLRButton1.setText("확인");
-        LastLRButton1.addActionListener(evt -> {
-            try {
-                LastLRButton1ActionPerformed(evt);
-            } catch (Exception ex) {
-                ex.printStackTrace();
+        viewSelectRoom.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                viewSelectRoomActionPerformed(evt);
             }
         });
 
-        // 레이아웃 설정 (간단하게 수정)
+        viewSelectTime.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                viewSelectTimeActionPerformed(evt);
+            }
+        });
+
+        LastLRCancel.setText("취소");
+        LastLRCancel.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                LastLRCancelActionPerformed(evt);
+            }
+        });
+
+        jLabel4.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
+        jLabel4.setText("예약하시겠습니까?");
+
+        LastLRButton1.setText("확인");
+        LastLRButton1.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                try {
+                    LastLRButton1ActionPerformed(evt);
+                } catch (ClassNotFoundException | IOException ex) {
+                    ex.printStackTrace();
+                }
+            }
+        });
+
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
         layout.setHorizontalGroup(
-            layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(layout.createSequentialGroup()
-                .addContainerGap()
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(viewSelectTime)
-                    .addComponent(viewSelectRoom)
-                    .addGroup(layout.createSequentialGroup()
-                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addComponent(jLabel1)
-                            .addGroup(layout.createSequentialGroup()
+                layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                        .addGroup(layout.createSequentialGroup()
+                                .addContainerGap()
                                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                                    .addComponent(lblPurpose)
-                                    .addComponent(lblUserId)
-                                    .addComponent(lblUserCount))
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                                    .addComponent(txtUserCount)
-                                    .addComponent(txtUserId)
-                                    .addComponent(txtPurpose, javax.swing.GroupLayout.DEFAULT_SIZE, 200, Short.MAX_VALUE))))
-                        .addGap(0, 0, Short.MAX_VALUE))
-                    .addComponent(jLabel4, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
-                        .addGap(0, 0, Short.MAX_VALUE)
-                        .addComponent(LastLRButton1, javax.swing.GroupLayout.PREFERRED_SIZE, 80, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(LastLRCancel, javax.swing.GroupLayout.PREFERRED_SIZE, 80, javax.swing.GroupLayout.PREFERRED_SIZE)))
-                .addContainerGap())
-        );
+                                        .addGroup(layout.createSequentialGroup()
+                                                .addGroup(layout
+                                                        .createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                                                        .addComponent(jLabel1, javax.swing.GroupLayout.PREFERRED_SIZE,
+                                                                74, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                                        .addComponent(viewSelectRoom)
+                                                        .addComponent(viewSelectTime,
+                                                                javax.swing.GroupLayout.Alignment.TRAILING,
+                                                                javax.swing.GroupLayout.DEFAULT_SIZE, 441,
+                                                                Short.MAX_VALUE))
+                                                .addContainerGap())
+                                        .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout
+                                                .createSequentialGroup()
+                                                .addGap(61, 61, 61)
+                                                .addGroup(layout
+                                                        .createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                                                        .addGroup(layout.createSequentialGroup()
+                                                                .addGap(58, 58, 58)
+                                                                .addComponent(LastLRButton1)
+                                                                .addPreferredGap(
+                                                                        javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                                                .addComponent(LastLRCancel))
+                                                        .addComponent(jLabel4, javax.swing.GroupLayout.PREFERRED_SIZE,
+                                                                264, javax.swing.GroupLayout.PREFERRED_SIZE))
+                                                .addGap(94, 94, 94)))));
         layout.setVerticalGroup(
-            layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(layout.createSequentialGroup()
-                .addContainerGap()
-                .addComponent(jLabel1)
-                .addGap(18, 18, 18)
-                .addComponent(viewSelectRoom, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(viewSelectTime, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addGap(18, 18, 18)
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(lblUserId)
-                    .addComponent(txtUserId, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(lblPurpose)
-                    .addComponent(txtPurpose, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(lblUserCount)
-                    .addComponent(txtUserCount, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addGap(18, 18, 18)
-                .addComponent(jLabel4)
-                .addGap(18, 18, 18)
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(LastLRCancel)
-                    .addComponent(LastLRButton1))
-                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
-        );
+                layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                        .addGroup(layout.createSequentialGroup()
+                                .addContainerGap()
+                                .addComponent(jLabel1, javax.swing.GroupLayout.PREFERRED_SIZE, 23,
+                                        javax.swing.GroupLayout.PREFERRED_SIZE)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addComponent(viewSelectRoom, javax.swing.GroupLayout.PREFERRED_SIZE, 50,
+                                        javax.swing.GroupLayout.PREFERRED_SIZE)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addComponent(viewSelectTime, javax.swing.GroupLayout.PREFERRED_SIZE, 50,
+                                        javax.swing.GroupLayout.PREFERRED_SIZE)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addComponent(jLabel4, javax.swing.GroupLayout.DEFAULT_SIZE,
+                                        javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                                        .addComponent(LastLRCancel, javax.swing.GroupLayout.PREFERRED_SIZE, 38,
+                                                javax.swing.GroupLayout.PREFERRED_SIZE)
+                                        .addComponent(LastLRButton1, javax.swing.GroupLayout.PREFERRED_SIZE, 38,
+                                                javax.swing.GroupLayout.PREFERRED_SIZE))
+                                .addContainerGap()));
 
         pack();
     }
@@ -204,52 +202,84 @@ public class LRCompleteCheck extends javax.swing.JFrame {
         // TODO add your handling code here: 날짜 시간 표시 Jtextfield
     }// GEN-LAST:event_viewSelectTimeActionPerformed
 
-    private void LastLRButton1ActionPerformed(java.awt.event.ActionEvent evt) throws Exception {
-        // 1. 입력값 검증
-        String purpose = txtPurpose.getText().trim();
-        String countStr = txtUserCount.getText().trim();
+    private void LastLRButton1ActionPerformed(java.awt.event.ActionEvent evt)
+            throws ClassNotFoundException, IOException {// GEN-FIRST:event_LastLRButton1ActionPerformed
 
-        if (purpose.isEmpty() || countStr.isEmpty()) {
-            JOptionPane.showMessageDialog(this, "사용 목적과 인원을 모두 입력해주세요.", "입력 오류", JOptionPane.WARNING_MESSAGE);
-            return;
-        }
-
-        int userCount;
-        try {
-            userCount = Integer.parseInt(countStr);
-            if (userCount <= 0) throw new NumberFormatException();
-        } catch (NumberFormatException e) {
-            JOptionPane.showMessageDialog(this, "인원은 1 이상의 숫자여야 합니다.", "입력 오류", JOptionPane.WARNING_MESSAGE);
-            return;
-        }
-
-        // 2. 학생인 경우 최대 예약 가능 시간(개수) 체크
-        if ("S".equals(role)) {
+        // 학생인 경우 최대 예약 초과 체크
+        if (role.equals("S")) {
             CheckMaxTimeResult checkResult = client.sendCheckMaxTimeRequest(id);
             if (checkResult.isExceeded()) {
-                JOptionPane.showMessageDialog(null, "최대 예약 가능 시간(4시간)을 초과했습니다.", "예약 실패", JOptionPane.ERROR_MESSAGE);
+                // 최대 예약 초과 시 안내 후 종료
+                JOptionPane.showMessageDialog(null, "최대 예약시간이 초과되었습니다", "예약 실패", JOptionPane.ERROR_MESSAGE);
                 this.dispose();
                 return;
             }
         }
 
-        // 3. 예약 요청 전송 (수정된 sendReserveRequest 사용)
-        ReserveResult result;
-        if (IsChange != null) {
-            // 예약 변경 (변경 로직은 기존 유지 - 필요시 파라미터 추가)
-            result = client.sendModifyReserveRequest(id, IsChange, roomNumber, date, day, role);
-        } else {
-            // 신규 예약
-            result = client.sendReserveRequest(id, role, roomNumber, date, day, purpose, userCount);
+        // 교수인 경우 공지사항 입력, 학생은 null
+        String noticeToSend = null;
+        if (role.equals("P")) {
+            noticeWriterView noticeDialog = new noticeWriterView();
+            noticeDialog.setLocationRelativeTo(this);
+            noticeDialog.setNoticeListener(new noticeWriterView.NoticeListener() {
+                @Override
+                public void onNoticeEntered(String noticeText) {
+                    if (noticeText == null || noticeText.trim().isEmpty()) {
+                        JOptionPane.showMessageDialog(LRCompleteCheck.this, "공지사항을 입력해야 예약이 완료됩니다.", "입력 필요",
+                                JOptionPane.WARNING_MESSAGE);
+                        return;
+                    }
+                    try {
+                        ReserveResult result;
+                        if (IsChange != null) {
+                            // 예약 변경 처리
+                            result = client.sendModifyReserveRequest(
+                                    id, IsChange, roomNumber, date, day, role
+                            );
+                        } else {
+                            // 신규 예약 처리
+                            result = client.sendReserveRequest(
+                                    id, role, roomNumber, date, day, noticeText
+                            );
+                        }
+                        new viewResultLR().viewResult(result.getResult(), result.getReason());
+                        if (result.getResult()) {
+                            new ProfessorMainMenu(id, client).setVisible(true);
+                            LRCompleteCheck.this.dispose();
+                        }
+                    } catch (Exception ex) {
+                        ex.printStackTrace();
+                        JOptionPane.showMessageDialog(LRCompleteCheck.this, "오류가 발생했습니다: " + ex.getMessage(), "에러",
+                                JOptionPane.ERROR_MESSAGE);
+                    }
+                }
+            });
+            noticeDialog.setVisible(true);
+            return; // 교수는 여기서 예약 진행을 콜백에서 처리하므로 아래 코드 실행 안 함
+
         }
 
-        // 4. 결과 처리
-        new viewResultLR().viewResult(result.getResult(), result.getReason());
-        
+        // 학생 신규/변경 처리 (학생은 예약 변경이 없다면 기존 로직대로)
+        ReserveResult result;
+        if(IsChange != null) {
+            // 예약 변경 처리
+            result = client.sendModifyReserveRequest(id, IsChange, roomNumber, date, day, role);
+            new viewResultLR().viewResult(result.getResult(), result.getReason());
+        } else {
+            // 신규 예약 처리
+            result = client.sendReserveRequest(id, role, roomNumber, date, day, noticeToSend);
+            new viewResultLR().viewResult(result.getResult(), result.getReason());
+        }
+
         if (result.getResult()) {
+            if (role.equals("P")) {
+                new ProfessorMainMenu(id, client).setVisible(true);
+            } else if (role.equals("S")) {
+                new StudentMainMenu(id, client).setVisible(true);
+            }
             this.dispose();
         }
-    }
+    }// GEN-LAST:event_LastLRButton1ActionPerformed
 
     /**
      * @param args the command line arguments
