@@ -10,6 +10,7 @@ deu\cse\lectureroomreservation2\client\view\LoginFrame$3.class
 deu\cse\lectureroomreservation2\client\view\ReservationHistoryView$8.class
 deu\cse\lectureroomreservation2\common\CheckMaxTimeRequest.class
 deu\cse\lectureroomreservation2\client\control\RoomController$5.class
+deu\cse\lectureroomreservation2\client\view\RoomScheduleManagementView$11.class
 deu\cse\lectureroomreservation2\client\view\LoginFrame.class
 deu\cse\lectureroomreservation2\client\view\ProfessorMainMenu$2.class
 deu\cse\lectureroomreservation2\client\view\LRCompleteCheck.class
@@ -28,6 +29,7 @@ deu\cse\lectureroomreservation2\client\view\ReservationHistoryView$7.class
 deu\cse\lectureroomreservation2\client\view\StudentMainMenu$4.class
 deu\cse\lectureroomreservation2\client\control\RoomController$6.class
 deu\cse\lectureroomreservation2\client\view\ProfessorMainMenu$5.class
+deu\cse\lectureroomreservation2\client\view\SemesterStrategy.class
 deu\cse\lectureroomreservation2\client\view\RoomScheduleManagementView$5.class
 deu\cse\lectureroomreservation2\client\view\LoginFrame$2.class
 deu\cse\lectureroomreservation2\client\view\ProfessorMainMenu.class
@@ -48,6 +50,7 @@ deu\cse\lectureroomreservation2\client\view\viewResultLR.class
 deu\cse\lectureroomreservation2\client\view\UserManagementView.class
 deu\cse\lectureroomreservation2\client\control\RoomController$4.class
 deu\cse\lectureroomreservation2\client\view\noticeWriterView.class
+deu\cse\lectureroomreservation2\client\view\RoomScheduleManagementView$12.class
 deu\cse\lectureroomreservation2\client\view\UserManagementView$3.class
 deu\cse\lectureroomreservation2\client\control\RoomController$1.class
 deu\cse\lectureroomreservation2\client\view\ProfessorMainMenu$6.class
@@ -69,6 +72,7 @@ deu\cse\lectureroomreservation2\client\view\RoomScheduleManagementView$4.class
 deu\cse\lectureroomreservation2\client\view\RoomScheduleManagementView$7.class
 deu\cse\lectureroomreservation2\client\view\RoomScheduleManagementView.class
 deu\cse\lectureroomreservation2\common\ScheduleRequest.class
+deu\cse\lectureroomreservation2\client\view\FirstSemesterStrategy.class
 deu\cse\lectureroomreservation2\common\LoginStatus.class
 deu\cse\lectureroomreservation2\client\view\ReservationHistoryView$1.class
 deu\cse\lectureroomreservation2\client\view\UserManagementView$8.class
@@ -97,6 +101,7 @@ deu\cse\lectureroomreservation2\client\view\LoginFrame$6.class
 deu\cse\lectureroomreservation2\client\view\ChangePassView$1.class
 deu\cse\lectureroomreservation2\client\view\RoomScheduleManagementView$2.class
 deu\cse\lectureroomreservation2\client\view\RoomScheduleManagementView$9.class
+deu\cse\lectureroomreservation2\client\view\SecondSemesterStrategy.class
 deu\cse\lectureroomreservation2\client\view\UserManagementView$6.class
 deu\cse\lectureroomreservation2\client\view\ReservationHistoryView$9.class
 deu\cse\lectureroomreservation2\client\view\ReservationHistoryView$2.class
@@ -104,5 +109,6 @@ deu\cse\lectureroomreservation2\client\view\MyReservationView$1.class
 deu\cse\lectureroomreservation2\common\ReserveManageRequest.class
 deu\cse\lectureroomreservation2\client\view\ViewRoom.class
 deu\cse\lectureroomreservation2\client\view\noticeWriterView$NoticeListener.class
+deu\cse\lectureroomreservation2\client\view\RoomScheduleManagementView$10.class
 deu\cse\lectureroomreservation2\client\control\RoomController$3.class
 deu\cse\lectureroomreservation2\client\view\AdminMainView$4.class

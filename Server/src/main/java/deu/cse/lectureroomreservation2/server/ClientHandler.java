@@ -1,7 +1,3 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
- */
 package deu.cse.lectureroomreservation2.server;
 
 /**
@@ -40,22 +36,23 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.ArrayList;
 
 public class ClientHandler implements Runnable, Observer {
 
     private final Socket socket;
     private final Server server;
     private final BuildingManager buildingManager;
-    
+
     // [Observer 패턴] 3. 출력 스트림을 멤버 변수로 승격 (update 메서드에서 쓰기 위해)
     private ObjectOutputStream out;
-    
+
     public ClientHandler(Socket socket, Server server) {
         this.socket = socket;
         this.server = server;
         this.buildingManager = BuildingManager.getInstance();
     }
-    
+
     // [Observer 패턴] 4. 알림 수신 시 실행될 메서드 구현
     @Override
     public void update(String message) {
@@ -71,7 +68,7 @@ public class ClientHandler implements Runnable, Observer {
             System.err.println("알림 전송 실패: " + e.getMessage());
         }
     }
-    
+
     @Override
     public void run() {
         boolean acquired = false;
@@ -79,7 +76,7 @@ public class ClientHandler implements Runnable, Observer {
 
         try {
             System.out.println("Client Connection request received: " + socket.getInetAddress());
-            
+
             // 멤버 변수 out 초기화
             out = new ObjectOutputStream(socket.getOutputStream());
             ObjectInputStream in = new ObjectInputStream(socket.getInputStream());
@@ -107,7 +104,7 @@ public class ClientHandler implements Runnable, Observer {
                 synchronized (server.getLoggedInUsers()) {
                     server.getLoggedInUsers().add(id); // 로그인 성공한 사용자 등록
                 }
-                
+
                 // [Observer 패턴] 5. 로그인 성공 시 알림 서비스에 등록 (구독 시작)
                 NotificationService.getInstance().registerObserver(id, this);
             }
@@ -137,21 +134,21 @@ public class ClientHandler implements Runnable, Observer {
                         String command = in.readUTF();
 
                         System.out.println(">> 수신 명령: " + command); // 여기 추가
-                        
+
                         // [신규] 예약 현황 통계 요청 처리
                         if ("GET_RESERVATION_STATS".equals(command)) {
                             String room = in.readUTF();
                             String date = in.readUTF();
                             String startTime = in.readUTF();
-                            
+
                             // ReserveManager에서 통계 가져오기
                             int[] stats = ReserveManager.getReservationStats(room, date, startTime);
-                            
+
                             // 결과 전송 (int 배열: [확정수, 대기수])
                             out.writeObject(stats);
                             out.flush();
                         }
-                        
+
                         if ("LOGOUT".equalsIgnoreCase(command)) {
                             System.out.println("User has log-out: " + id);
                             break;
@@ -354,22 +351,43 @@ public class ClientHandler implements Runnable, Observer {
                             // 클라이언트로부터 ScheduleRequest 객체 수신
                             ScheduleRequest req = (ScheduleRequest) in.readObject();
 
-                            ScheduleResult result; // 클라이언트에게 보낼 응답 객체 
+                            ScheduleResult result; // 클라이언트에게 보낼 응답 객체
                             TimeTableController controller = new TimeTableController(); // 시간표 처리 로직
 
                             // 클라이언트가 요청한 명령에 따라 분기 처리
                             switch (req.getCommand()) {
                                 case "LOAD" -> {
-                                    // 시간표 조회
+                                    // (1) 해당 년도/학기/건물만 메모리에 로드
+                                    controller.loadSchedulesFromFile(
+                                            req.getYear(),
+                                            req.getSemester(),
+                                            req.getBuilding()
+                                    );
+
+                                    // (2) 메모리에 올라간 것 중에서 강의실/요일/타입만 골라서 반환
                                     Map<String, String> schedule = controller.getScheduleForRoom(
-                                            req.getRoom(), req.getDay(), req.getType());
+                                            req.getRoom(),
+                                            req.getDay(),
+                                            req.getType()
+                                    );
                                     result = new ScheduleResult(true, "조회 성공", schedule);
                                 }
 
                                 case "ADD" -> {
                                     // 시간표 추가
                                     try {
-                                        controller.addScheduleToFile(req.getRoom(), req.getDay(), req.getStart(), req.getEnd(), req.getSubject(), req.getType());
+                                        controller.addScheduleToFile(
+                                                req.getYear(), 
+                                                req.getSemester(), 
+                                                req.getBuilding(), 
+                                                req.getRoom(),
+                                                req.getDay(),
+                                                req.getStart(),
+                                                req.getEnd(),
+                                                req.getSubject(),
+                                                req.getProfessor(), 
+                                                req.getType()
+                                        );
                                         result = new ScheduleResult(true, "등록 성공", null);
                                     } catch (Exception e) {
                                         result = new ScheduleResult(false, "등록 실패: " + e.getMessage(), null);
@@ -378,13 +396,32 @@ public class ClientHandler implements Runnable, Observer {
 
                                 case "DELETE" -> {
                                     // 시간표 삭제
-                                    boolean deleted = controller.deleteScheduleFromFile(req.getRoom(), req.getDay(), req.getStart(), req.getEnd());
+                                    boolean deleted = controller.deleteScheduleFromFile(
+                                            req.getYear(),  
+                                            req.getSemester(), 
+                                            req.getBuilding(), 
+                                            req.getRoom(),
+                                            req.getDay(),
+                                            req.getStart(),
+                                            req.getEnd()
+                                    );
                                     result = new ScheduleResult(deleted, deleted ? "삭제 성공" : "삭제 실패", null);
                                 }
 
                                 case "UPDATE" -> {
                                     // 시간표 수정
-                                    boolean updated = controller.updateSchedule(req.getRoom(), req.getDay(), req.getStart(), req.getEnd(), req.getSubject(), req.getType());
+                                    boolean updated = controller.updateSchedule(
+                                            req.getYear(),        // 🚨 추가됨
+                                            req.getSemester(),    // 🚨 추가됨
+                                            req.getBuilding(),    // 🚨 추가됨
+                                            req.getRoom(),
+                                            req.getDay(),
+                                            req.getStart(),
+                                            req.getEnd(),
+                                            req.getSubject(),
+                                            req.getProfessor(),   // 🚨 추가됨
+                                            req.getType()
+                                    );
                                     result = new ScheduleResult(updated, updated ? "수정 성공" : "수정 실패", null);
                                 }
 
@@ -505,26 +542,26 @@ public class ClientHandler implements Runnable, Observer {
                                         );
                                         result = new ReserveManageResult(deleteRes.getResult(), deleteRes.getReason(), null);
                                     }
-                                    
+
                                     // 승인(APPROVE) 및 거절(REJECT) 기능 추가
                                     case "APPROVE" -> {
                                         result = ReserveManager.approveOrReject(
-                                            "APPROVE",
-                                            req.getUserId(),
-                                            req.getOldReserveInfo(),
-                                            null
+                                                "APPROVE",
+                                                req.getUserId(),
+                                                req.getOldReserveInfo(),
+                                                null
                                         );
                                     }
 
                                     case "REJECT" -> {
                                         result = ReserveManager.approveOrReject(
-                                            "REJECT",
-                                            req.getUserId(),
-                                            req.getOldReserveInfo(),
-                                            req.getReserveInfo()
+                                                "REJECT",
+                                                req.getUserId(),
+                                                req.getOldReserveInfo(),
+                                                req.getReserveInfo()
                                         );
                                     }
-                                    
+
                                     default ->
                                         result = new ReserveManageResult(false, "알 수 없는 명령입니다", null);
                                 }
@@ -542,10 +579,55 @@ public class ClientHandler implements Runnable, Observer {
                             }
                         }
 
+                        // ===========================
+                        // 📁 강의실 시간표 백업 요청
+                        // ===========================
+                        if ("SCHEDULE_BACKUP".equals(command)) {
+                            System.out.println(">> SCHEDULE_BACKUP 명령 수신됨");
+
+                            // 클라이언트에서 보낸 백업 파일 이름 받기
+                            String backupName = in.readUTF();    // 예: "ScheduleInfo_backup.txt"
+
+                            TimeTableController controller = new TimeTableController();
+                            boolean ok = controller.backupSchedule(backupName);
+
+                            ScheduleResult result = new ScheduleResult(
+                                    ok,
+                                    ok ? "백업 성공" : "백업 실패",
+                                    null
+                            );
+                            out.writeObject(result);
+                            out.flush();
+                        }
+
+                        // ===========================
+                        // 🔄 강의실 시간표 복원 요청
+                        // ===========================
+                        if ("SCHEDULE_RESTORE".equals(command)) {
+                            System.out.println(">> SCHEDULE_RESTORE 명령 수신됨");
+
+                            // 클라이언트에서 보낸 백업 파일 이름 받기
+                            String backupName = in.readUTF();    // 예: "ScheduleInfo_backup.txt"
+
+                            TimeTableController controller = new TimeTableController();
+                            boolean ok = controller.restoreSchedule(backupName);
+
+                            ScheduleResult result = new ScheduleResult(
+                                    ok,
+                                    ok ? "복원 성공" : "복원 실패",
+                                    null
+                            );
+                            out.writeObject(result);
+                            out.flush();
+                        }
+
                     } catch (IOException e) {
                         System.out.println("Client Connection Error or Terminated. " + e.getMessage());
                         e.printStackTrace();
                         break;
+                    } catch (ClassNotFoundException e) {
+                        System.err.println("Deserialization Error: " + e.getMessage());
+                        e.printStackTrace();
                     }
                 }
             }
@@ -561,7 +643,7 @@ public class ClientHandler implements Runnable, Observer {
                 synchronized (server.getLoggedInUsers()) {
                     server.getLoggedInUsers().remove(id); // 로그아웃 처리
                 }
-                
+
                 //연결 종료시 알림 구독 해지
                 NotificationService.getInstance().removeObserver(id);
             }
@@ -573,5 +655,18 @@ public class ClientHandler implements Runnable, Observer {
             }
         }
     }
-
+    /*
+     * private void handleStudent(ObjectInputStream in, ObjectOutputStream out,
+     * String id) {
+     * System.out.println("학생 기능 처리: " + id);
+     * }
+     * * private void handleProfessor(ObjectInputStream in, ObjectOutputStream out,
+     * String id) {
+     * System.out.println("교수 기능 처리: " + id);
+     * }
+     * * private void handleAdmin(ObjectInputStream in, ObjectOutputStream out, String
+     * id) {
+     * System.out.println("관리자 기능 처리: " + id);
+     * }
+     */
 }

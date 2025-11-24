@@ -1,6 +1,7 @@
 D:\deu\3.2\DesignPattern\project\DesignPattern\Client\src\main\java\deu\cse\lectureroomreservation2\client\view\noticeWriterView.java
 D:\deu\3.2\DesignPattern\project\DesignPattern\Client\src\main\java\deu\cse\lectureroomreservation2\common\ReserveManageResult.java
 D:\deu\3.2\DesignPattern\project\DesignPattern\Client\src\main\java\deu\cse\lectureroomreservation2\common\UserResult.java
+D:\deu\3.2\DesignPattern\project\DesignPattern\Client\src\main\java\deu\cse\lectureroomreservation2\client\view\SecondSemesterStrategy.java
 D:\deu\3.2\DesignPattern\project\DesignPattern\Client\src\main\java\deu\cse\lectureroomreservation2\Main.java
 D:\deu\3.2\DesignPattern\project\DesignPattern\Client\src\main\java\deu\cse\lectureroomreservation2\common\ReserveRequest.java
 D:\deu\3.2\DesignPattern\project\DesignPattern\Client\src\main\java\deu\cse\lectureroomreservation2\common\UserRequest.java
@@ -19,11 +20,13 @@ D:\deu\3.2\DesignPattern\project\DesignPattern\Client\src\main\java\deu\cse\lect
 D:\deu\3.2\DesignPattern\project\DesignPattern\Client\src\main\java\deu\cse\lectureroomreservation2\common\ScheduleRequest.java
 D:\deu\3.2\DesignPattern\project\DesignPattern\Client\src\main\java\deu\cse\lectureroomreservation2\client\User.java
 D:\deu\3.2\DesignPattern\project\DesignPattern\Client\src\main\java\deu\cse\lectureroomreservation2\client\Client.java
+D:\deu\3.2\DesignPattern\project\DesignPattern\Client\src\main\java\deu\cse\lectureroomreservation2\client\view\SemesterStrategy.java
 D:\deu\3.2\DesignPattern\project\DesignPattern\Client\src\main\java\deu\cse\lectureroomreservation2\client\view\MyReservationView.java
 D:\deu\3.2\DesignPattern\project\DesignPattern\Client\src\main\java\deu\cse\lectureroomreservation2\common\CheckMaxTimeResult.java
 D:\deu\3.2\DesignPattern\project\DesignPattern\Client\src\main\java\deu\cse\lectureroomreservation2\client\view\UserManagementView.java
 D:\deu\3.2\DesignPattern\project\DesignPattern\Client\src\main\java\deu\cse\lectureroomreservation2\client\view\LRCompleteCheck.java
 D:\deu\3.2\DesignPattern\project\DesignPattern\Client\src\main\java\deu\cse\lectureroomreservation2\client\view\ReservationHistoryView.java
+D:\deu\3.2\DesignPattern\project\DesignPattern\Client\src\main\java\deu\cse\lectureroomreservation2\client\view\FirstSemesterStrategy.java
 D:\deu\3.2\DesignPattern\project\DesignPattern\Client\src\main\java\deu\cse\lectureroomreservation2\client\view\AdminMainView.java
 D:\deu\3.2\DesignPattern\project\DesignPattern\Client\src\main\java\deu\cse\lectureroomreservation2\common\ScheduleResult.java
 D:\deu\3.2\DesignPattern\project\DesignPattern\Client\src\main\java\deu\cse\lectureroomreservation2\client\view\errorPage.java
