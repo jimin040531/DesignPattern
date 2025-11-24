@@ -35,27 +35,16 @@ public class ScheduleRequest implements Serializable {
     private final String end;
     private final String subject;
     private final String type;
-    private String year;       
-    private String semester;    
-    private String building;   
-    private String professor;
 
     // 생성자
-    public ScheduleRequest(String command,
-                       String year, String semester, String building,
-                       String room, String day, String start, String end,
-                       String subject, String professor, String type) {
-    this.command = command;
-    this.year = year;
-    this.semester = semester;
-    this.building = building;
-    this.room = room;
-    this.day = day;
-    this.start = start;
-    this.end = end;
-    this.subject = subject;
-    this.professor = professor;
-    this.type = type;
+    public ScheduleRequest(String command, String room, String day, String start, String end, String subject, String type) {
+        this.command = command;
+        this.room = room;
+        this.day = day;
+        this.start = start;
+        this.end = end;
+        this.subject = subject;
+        this.type = type;
     }
 
     public String getCommand() {
@@ -85,35 +74,11 @@ public class ScheduleRequest implements Serializable {
     public String getType() {
         return type;
     }
-    public String getYear() {
-    return year;
-    }
 
-    public String getSemester() {
-    return semester;
-    }
-
-    public String getBuilding() {
-    return building;
-    }
-
-    public String getProfessor() {
-    return professor;
-    }
     // 객체의 필드 상태를 문자열로 출력
     @Override
-public String toString() {
-    return "[command=" + command
-            + ", year=" + year
-            + ", semester=" + semester
-            + ", building=" + building
-            + ", room=" + room
-            + ", day=" + day
-            + ", start=" + start
-            + ", end=" + end
-            + ", subject=" + subject
-            + ", professor=" + professor
-            + ", type=" + type
-            + "]";
-}
+    public String toString() {
+        return "[command=" + command + ", room=" + room + ", day=" + day
+                + ", start=" + start + ", end=" + end + ", subject=" + subject + ", type=" + type + "]";
+    }
 }
