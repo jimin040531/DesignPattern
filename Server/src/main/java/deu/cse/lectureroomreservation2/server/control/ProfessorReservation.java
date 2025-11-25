@@ -13,8 +13,8 @@ import java.util.List;
 import java.util.Set;
 
 /**
- * Strategy Pattern: 교수 예약 전략 (SFR-208) [적용된 패턴] 1. Builder: 알림 객체 생성 2.
- * Iterator: 학생 예약 탐색 3. Observer: 알림 전송
+ * Strategy Pattern: 교수 예약 전략 (SFR-208) 
+ * [적용된 패턴] 1. Builder: 알림 객체 생성 2.Iterator: 학생 예약 탐색 3. Observer: 알림 전송
  */
 public class ProfessorReservation implements ReservationBehavior {
 
@@ -45,7 +45,7 @@ public class ProfessorReservation implements ReservationBehavior {
         String endTime = times[1];
 
         // 2. 포맷팅된 예약 문자열 생성
-        String newReserve = ReserveManager.makeReserveInfo(room, dateOnly, day);
+        //String newReserve = ReserveManager.makeReserveInfo(room, dateOnly, day);
 
         // 3. 다른 교수 예약 중복 확인 (기존 로직 유지)
         if (ReserveManager.isSlotTakenByOtherProfessor(room, dateOnly, startTime, profId)) {
@@ -71,10 +71,10 @@ public class ProfessorReservation implements ReservationBehavior {
             // 조건: 같은 방, 같은 날짜, 같은 시작 시간이고 '학생' 예약인 경우
             // (교수는 3시간 예약 가능하지만, 여기선 단순화를 위해 시작 시간이 같은 경우만 처리하거나
             //  필요하면 시간대 포함 여부 로직을 추가할 수 있음. 일단 '시작 시간 일치'로 구현)
-            if (res.getRoom().equals(room)
-                    && res.getDate().equals(dateOnly)
-                    && res.getStart().equals(startTime)
-                    && res.isValidStudentReservation()) {
+           if (res.isValidStudentReservation() 
+                    && res.getRoom() != null && res.getRoom().equals(room)
+                    && res.getDate() != null && res.getDate().equals(dateOnly)
+                    && res.getStart() != null && res.getStart().equals(startTime)) {
 
                 // -> 학생 예약 취소 실행
                 ReserveManager.cancelReserve(res.getUserId(), res.getRawLine());
@@ -117,7 +117,7 @@ public class ProfessorReservation implements ReservationBehavior {
                 requestCount, maxCapacity));
         }
         
-        // 3시간 연속 예약 제한 검사
+        // 4시간 연속 예약 제한 검사
         String startTimeStr = times[0]; 
         // 날짜비교용
         String dateStr = tokens[0].trim() + "-" + tokens[1].trim() + "-" + tokens[2].trim(); 
