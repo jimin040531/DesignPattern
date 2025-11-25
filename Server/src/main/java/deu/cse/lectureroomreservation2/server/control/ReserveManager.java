@@ -600,7 +600,8 @@ public class ReserveManager {
                 while ((line = br.readLine()) != null) {
                     String[] parts = line.split(",", -1); 
                     if (parts.length < 12) continue;
-
+                    
+                    String rBuilding = parts[0].trim(); // 건물 이름
                     String rRoom = parts[1].trim();
                     String rDate = parts[2].trim(); // 파일: 2025/11/27
                     String rDay = parts[3].trim();
@@ -619,15 +620,25 @@ public class ReserveManager {
                         if (!normRDate.equals(normDate)) continue;
                     }
                     
-                    if ("REJECTED".equals(rStatus)) continue;
+                    //if ("REJECTED".equals(rStatus)) continue;
 
                     // 날짜 분리 (슬래시 또는 하이픈 기준)
                     String[] dateTokens = rDate.split("[/-]");
                     if (dateTokens.length < 3) continue; 
                     
-                    // Client 포맷: "916 / 2025 / 11 / 27 / 17:00 17:50 / 목요일"
-                    String formattedInfo = String.format("%s / %s / %s / %s / %s %s / %s",
-                            rRoom, dateTokens[0], dateTokens[1], dateTokens[2], rStart, rEnd, rDay);
+                    // 클라이언트 요청 포맷에 맞춰 데이터 추가
+                    // 순서: 건물 / 강의실 / 년 / 월 / 일 / 요일 / 시작 / 끝 / 상태
+                    String formattedInfo = String.format("%s / %s / %s / %s / %s / %s / %s / %s / %s",
+                            rBuilding,      // 0. 건물
+                            rRoom,          // 1. 강의실
+                            dateTokens[0],  // 2. 년
+                            dateTokens[1],  // 3. 월
+                            dateTokens[2],  // 4. 일
+                            rDay,           // 5. 요일
+                            rStart,         // 6. 시작
+                            rEnd,           // 7. 끝
+                            rStatus         // 8. 상태
+                    );
                     
                     result.add(formattedInfo);
                 }

@@ -46,7 +46,41 @@ public class MyReservationView extends javax.swing.JFrame {
         
         loadMyData();
         initComponents();
+        
         currentUserID.setText(userid);
+        
+        MyReservationTable.addMouseListener(new java.awt.event.MouseAdapter() {
+            @Override
+            public void mouseClicked(java.awt.event.MouseEvent evt) {
+                int row = MyReservationTable.rowAtPoint(evt.getPoint());
+
+                if (row != -1) {
+                    // 컬럼 순서: 0:건물, 1:강의실, 2:날짜, 3:요일, 4:시작, 5:끝, 6:상태
+                    
+                    // 데이터 가져오기
+                    // String building = String.valueOf(MyReservationTable.getValueAt(row, 0)); // 필요 시 사용
+                    roomR = String.valueOf(MyReservationTable.getValueAt(row, 1)); // 강의실
+                    dateR = String.valueOf(MyReservationTable.getValueAt(row, 2)); // 날짜
+                    dayR = String.valueOf(MyReservationTable.getValueAt(row, 3));  // 요일
+                    startR = String.valueOf(MyReservationTable.getValueAt(row, 4)); // 시작
+                    endR = String.valueOf(MyReservationTable.getValueAt(row, 5));   // 끝
+                    
+                    // 취소/변경 요청용 문자열 조립
+                    // 날짜 분해 (2025/11/27 -> 2025, 11, 27)
+                    String[] dParts = dateR.split("/");
+                    if (dParts.length >= 3) {
+                        String y = dParts[0];
+                        String m = dParts[1];
+                        String d = dParts[2];
+                        
+                        // 서버 포맷: room / y / m / d / start end / day
+                        cancelreservation = roomR + "/" + y + "/" + m + "/" + d + "/ " + startR + " " + endR + "/" + dayR;
+                        
+                        System.out.println("선택된 예약 정보: " + cancelreservation);
+                    }
+                }
+            }
+        });
     }
 
     public void loadMyData() {
@@ -57,24 +91,27 @@ public class MyReservationView extends javax.swing.JFrame {
                 try {
                     List<String> reservations = client.retrieveMyReserveInfo(userid, null, null);
 
-                    for (String reserve : reservations) {
-                        System.out.println("확인용reservation");
-                        System.out.println(reserve);
-                    }
-
                     for (String res : reservations) {
-                        String[] parts = res.split("[/-]"); // 구분자로 나누기
+                        String[] parts = res.split(" / "); // 구분자로 나누기
 
-                        if (parts != null && parts.length >= 5) {
-                            String room = parts[0];
-                            String date = parts[1] + "/" + parts[2] + "/" + parts[3];
+                        // 서버에서 9개를 보냄 (건물, 방, 년, 월, 일, 요일, 시작, 끝, 상태)
+                        if (parts.length >= 9) {
+                            String building = parts[0];
+                            String room = parts[1];
+                            String date = parts[2] + "/" + parts[3] + "/" + parts[4]; // YYYY/MM/DD
                             String day = parts[5];
+                            String start = parts[6];
+                            String end = parts[7];
+                            String status = parts[8];
 
-                            String start = (parts[4].length() >= 5) ? parts[4].substring(1, 6) : "오류";
-                            String end = (parts[4].length() >= 4) ? parts[4].substring(parts[4].length() - 6) : "오류";
+                            // 상태 한글화
+                            if("WAIT".equals(status)) status = "대기중";
+                            else if("APPROVED".equals(status)) status = "예약됨";
+                            else if("REJECTED".equals(status)) status = "거절됨";
 
                             System.out.println(Arrays.toString(parts)); // 확인용 출력
-                            rowDataList.add(new String[]{start, end, room, date, day});
+                            // 테이블 순서: 건물, 강의실, 날짜, 요일, 시작, 끝, 상태
+                            rowDataList.add(new Object[]{building, room, date, day, start, end, status});
 
                             System.out.println(Arrays.deepToString(rowDataList.toArray())); // 리스트 출력
                         } else {
@@ -154,14 +191,9 @@ public class MyReservationView extends javax.swing.JFrame {
         currentUserID.setText("000");
 
         MyReservationTable.setModel(new javax.swing.table.DefaultTableModel(
-            new Object [][] {
-                {null, null, null, null, null},
-                {null, null, null, null, null},
-                {null, null, null, null, null},
-                {null, null, null, null, null}
-            },
+            new Object [][] {},
             new String [] {
-                "Start Time", "End Time", "Room", "Date", "Day"
+                "건물", "강의실", "날짜", "요일", "시작시간", "끝시간", "상태"
             }
         )
         {
