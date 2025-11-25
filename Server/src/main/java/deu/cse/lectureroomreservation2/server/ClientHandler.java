@@ -521,9 +521,10 @@ public class ClientHandler implements Runnable, Observer {
                                 switch (cmd) {
                                     case "SEARCH" ->
                                         result = ReserveManager.searchUserAndReservations(
-                                                req.getUserId(), req.getRoom(), req.getDate()
+                                                req.getUserId(), req.getBuilding(), req.getRoom(), req.getDate()
                                         );
-
+                                    
+                                    /* 수정 기능 삭제
                                     case "UPDATE" -> {
                                         // [수정] Builder 패턴 적용
                                         ReservationDetails details = new ReservationDetails.Builder(req.getUserId(), req.getRole())
@@ -535,6 +536,7 @@ public class ClientHandler implements Runnable, Observer {
                                         ReserveResult updateRes = ReserveManager.updateReserve(details);
                                         result = new ReserveManageResult(updateRes.getResult(), updateRes.getReason(), null);
                                     }
+                                    */
 
                                     case "DELETE" -> {
                                         ReserveResult deleteRes = ReserveManager.cancelReserve(

@@ -39,35 +39,43 @@
                       <EmptySpace min="0" pref="0" max="32767" attributes="0"/>
                   </Group>
                   <Group type="102" alignment="1" attributes="0">
-                      <EmptySpace min="0" pref="0" max="32767" attributes="0"/>
-                      <Group type="103" groupAlignment="0" attributes="0">
-                          <Group type="102" alignment="1" attributes="0">
-                              <Component id="lblUserId" min="-2" max="-2" attributes="0"/>
-                              <EmptySpace max="-2" attributes="0"/>
-                              <Component id="txtUserId" min="-2" pref="202" max="-2" attributes="0"/>
-                              <EmptySpace max="-2" attributes="0"/>
-                              <Component id="lblRoomSelect" min="-2" max="-2" attributes="0"/>
-                              <EmptySpace min="-2" pref="8" max="-2" attributes="0"/>
-                              <Component id="cmbRoomSelect" min="-2" max="-2" attributes="0"/>
-                              <EmptySpace type="unrelated" max="-2" attributes="0"/>
-                              <Component id="lblDate" min="-2" max="-2" attributes="0"/>
-                              <EmptySpace max="-2" attributes="0"/>
-                              <Component id="txtDate" min="-2" pref="116" max="-2" attributes="0"/>
-                          </Group>
-                          <Component id="btnSearch" alignment="1" min="-2" pref="116" max="-2" attributes="0"/>
-                          <Group type="102" alignment="1" attributes="0">
-                              <Component id="btnApproved" min="-2" pref="90" max="-2" attributes="0"/>
-                              <EmptySpace max="-2" attributes="0"/>
-                              <Component id="btnRejected1" min="-2" pref="90" max="-2" attributes="0"/>
-                              <EmptySpace max="-2" attributes="0"/>
-                              <Component id="btnEdit" min="-2" pref="90" max="-2" attributes="0"/>
-                              <EmptySpace max="-2" attributes="0"/>
-                              <Component id="btnDelete" min="-2" pref="90" max="-2" attributes="0"/>
-                          </Group>
-                      </Group>
+                      <Component id="btnApproved" min="-2" pref="90" max="-2" attributes="0"/>
+                      <EmptySpace type="separate" max="-2" attributes="0"/>
+                      <Component id="btnRejected1" min="-2" pref="90" max="-2" attributes="0"/>
+                      <EmptySpace max="32767" attributes="0"/>
+                      <Component id="btnDelete" min="-2" pref="90" max="-2" attributes="0"/>
                   </Group>
               </Group>
               <EmptySpace max="-2" attributes="0"/>
+          </Group>
+          <Group type="102" alignment="1" attributes="0">
+              <EmptySpace max="32767" attributes="0"/>
+              <Group type="103" groupAlignment="1" attributes="0">
+                  <Group type="102" alignment="1" attributes="0">
+                      <Component id="lblRoomSelect" min="-2" max="-2" attributes="0"/>
+                      <EmptySpace min="-2" pref="8" max="-2" attributes="0"/>
+                      <Component id="cmbRoomSelect" min="-2" pref="80" max="-2" attributes="0"/>
+                  </Group>
+                  <Group type="102" alignment="1" attributes="0">
+                      <Component id="lblUserId" min="-2" max="-2" attributes="0"/>
+                      <EmptySpace max="-2" attributes="0"/>
+                      <Component id="txtUserId" min="-2" pref="196" max="-2" attributes="0"/>
+                      <EmptySpace type="separate" max="-2" attributes="0"/>
+                      <Component id="lblBuildingSelect" min="-2" max="-2" attributes="0"/>
+                      <EmptySpace min="-2" pref="8" max="-2" attributes="0"/>
+                      <Component id="cmbBuildingSelect" min="-2" pref="80" max="-2" attributes="0"/>
+                  </Group>
+              </Group>
+              <EmptySpace max="-2" attributes="0"/>
+              <Group type="103" groupAlignment="0" attributes="0">
+                  <Group type="102" alignment="1" attributes="0">
+                      <Component id="lblDate" min="-2" max="-2" attributes="0"/>
+                      <EmptySpace max="-2" attributes="0"/>
+                      <Component id="txtDate" min="-2" pref="116" max="-2" attributes="0"/>
+                  </Group>
+                  <Component id="btnSearch" alignment="1" min="-2" pref="116" max="-2" attributes="0"/>
+              </Group>
+              <EmptySpace min="-2" pref="81" max="-2" attributes="0"/>
           </Group>
       </Group>
     </DimensionLayout>
@@ -84,19 +92,26 @@
                   <Component id="lblUserId" alignment="3" min="-2" max="-2" attributes="0"/>
                   <Component id="txtUserId" alignment="3" min="-2" max="-2" attributes="0"/>
                   <Component id="lblDate" alignment="3" min="-2" max="-2" attributes="0"/>
-                  <Component id="lblRoomSelect" alignment="3" min="-2" max="-2" attributes="0"/>
-                  <Component id="cmbRoomSelect" alignment="3" min="-2" max="-2" attributes="0"/>
                   <Component id="txtDate" alignment="3" min="-2" max="-2" attributes="0"/>
+                  <Group type="103" alignment="3" groupAlignment="3" attributes="0">
+                      <Component id="lblBuildingSelect" alignment="3" min="-2" max="-2" attributes="0"/>
+                      <Component id="cmbBuildingSelect" alignment="3" min="-2" max="-2" attributes="0"/>
+                  </Group>
               </Group>
               <EmptySpace max="-2" attributes="0"/>
-              <Component id="btnSearch" min="-2" max="-2" attributes="0"/>
+              <Group type="103" groupAlignment="3" attributes="0">
+                  <Component id="btnSearch" alignment="3" min="-2" max="-2" attributes="0"/>
+                  <Group type="103" alignment="3" groupAlignment="3" attributes="0">
+                      <Component id="lblRoomSelect" alignment="3" min="-2" max="-2" attributes="0"/>
+                      <Component id="cmbRoomSelect" alignment="3" min="-2" max="-2" attributes="0"/>
+                  </Group>
+              </Group>
               <EmptySpace min="-2" pref="24" max="-2" attributes="0"/>
               <Component id="lblReservationTableTitle" min="-2" max="-2" attributes="0"/>
               <EmptySpace max="-2" attributes="0"/>
               <Component id="jScrollPane1" min="-2" pref="170" max="-2" attributes="0"/>
               <EmptySpace type="unrelated" max="-2" attributes="0"/>
               <Group type="103" groupAlignment="3" attributes="0">
-                  <Component id="btnEdit" alignment="3" min="-2" max="-2" attributes="0"/>
                   <Component id="btnDelete" alignment="3" min="-2" max="-2" attributes="0"/>
                   <Component id="btnApproved" alignment="3" min="-2" max="-2" attributes="0"/>
                   <Component id="btnRejected1" alignment="3" min="-2" max="-2" attributes="0"/>
@@ -118,6 +133,11 @@
     <Component class="javax.swing.JLabel" name="lblUserId">
       <Properties>
         <Property name="text" type="java.lang.String" value="&#xc0ac;&#xc6a9;&#xc790; ID :"/>
+      </Properties>
+    </Component>
+    <Component class="javax.swing.JLabel" name="lblBuildingSelect">
+      <Properties>
+        <Property name="text" type="java.lang.String" value="&#xac74;&#xbb3c; &#xc120;&#xd0dd; :"/>
       </Properties>
     </Component>
     <Component class="javax.swing.JLabel" name="lblRoomSelect">
@@ -151,19 +171,26 @@
         <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="txtUserIdActionPerformed"/>
       </Events>
     </Component>
+    <Component class="javax.swing.JComboBox" name="cmbBuildingSelect">
+      <Properties>
+        <Property name="model" type="javax.swing.ComboBoxModel" editor="org.netbeans.modules.form.editors2.ComboBoxModelEditor">
+          <StringArray count="1">
+            <StringItem index="0" value="&#xc804;&#xccb4;"/>
+          </StringArray>
+        </Property>
+      </Properties>
+      <Events>
+        <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="cmbBuildingSelectActionPerformed"/>
+      </Events>
+      <AuxValues>
+        <AuxValue name="JavaCodeGenerator_TypeParameters" type="java.lang.String" value="&lt;String&gt;"/>
+      </AuxValues>
+    </Component>
     <Component class="javax.swing.JComboBox" name="cmbRoomSelect">
       <Properties>
         <Property name="model" type="javax.swing.ComboBoxModel" editor="org.netbeans.modules.form.editors2.ComboBoxModelEditor">
-          <StringArray count="9">
+          <StringArray count="1">
             <StringItem index="0" value="&#xc804;&#xccb4;"/>
-            <StringItem index="1" value="908"/>
-            <StringItem index="2" value="911"/>
-            <StringItem index="3" value="912"/>
-            <StringItem index="4" value="913"/>
-            <StringItem index="5" value="914"/>
-            <StringItem index="6" value="915"/>
-            <StringItem index="7" value="916"/>
-            <StringItem index="8" value="918"/>
           </StringArray>
         </Property>
       </Properties>
@@ -189,10 +216,10 @@
         <Component class="javax.swing.JTable" name="tblReservationHistory">
           <Properties>
             <Property name="model" type="javax.swing.table.TableModel" editor="org.netbeans.modules.form.editors2.TableModelEditor">
-              <Table columnCount="12" rowCount="4">
+              <Table columnCount="13" rowCount="4">
                 <Column editable="true" title="&#xac74;&#xbb3c;" type="java.lang.Object"/>
-                <Column editable="true" title="&#xc0ac;&#xc6a9;&#xc790; ID" type="java.lang.Object"/>
                 <Column editable="true" title="&#xac15;&#xc758;&#xc2e4;" type="java.lang.Object"/>
+                <Column editable="true" title="&#xc0ac;&#xc6a9;&#xc790; ID" type="java.lang.Object"/>
                 <Column editable="true" title="&#xb144;" type="java.lang.Object"/>
                 <Column editable="true" title="&#xc6d4;" type="java.lang.Object"/>
                 <Column editable="true" title="&#xc77c;" type="java.lang.Object"/>
@@ -202,10 +229,16 @@
                 <Column editable="true" title="&#xb0b4;&#xc6a9;" type="java.lang.Object"/>
                 <Column editable="true" title="&#xc0c1;&#xd0dc;" type="java.lang.Object"/>
                 <Column editable="true" title="&#xc0ac;&#xc720;" type="java.lang.Object"/>
+                <Column editable="true" title="ogTxt" type="java.lang.Object"/>
               </Table>
             </Property>
             <Property name="columnModel" type="javax.swing.table.TableColumnModel" editor="org.netbeans.modules.form.editors2.TableColumnModelEditor">
               <TableColumnModel selectionModel="0">
+                <Column maxWidth="-1" minWidth="-1" prefWidth="-1" resizable="true">
+                  <Title/>
+                  <Editor/>
+                  <Renderer/>
+                </Column>
                 <Column maxWidth="-1" minWidth="-1" prefWidth="-1" resizable="true">
                   <Title/>
                   <Editor/>
@@ -221,11 +254,6 @@
                   <Editor/>
                   <Renderer/>
                 </Column>
-                <Column maxWidth="-1" minWidth="-1" prefWidth="-1" resizable="true">
-                  <Title/>
-                  <Editor/>
-                  <Renderer/>
-                </Column>
                 <Column maxWidth="-1" minWidth="-1" prefWidth="40" resizable="true">
                   <Title/>
                   <Editor/>
@@ -262,6 +290,11 @@
                   <Renderer/>
                 </Column>
                 <Column maxWidth="-1" minWidth="-1" prefWidth="-1" resizable="true">
+                  <Title/>
+                  <Editor/>
+                  <Renderer/>
+                </Column>
+                <Column maxWidth="0" minWidth="0" prefWidth="0" resizable="true">
                   <Title/>
                   <Editor/>
                   <Renderer/>
@@ -272,6 +305,10 @@
               <TableHeader reorderingAllowed="true" resizingAllowed="true"/>
             </Property>
           </Properties>
+          <AccessibilityProperties>
+            <Property name="AccessibleContext.accessibleName" type="java.lang.String" value=""/>
+            <Property name="AccessibleContext.accessibleDescription" type="java.lang.String" value=""/>
+          </AccessibilityProperties>
         </Component>
       </SubComponents>
     </Container>
@@ -289,14 +326,6 @@
       </Properties>
       <Events>
         <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="btnRejected1ActionPerformed"/>
-      </Events>
-    </Component>
-    <Component class="javax.swing.JButton" name="btnEdit">
-      <Properties>
-        <Property name="text" type="java.lang.String" value="&#x270f; &#xc218;&#xc815;"/>
-      </Properties>
-      <Events>
-        <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="btnEditActionPerformed"/>
       </Events>
     </Component>
     <Component class="javax.swing.JButton" name="btnDelete">
