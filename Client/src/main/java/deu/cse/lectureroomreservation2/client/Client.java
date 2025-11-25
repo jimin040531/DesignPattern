@@ -80,35 +80,31 @@ public class Client {
 
     // 예약 요청 처리
     public synchronized ReserveResult sendReserveRequest(String id, String role, 
-            String buildingName, 
-            String roomNumber, 
-            String date, String day, 
-            String purpose, int userCount) // <--- 여기 파라미터가 변경되었습니다!
+            String buildingName, // [추가됨]
+            String roomNumber, String date, String day, 
+            String purpose, int userCount) 
             throws IOException, ClassNotFoundException {
         
-        // 변경된 ReserveRequest 생성자 호출 (7개 파라미터)
+        // ReserveRequest 생성자 변경 반영
         ReserveRequest req = new ReserveRequest(id, role, buildingName, roomNumber, date, day, purpose, userCount);
         
-        // 서버에 예약 명령 전송
         out.writeUTF("RESERVE");
         out.flush();
         out.writeObject(req);
         out.flush();
-        // 서버로부터 결과 수신
         return (ReserveResult) in.readObject();
     }
 
     /**
      * [신규] 특정 강의실/월/시간대에 예약된 날짜(day) 목록을 서버에 요청합니다. (ObjectStream 버전에 맞게 수정됨)
      */
+    @SuppressWarnings("unchecked")
     public synchronized List<String> getMonthlyReservedDates(String roomNum, int year, int month, String startTime)
             throws IOException, ClassNotFoundException {
 
-        // 1. 서버에 보낼 요청 프로토콜 (명령어)
         out.writeUTF("GET_MONTHLY_RESERVED_DATES");
         out.flush();
 
-        // 2. 파라미터 전송
         out.writeUTF(roomNum);
         out.flush();
         out.writeInt(year);
@@ -118,9 +114,6 @@ public class Client {
         out.writeUTF(startTime);
         out.flush();
 
-        // 3. 서버로부터 Set<Integer> 객체 자체를 수신
-        // (서버는 {3, 5, 10} 같은 Set 객체를 new HashSet<>()으로 만들어
-        //  out.writeObject()로 보내야 합니다.)
         return (List<String>) in.readObject();
     }
 
@@ -474,15 +467,17 @@ public class Client {
     }
 
     // ---------------------------------------------------------
-    // 예약 현황 통계 요청 (강의실, 날짜, 시작시간)
+    // 예약 현황 통계 요청 (건물이름, 강의실, 날짜, 시작시간)
     // ---------------------------------------------------------
-    public synchronized int[] getReservationStats(String room, String date, String startTime) {
+    public synchronized int[] getReservationStats(String buildingName, String room, String date, String startTime) {
         try {
-            // 1. 서버와 약속된 명령어 전송
-            out.writeUTF("GET_RESERVATION_STATS"); 
+            out.writeUTF("GET_RESERVATION_STATS");
             out.flush();
 
-            // 2. 파라미터 전송 (순서 중요: 방 -> 날짜 -> 시간)
+            // 건물 이름 전송
+            out.writeUTF(buildingName); 
+            out.flush();
+
             out.writeUTF(room);
             out.flush();
             out.writeUTF(date);
@@ -490,13 +485,10 @@ public class Client {
             out.writeUTF(startTime);
             out.flush();
             
-            // 3. 서버로부터 결과 수신 (int배열: [현재인원, 최대인원])
-            // readObject()로 받은 뒤 캐스팅합니다.
             return (int[]) in.readObject();
 
         } catch (IOException | ClassNotFoundException e) {
             e.printStackTrace();
-            // 통신 오류 시 기본값 [0, 0] 반환하여 에러 방지
             return new int[]{0, 0}; 
         }
     }

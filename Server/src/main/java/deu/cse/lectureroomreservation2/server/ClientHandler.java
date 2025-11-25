@@ -138,12 +138,10 @@ public class ClientHandler implements Runnable, Observer {
 
                         // [신규] 예약 현황 통계 요청 처리
                         if ("GET_RESERVATION_STATS".equals(command)) {
+                            String buildingName = in.readUTF();
                             String room = in.readUTF();
                             String date = in.readUTF();
                             String startTime = in.readUTF();
-                            
-                            // 1. 방 번호로 건물 이름을 먼저 찾음
-                            String buildingName = BuildingManager.getInstance().getBuildingName(room);
                             
                             // 2. 건물 이름을 포함하여 통계 요청 (자연관/공학관 구분)
                             int[] stats = ReserveManager.getReservationStats(buildingName, room, date, startTime);

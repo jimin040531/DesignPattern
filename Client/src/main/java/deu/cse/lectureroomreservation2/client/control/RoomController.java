@@ -96,9 +96,11 @@ public class RoomController {
                         // 날짜 포맷 정리 (예: "2025 / 06 / 03 / " -> "2025/06/03")
                         String[] dateParts = choosedDate.split("/");
                         String dateSimple = dateParts[0].trim() + "/" + dateParts[1].trim() + "/" + dateParts[2].trim();
-
+                        
+                        String selectedBuilding = (String) view.getBuildingComboBox().getSelectedItem();
+                        
                         // 서버 요청 (Client.java에 추가한 메서드 호출)
-                        int[] stats = client.getReservationStats(roomR, dateSimple, startR);
+                        int[] stats = client.getReservationStats(selectedBuilding, roomR, dateSimple, startR);
                         int currentCount = stats[0]; // 현재 예약된 인원 (대기+확정)
                         int maxCapacity = stats[1];  // 강의실 최대 수용 인원
                         
@@ -728,7 +730,8 @@ public class RoomController {
         calendar.getDayChooser().addDateEvaluator(reservedEvaluator);
         calendar.getDayChooser().addDateEvaluator(availableEvaluator);
     }
-
+    
+    
     /**
      * '월별 현황' 탭의 데이터를 로드하고 캘린더에 색칠합니다. [대폭 수정됨]
      */
@@ -747,7 +750,8 @@ public class RoomController {
             return;
         }
         String startTime = selectedTimeSlot.split(" - ")[0];
-
+        
+        
         // 1. SwingWorker 반환 타입을 서버가 보내는 List<String>으로 변경 (ArrayList가 List를 구현)
         new SwingWorker<List<String>, Void>() { // <--- Set<Integer> -> List<String>으로 변경
             @Override
