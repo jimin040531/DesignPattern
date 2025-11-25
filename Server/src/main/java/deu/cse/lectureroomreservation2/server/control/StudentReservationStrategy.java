@@ -25,6 +25,7 @@ public class StudentReservationStrategy implements ReservationStrategy {
     public ReserveResult execute(ReservationDetails details) {
         String id = details.getId();
         String room = details.getRoomNumber();
+        String buildingName = details.getBuildingName();
         String fullDateInfo = details.getDate(); // 예: "2025 / 06 / 03 / 10:00 10:50"
         String day = details.getDay();           // 예: "화요일"
         int requestCount = details.getUserCount();
@@ -39,10 +40,8 @@ public class StudentReservationStrategy implements ReservationStrategy {
         }
         
         String dateOnly = tokens[0].trim() + "/" + tokens[1].trim() + "/" + tokens[2].trim();
-        
         // 날짜비교용
-        String dateStr = tokens[0].trim() + "-" + tokens[1].trim() + "-" + tokens[2].trim(); 
-        
+        String dateStr = tokens[0].trim() + "-" + tokens[1].trim() + "-" + tokens[2].trim();        
         // 시간: "10:00" (시작 시간만 중요)
         String[] times = tokens[3].trim().split(" ");
         String startTimeStr = times[0]; 
@@ -63,13 +62,13 @@ public class StudentReservationStrategy implements ReservationStrategy {
         // (2) [Singleton 패턴 사용] 수용 인원 50% 제한
         // BuildingManager의 유일한 인스턴스를 가져옴
         BuildingManager bm = BuildingManager.getInstance();
-        int maxCapacity = bm.getRoomCapacity(room);
+        int maxCapacity = bm.getRoomCapacity(buildingName, room);
 
         if (maxCapacity == 0) {
             return new ReserveResult(false, "강의실 정보(" + room + ")를 찾을 수 없습니다.");
         }
 
-        // ★ [핵심 변경] 해당 시간대의 기존 예약 인원 총합 구하기
+        // 해당 시간대의 기존 예약 인원 총합 구하기
         int currentReservedCount = getExistingReservedCount(room, dateOnly, startTimeStr);
         int totalExpectedCount = currentReservedCount + requestCount;
         int limitCount = (int)(maxCapacity * 0.5);
@@ -83,7 +82,6 @@ public class StudentReservationStrategy implements ReservationStrategy {
         // (3) 3시간 연속 예약 제한 검사
         // 파일에서 해당 학생이 해당 날짜에 이미 예약한 시간(Hour)들을 가져옴
         Set<Integer> bookedHours = getUserBookedHours(id, dateStr);
-        
         int currentHour = requestStart.getHour(); // 예: 10시 신청 시 10
 
         // Case A: 10시 신청 -> (9시, 11시)가 이미 있음 -> 9,10,11 연속됨 -> 불가
@@ -103,8 +101,6 @@ public class StudentReservationStrategy implements ReservationStrategy {
         // 3. 파일 저장
         // -----------------------------------------
         
-        // 건물 이름 가져오기 (Singleton 사용)
-        String buildingName = bm.getBuildingName(room);
         
         // 종료 시간 계산 (50분 수업 고정)
         // 10:00 -> 10:50
@@ -113,17 +109,17 @@ public class StudentReservationStrategy implements ReservationStrategy {
         // 포맷: 건물이름,강의실,예약날짜,요일,시작,끝,학번,권한(S),사용목적,사용인원,WAIT,-
         String csvLine = String.format("%s,%s,%s,%s,%s,%s,%s,%s,%s,%d,%s,%s",
                 buildingName,   // 1. 건물이름
-                room,           // 2. 강의실
-                dateOnly,       // 3. 예약 날짜
-                day,            // 4. 요일
-                startTimeStr,   // 5. 시작시간
-                endTimeStr,     // 6. 끝시간
-                id,             // 7. 학번
-                "S",            // 8. 권한
-                purpose,        // 9. 사용 목적
-                requestCount,   // 10. 사용 인원
-                "WAIT",         // 11. 상태 (대기)
-                "-"             // 12. 거절 사유
+                room,           
+                dateOnly,       
+                day,            
+                startTimeStr,   
+                endTimeStr,     
+                id,             
+                "S",            
+                purpose,        
+                requestCount,   
+                "WAIT",         
+                "-"             
         );
 
         // ReserveManager를 통해 파일에 기록

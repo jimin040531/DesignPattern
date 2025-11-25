@@ -140,7 +140,7 @@ public class ReserveManager {
     // ---------------------------------------------------------
     //예약 현황 통계 조회 (확정 인원, 대기 인원)
     // ---------------------------------------------------------
-    public static int[] getReservationStats(String room, String dateOnly, String startTime) {
+    public static int[] getReservationStats(String buildingName, String room, String dateOnly, String startTime) {
         int currentTotalCount = 0; // 확정(APPROVED) + 대기(WAIT) 인원 합계
 
         synchronized (FILE_LOCK) {
@@ -152,7 +152,8 @@ public class ReserveManager {
                     if (parts.length < 11) {
                         continue;
                     }
-
+                    
+                    String rBuilding = parts[0].trim();
                     String rRoom = parts[1].trim();
                     String rDate = parts[2].trim();  // yyyy/MM/dd
                     String rStart = parts[4].trim(); // HH:mm
@@ -184,7 +185,7 @@ public class ReserveManager {
         //[Singleton Pattern 적용]
         // BuildingManager 클래스의 유일한 인스턴스를 가져와서 해당 강의실의 최대 수용 인원을 조회
         // new BuildingManager()를 하지 않고 getInstance()를 사용.
-        int maxCapacity = BuildingManager.getInstance().getRoomCapacity(room);
+        int maxCapacity = BuildingManager.getInstance().getRoomCapacity(buildingName, room);
 
         // 결과 반환: [현재 예약된 총 인원, 최대 수용 인원]
         return new int[]{currentTotalCount, maxCapacity};

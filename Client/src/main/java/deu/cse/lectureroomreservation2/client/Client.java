@@ -79,13 +79,15 @@ public class Client {
     }
 
     // 예약 요청 처리
-    public synchronized ReserveResult sendReserveRequest(String id, String role, String roomNumber, 
+    public synchronized ReserveResult sendReserveRequest(String id, String role, 
+            String buildingName, 
+            String roomNumber, 
             String date, String day, 
             String purpose, int userCount) // <--- 여기 파라미터가 변경되었습니다!
             throws IOException, ClassNotFoundException {
         
-        // [수정] 변경된 ReserveRequest 생성자 호출 (7개 파라미터)
-        ReserveRequest req = new ReserveRequest(id, role, roomNumber, date, day, purpose, userCount);
+        // 변경된 ReserveRequest 생성자 호출 (7개 파라미터)
+        ReserveRequest req = new ReserveRequest(id, role, buildingName, roomNumber, date, day, purpose, userCount);
         
         // 서버에 예약 명령 전송
         out.writeUTF("RESERVE");

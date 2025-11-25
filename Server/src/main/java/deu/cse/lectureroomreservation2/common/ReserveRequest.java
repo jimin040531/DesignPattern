@@ -5,6 +5,7 @@ import java.io.Serializable;
 public class ReserveRequest implements Serializable {
     private String id;
     private String role;
+    private String buildingName;
     private String roomNumber;
     private String date;
     private String day;
@@ -14,9 +15,10 @@ public class ReserveRequest implements Serializable {
     private int userCount;
 
     // [수정] 생성자 파라미터 변경 (7개)
-    public ReserveRequest(String id, String role, String roomNumber, String date, String day, String purpose, int userCount) {
+    public ReserveRequest(String id, String role, String buildingName, String roomNumber, String date, String day, String purpose, int userCount) {
         this.id = id;
         this.role = role;
+        this.buildingName = buildingName;
         this.roomNumber = roomNumber;
         this.date = date;
         this.day = day;
@@ -25,7 +27,11 @@ public class ReserveRequest implements Serializable {
 
         System.out.println("클라이언트 ReserveRequest : " + id + " " + role + " " + roomNumber + " " + date + " " + day + " " + purpose + " " + userCount + " 보냄");
     }
-
+    
+    public String getBuildingName() {
+        return buildingName;
+    }
+    
     public String getId() {
         return id;
     }

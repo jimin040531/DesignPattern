@@ -10,6 +10,7 @@ public class LRCompleteCheck extends javax.swing.JFrame {
 
     private final String id;
     private final String role;
+    private final String buildingName;
     String roomNumber;
     String date;
     String day;
@@ -27,40 +28,16 @@ public class LRCompleteCheck extends javax.swing.JFrame {
     
     // 기본 생성자 (테스트용)
     public LRCompleteCheck() {
-        this("20203139", "S", "915", "2025 05 15 15:00 16:00", "목요일", null, null);
+        this("20203139", "S", "공학관" ,"915", "2025 05 15 15:00 16:00", "목요일", null, null);
     }
     
-    /*public LRCompleteCheck() {
-        initComponents();
 
-        setLocationRelativeTo(null);
-
-        String tID = "20203139";
-        String tRole = "S";
-
-        String troomNumber = "915";
-        String tdate = "2025 05 15 15:00 16:00";
-        String tday = "목요일";
-        showDate = tdate + " / " + tday;
-
-        this.id = tID;
-        this.role = tRole;
-        this.roomNumber = troomNumber;
-        this.date = tdate;
-        this.day = tday;
-
-        viewSelectRoom.setText(troomNumber);
-        viewSelectTime.setText(showDate);
-
-        viewSelectRoom.setEditable(false);
-        viewSelectTime.setEditable(false);
-    }*/
-
-    public LRCompleteCheck(String id, String role, String roomNumber, String date, String day, Client client, String IsChange) {
+    public LRCompleteCheck(String id, String role, String buildingName, String roomNumber, String date, String day, Client client, String IsChange) {
         setTitle("강의실 예약 확인");
         this.client = client;
         this.id = id;
         this.role = role;
+        this.buildingName = buildingName;
         this.roomNumber = roomNumber;
         this.date = date; // 예: "2025 / 06 / 03 / 10:00 10:50"
         this.day = day;
@@ -240,7 +217,7 @@ public class LRCompleteCheck extends javax.swing.JFrame {
             result = client.sendModifyReserveRequest(id, IsChange, roomNumber, date, day, role);
         } else {
             // 신규 예약
-            result = client.sendReserveRequest(id, role, roomNumber, date, day, purpose, userCount);
+            result = client.sendReserveRequest(id, role, buildingName, roomNumber, date, day, purpose, userCount);
         }
 
         // 4. 결과 처리
@@ -281,7 +258,7 @@ public class LRCompleteCheck extends javax.swing.JFrame {
         java.awt.EventQueue.invokeLater(new Runnable() {
             public void run() {
                 // new LRCompleteCheck(id, role, roomNumber, date, day, null).setVisible(true);
-                new LRCompleteCheck(null, null, null, null, null, null, null).setVisible(true);
+                new LRCompleteCheck(null, null, null,null, null, null, null, null).setVisible(true);
             }
         });
     }

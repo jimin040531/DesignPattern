@@ -11,6 +11,7 @@ public class ReservationDetails {
     private final String role;
 
     // --- '신규 예약'용 ---
+    private final String buildingName;
     private final String roomNumber;
     private final String date;
     private final String day;
@@ -28,6 +29,7 @@ public class ReservationDetails {
     private ReservationDetails(Builder builder) {
         this.id = builder.id;
         this.role = builder.role;
+        this.buildingName = builder.buildingName;
         this.roomNumber = builder.roomNumber;
         this.date = builder.date;
         this.day = builder.day;
@@ -44,6 +46,7 @@ public class ReservationDetails {
     // --- Getters ---
     public String getId() { return id; }
     public String getRole() { return role; }
+    public String getBuildingName() { return buildingName; }
     public String getRoomNumber() { return roomNumber; }
     public String getDate() { return date; }
     public String getDay() { return day; }
@@ -63,6 +66,7 @@ public class ReservationDetails {
         private final String role;
 
         // 선택적 파라미터
+        private String buildingName;
         private String roomNumber;
         private String date;
         private String day;
@@ -80,7 +84,13 @@ public class ReservationDetails {
             this.id = id;
             this.role = role;
         }
-
+        
+        // 건물 이름 설정 메서드
+        public Builder buildingName(String buildingName) {
+            this.buildingName = buildingName;
+            return this;
+        }
+        
         // --- '신규 예약'용 메서드 ---
         public Builder roomNumber(String roomNumber) {
             this.roomNumber = roomNumber;

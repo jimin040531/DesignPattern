@@ -141,13 +141,18 @@ public class ClientHandler implements Runnable, Observer {
                             String room = in.readUTF();
                             String date = in.readUTF();
                             String startTime = in.readUTF();
-
-                            // ReserveManager에서 통계 가져오기
-                            int[] stats = ReserveManager.getReservationStats(room, date, startTime);
+                            
+                            // 1. 방 번호로 건물 이름을 먼저 찾음
+                            String buildingName = BuildingManager.getInstance().getBuildingName(room);
+                            
+                            // 2. 건물 이름을 포함하여 통계 요청 (자연관/공학관 구분)
+                            int[] stats = ReserveManager.getReservationStats(buildingName, room, date, startTime);
 
                             // 결과 전송 (int 배열: [확정수, 대기수])
-                            out.writeObject(stats);
-                            out.flush();
+                            synchronized (this) {
+                                out.writeObject(stats);
+                                out.flush();
+                            }
                         }
 
                         if ("LOGOUT".equalsIgnoreCase(command)) {

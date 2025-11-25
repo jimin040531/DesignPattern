@@ -94,10 +94,12 @@ public class BuildingManager {
         return rooms;
     }
     
-    // 4. 특정 강의실의 최대 수용 인원 반환
-    public int getRoomCapacity(String roomNumber) {
+    // 4. 특정 강의실의 최대 수용 인원 반환 (건물 이름 포함 검색)
+    public int getRoomCapacity(String buildingName, String roomNumber) {
         for (String[] parts : allRoomData) {
-            if (parts[2].trim().equals(roomNumber)) {
+            // parts[0]: 건물명, parts[2]: 강의실번호, parts[4]: 인원
+            // 건물 이름과 강의실 번호가 모두 일치해야 함
+            if (parts[0].trim().equals(buildingName) && parts[2].trim().equals(roomNumber)) {
                 try {
                     return Integer.parseInt(parts[4].trim());
                 } catch (NumberFormatException e) {
@@ -105,6 +107,16 @@ public class BuildingManager {
                 }
             }
         }
+        
+        // 건물 이름이 null이거나 못 찾았을 경우 호수만으로 검색 (기존 로직 호환성)
+        if (buildingName == null) {
+             for (String[] parts : allRoomData) {
+                if (parts[2].trim().equals(roomNumber)) {
+                    try { return Integer.parseInt(parts[4].trim()); } catch(Exception e) {}
+                }
+             }
+        }
+        
         return 0; // 못 찾으면 0
     }
     

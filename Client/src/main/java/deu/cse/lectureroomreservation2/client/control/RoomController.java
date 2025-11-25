@@ -472,8 +472,10 @@ public class RoomController {
         if ("change".equals(view.getCheck())) {
             oldReserveInfo = MyReservationView.cancelreservation;
         }
-
-        new LRCompleteCheck(view.getUserid(), view.getRole(), roomR, fullDate, fullDay, client, oldReserveInfo).setVisible(true);
+        
+        // 현재 선택된 건물 이름 가져오기
+        String currentBuilding = (String) view.getBuildingComboBox().getSelectedItem();
+        new LRCompleteCheck(view.getUserid(), view.getRole(), currentBuilding ,roomR, fullDate, fullDay, client, oldReserveInfo).setVisible(true);
         //view.dispose();
     }
 
@@ -911,10 +913,13 @@ public class RoomController {
         String dayOfWeek = daysKor[cal.get(Calendar.DAY_OF_WEEK) - 1] + "요일";
 
         // 6. 예약 확인 창 띄우기
+        // 현재 선택된 건물 이름 가져오기
+        String currentBuilding = (String) view.getBuildingComboBox().getSelectedItem();
         // LRCompleteCheck 생성자에 파라미터 전달
         new LRCompleteCheck(
                 view.getUserid(),
                 view.getRole(),
+                currentBuilding,
                 selectedRoom,
                 fullDate,
                 dayOfWeek,
