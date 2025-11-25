@@ -28,11 +28,11 @@ public class ReservationHistoryView extends javax.swing.JFrame {
         this.client = client;
         initComponents();
         setLocationRelativeTo(null);
-
+        
         // 날짜 입력 힌트 설정
         txtDate.setText("yyyy / mm / dd");
         txtDate.setForeground(Color.GRAY);
-
+        
         txtDate.addFocusListener(new java.awt.event.FocusAdapter() {
             @Override
             public void focusGained(java.awt.event.FocusEvent evt) {
@@ -51,6 +51,50 @@ public class ReservationHistoryView extends javax.swing.JFrame {
                 }
             }
         });
+        
+        // 건물 선택 시 강의실 요청
+        try {
+            // 건물 목록 불러오기
+            cmbBuildingSelect.removeAllItems();
+            cmbBuildingSelect.addItem("전체");
+
+            java.util.List<String> buildings = client.getBuildingList();
+            for (String b : buildings) {
+                cmbBuildingSelect.addItem(b);
+            }
+
+            // 건물 선택 시 강의실 자동 로딩하도록 연결
+            cmbBuildingSelect.addActionListener(e -> {
+                String selectedBuilding = cmbBuildingSelect.getSelectedItem().toString();
+
+                cmbRoomSelect.removeAllItems();
+                cmbRoomSelect.addItem("전체");
+
+                if (selectedBuilding.equals("전체")) return;
+
+                try {
+                    // 선택한 건물의 층 목록
+                    java.util.List<String> floors = client.getFloorList(selectedBuilding);
+
+                    // 층 목록에서 강의실 불러오기
+                    for (String floor : floors) {
+                        java.util.List<String[]> roomList = client.getRoomList(selectedBuilding, floor);
+
+                        for (String[] roomData : roomList) {
+                            String roomNumber = roomData[0];
+                            cmbRoomSelect.addItem(roomNumber);
+                        }
+                    }
+                } catch (Exception ex) {
+                    ex.printStackTrace();
+                }
+            });
+            
+        } catch (Exception e) {
+            e.printStackTrace();
+            JOptionPane.showMessageDialog(this,
+                "건물/강의실 목록을 불러오는 중 오류가 발생했습니다.");
+        }
     }
 
     private String findUserRole(String userId) {
@@ -73,7 +117,6 @@ public class ReservationHistoryView extends javax.swing.JFrame {
             return null;
         }
     }
-
     /**
      * This method is called from within the constructor to initialize the form.
      * WARNING: Do NOT modify this code. The content of this method is always
@@ -85,18 +128,19 @@ public class ReservationHistoryView extends javax.swing.JFrame {
 
         lblTitle = new javax.swing.JLabel();
         lblUserId = new javax.swing.JLabel();
+        lblBuildingSelect = new javax.swing.JLabel();
         lblRoomSelect = new javax.swing.JLabel();
         lblDate = new javax.swing.JLabel();
         btnBack = new javax.swing.JButton();
         btnSearch = new javax.swing.JButton();
         txtUserId = new javax.swing.JTextField();
+        cmbBuildingSelect = new javax.swing.JComboBox<>();
         cmbRoomSelect = new javax.swing.JComboBox<>();
         lblReservationTableTitle = new javax.swing.JLabel();
         jScrollPane1 = new javax.swing.JScrollPane();
         tblReservationHistory = new javax.swing.JTable();
         btnApproved = new javax.swing.JButton();
         btnRejected1 = new javax.swing.JButton();
-        btnEdit = new javax.swing.JButton();
         btnDelete = new javax.swing.JButton();
         txtDate = new javax.swing.JTextField();
 
@@ -106,6 +150,8 @@ public class ReservationHistoryView extends javax.swing.JFrame {
         lblTitle.setText("예약 내역 조회");
 
         lblUserId.setText("사용자 ID :");
+
+        lblBuildingSelect.setText("건물 선택 :");
 
         lblRoomSelect.setText("강의실 선택 :");
 
@@ -131,7 +177,14 @@ public class ReservationHistoryView extends javax.swing.JFrame {
             }
         });
 
-        cmbRoomSelect.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "전체", "908", "911", "912", "913", "914", "915", "916", "918" }));
+        cmbBuildingSelect.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "전체" }));
+        cmbBuildingSelect.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                cmbBuildingSelectActionPerformed(evt);
+            }
+        });
+
+        cmbRoomSelect.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "전체" }));
         cmbRoomSelect.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 cmbRoomSelectActionPerformed(evt);
@@ -142,21 +195,26 @@ public class ReservationHistoryView extends javax.swing.JFrame {
 
         tblReservationHistory.setModel(new javax.swing.table.DefaultTableModel(
             new Object [][] {
-                {null, null, null, null, null, null, null, null, null, null, null, null},
-                {null, null, null, null, null, null, null, null, null, null, null, null},
-                {null, null, null, null, null, null, null, null, null, null, null, null},
-                {null, null, null, null, null, null, null, null, null, null, null, null}
+                {null, null, null, null, null, null, null, null, null, null, null, null, null},
+                {null, null, null, null, null, null, null, null, null, null, null, null, null},
+                {null, null, null, null, null, null, null, null, null, null, null, null, null},
+                {null, null, null, null, null, null, null, null, null, null, null, null, null}
             },
             new String [] {
-                "건물", "사용자 ID", "강의실", "년", "월", "일", "시작 시간", "종료 시간", "요일", "내용", "상태", "사유"
+                "건물", "강의실", "사용자 ID", "년", "월", "일", "시작 시간", "종료 시간", "요일", "내용", "상태", "사유", "ogTxt"
             }
         ));
         jScrollPane1.setViewportView(tblReservationHistory);
         if (tblReservationHistory.getColumnModel().getColumnCount() > 0) {
-            tblReservationHistory.getColumnModel().getColumn(1).setPreferredWidth(80);
+            tblReservationHistory.getColumnModel().getColumn(2).setPreferredWidth(80);
             tblReservationHistory.getColumnModel().getColumn(4).setPreferredWidth(40);
             tblReservationHistory.getColumnModel().getColumn(5).setPreferredWidth(40);
+            tblReservationHistory.getColumnModel().getColumn(12).setMinWidth(0);
+            tblReservationHistory.getColumnModel().getColumn(12).setPreferredWidth(0);
+            tblReservationHistory.getColumnModel().getColumn(12).setMaxWidth(0);
         }
+        tblReservationHistory.getAccessibleContext().setAccessibleName("");
+        tblReservationHistory.getAccessibleContext().setAccessibleDescription("");
 
         btnApproved.setText("✏ 승인");
         btnApproved.addActionListener(new java.awt.event.ActionListener() {
@@ -169,13 +227,6 @@ public class ReservationHistoryView extends javax.swing.JFrame {
         btnRejected1.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 btnRejected1ActionPerformed(evt);
-            }
-        });
-
-        btnEdit.setText("✏ 수정");
-        btnEdit.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                btnEditActionPerformed(evt);
             }
         });
 
@@ -203,30 +254,35 @@ public class ReservationHistoryView extends javax.swing.JFrame {
                                 .addComponent(lblTitle)))
                         .addGap(0, 0, Short.MAX_VALUE))
                     .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
-                        .addGap(0, 0, Short.MAX_VALUE)
-                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
-                                .addComponent(lblUserId)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                .addComponent(txtUserId, javax.swing.GroupLayout.PREFERRED_SIZE, 202, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                .addComponent(lblRoomSelect)
-                                .addGap(8, 8, 8)
-                                .addComponent(cmbRoomSelect, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                                .addComponent(lblDate)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                .addComponent(txtDate, javax.swing.GroupLayout.PREFERRED_SIZE, 116, javax.swing.GroupLayout.PREFERRED_SIZE))
-                            .addComponent(btnSearch, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.PREFERRED_SIZE, 116, javax.swing.GroupLayout.PREFERRED_SIZE)
-                            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
-                                .addComponent(btnApproved, javax.swing.GroupLayout.PREFERRED_SIZE, 90, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                .addComponent(btnRejected1, javax.swing.GroupLayout.PREFERRED_SIZE, 90, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                .addComponent(btnEdit, javax.swing.GroupLayout.PREFERRED_SIZE, 90, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                .addComponent(btnDelete, javax.swing.GroupLayout.PREFERRED_SIZE, 90, javax.swing.GroupLayout.PREFERRED_SIZE)))))
+                        .addComponent(btnApproved, javax.swing.GroupLayout.PREFERRED_SIZE, 90, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addGap(18, 18, 18)
+                        .addComponent(btnRejected1, javax.swing.GroupLayout.PREFERRED_SIZE, 90, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                        .addComponent(btnDelete, javax.swing.GroupLayout.PREFERRED_SIZE, 90, javax.swing.GroupLayout.PREFERRED_SIZE)))
                 .addContainerGap())
+            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
+                    .addGroup(layout.createSequentialGroup()
+                        .addComponent(lblRoomSelect)
+                        .addGap(8, 8, 8)
+                        .addComponent(cmbRoomSelect, javax.swing.GroupLayout.PREFERRED_SIZE, 80, javax.swing.GroupLayout.PREFERRED_SIZE))
+                    .addGroup(layout.createSequentialGroup()
+                        .addComponent(lblUserId)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(txtUserId, javax.swing.GroupLayout.PREFERRED_SIZE, 196, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addGap(18, 18, 18)
+                        .addComponent(lblBuildingSelect)
+                        .addGap(8, 8, 8)
+                        .addComponent(cmbBuildingSelect, javax.swing.GroupLayout.PREFERRED_SIZE, 80, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
+                        .addComponent(lblDate)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(txtDate, javax.swing.GroupLayout.PREFERRED_SIZE, 116, javax.swing.GroupLayout.PREFERRED_SIZE))
+                    .addComponent(btnSearch, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.PREFERRED_SIZE, 116, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addGap(81, 81, 81))
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -240,18 +296,22 @@ public class ReservationHistoryView extends javax.swing.JFrame {
                     .addComponent(lblUserId)
                     .addComponent(txtUserId, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(lblDate)
-                    .addComponent(lblRoomSelect)
-                    .addComponent(cmbRoomSelect, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(txtDate, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                    .addComponent(txtDate, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                        .addComponent(lblBuildingSelect)
+                        .addComponent(cmbBuildingSelect, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(btnSearch)
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(btnSearch)
+                    .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                        .addComponent(lblRoomSelect)
+                        .addComponent(cmbRoomSelect, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)))
                 .addGap(24, 24, 24)
                 .addComponent(lblReservationTableTitle)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 170, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(btnEdit)
                     .addComponent(btnDelete)
                     .addComponent(btnApproved)
                     .addComponent(btnRejected1))
@@ -261,6 +321,7 @@ public class ReservationHistoryView extends javax.swing.JFrame {
         pack();
     }// </editor-fold>//GEN-END:initComponents
 
+    
     private void btnBackActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnBackActionPerformed
         // TODO add your handling code here:
         new AdminMainView("A", client).setVisible(true);
@@ -270,6 +331,7 @@ public class ReservationHistoryView extends javax.swing.JFrame {
     private void btnSearchActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnSearchActionPerformed
         // 사용자 입력값 처리
         final String fUserId = txtUserId.getText().trim();
+        final String fBuilding = cmbBuildingSelect.getSelectedItem().toString().equals("전체") ? "" : cmbBuildingSelect.getSelectedItem().toString();
         final String fRoom = cmbRoomSelect.getSelectedItem().toString().equals("전체") ? "" : cmbRoomSelect.getSelectedItem().toString();
         final String inputDate = txtDate.getText().trim();
         final String fDate = inputDate.equals("yyyy / mm / dd") ? "" : inputDate;
@@ -279,19 +341,20 @@ public class ReservationHistoryView extends javax.swing.JFrame {
             JOptionPane.showMessageDialog(this, "날짜 형식이 잘못되었습니다.\n ex: yyyy/mm/dd");
             return;
         }
-
+        /* 
         // 검색 조건이 모두 비었는지 확인
-        if (fUserId.isEmpty() && fRoom.isEmpty() && fDate.isEmpty()) {
+        if (fUserId.isEmpty() && fBuilding.isEmpty() && fRoom.isEmpty() && fDate.isEmpty()) {
             JOptionPane.showMessageDialog(this, "검색 조건을 입력해주세요.");
             return;
         }
-
+        */
         try {
             // 요청 객체 생성
             ReserveManageRequest req = new ReserveManageRequest(
-                    "SEARCH", fUserId, fRoom, fDate,
-                    null, null, null, null, null, null
+                    "SEARCH", fUserId, fBuilding, fRoom, fDate,
+                    null, null, null, null, null, null, null
             );
+            
 
             // 서버에 요청
             ReserveManageResult result = client.sendReserveManageRequest(req);
@@ -341,51 +404,6 @@ public class ReservationHistoryView extends javax.swing.JFrame {
     }//GEN-LAST:event_txtUserIdActionPerformed
 
    
-    private void btnEditActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnEditActionPerformed
-        int row = tblReservationHistory.getSelectedRow();
-        if (row == -1) {
-            JOptionPane.showMessageDialog(this, "수정할 예약을 선택해주세요.");
-            return;
-        }
-
-        String userId = tblReservationHistory.getValueAt(row, 0).toString();
-        String oldRoom = tblReservationHistory.getValueAt(row, 1).toString();
-        String year = tblReservationHistory.getValueAt(row, 2).toString();
-        String month = tblReservationHistory.getValueAt(row, 3).toString();
-        String day = tblReservationHistory.getValueAt(row, 4).toString();
-        String startTime = tblReservationHistory.getValueAt(row, 5).toString();
-        String endTime = tblReservationHistory.getValueAt(row, 6).toString();
-        String weekDay = tblReservationHistory.getValueAt(row, 7).toString();
-
-        String oldDateStr = String.format("%s / %s / %s / %s %s", year, month, day, startTime, endTime);
-        String oldReserveInfo = String.format("%s / %s / %s", oldRoom, oldDateStr, weekDay);
-
-        String newRoom = JOptionPane.showInputDialog(this, "새 강의실 번호 입력:", oldRoom);
-        String newDate = JOptionPane.showInputDialog(this, "새 날짜 및 시간 입력 (예: yyyy / mm / dd / hh:mm hh:mm):", oldDateStr);
-        String newWeekDay = JOptionPane.showInputDialog(this, "새 요일 입력:", weekDay);
-
-        if (newRoom == null || newDate == null || newWeekDay == null) {
-            JOptionPane.showMessageDialog(this, "수정이 취소되었습니다.");
-            return;
-        }
-
-        try {
-            String role = findUserRole(userId);
-            ReserveManageRequest req = new ReserveManageRequest(
-                    "UPDATE", userId, null, null,
-                    oldReserveInfo, newRoom, newDate, newWeekDay, role, null
-            );
-            ReserveManageResult res = client.sendReserveManageRequest(req);
-            JOptionPane.showMessageDialog(this, res.getMessage());
-            if (res.isSuccess()) {
-                btnSearchActionPerformed(null);
-            }
-        } catch (Exception e) {
-            JOptionPane.showMessageDialog(this, "서버 오류: " + e.getMessage());
-            e.printStackTrace();
-        }
-    }//GEN-LAST:event_btnEditActionPerformed
-
     private void cmbRoomSelectActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_cmbRoomSelectActionPerformed
         // TODO add your handling code here:
     }//GEN-LAST:event_cmbRoomSelectActionPerformed
@@ -396,34 +414,30 @@ public class ReservationHistoryView extends javax.swing.JFrame {
             JOptionPane.showMessageDialog(this, "삭제할 예약을 선택해주세요.");
             return;
         }
-
-        String userId = tblReservationHistory.getValueAt(row, 0).toString();
-        String room = tblReservationHistory.getValueAt(row, 1).toString();
-        String year = tblReservationHistory.getValueAt(row, 2).toString();
-        String month = tblReservationHistory.getValueAt(row, 3).toString();
-        String day = tblReservationHistory.getValueAt(row, 4).toString();
-        String startTime = tblReservationHistory.getValueAt(row, 5).toString();
-        String endTime = tblReservationHistory.getValueAt(row, 6).toString();
-        String weekDay = tblReservationHistory.getValueAt(row, 7).toString();
-
-        String dateStr = String.format("%s / %s / %s / %s %s", year, month, day, startTime, endTime);
-        String reserveInfo = String.format("%s / %s / %s", room, dateStr, weekDay);
+        /*
+        ogTxt : jtable과 텍스트 파일 데이터 순서가 달라 직접적인 비교 어려움
+                -> 원본 텍스트 데이터를 컬럼에 포함시켜 삭제 시 비교 용의성 향상
+        */
+        String userId = tblReservationHistory.getValueAt(row, 2).toString();
+        String ogTxt = tblReservationHistory.getValueAt(row, 12).toString();
 
         try {
             ReserveManageRequest req = new ReserveManageRequest(
-                    "DELETE", userId, null, null,
-                    null, null, null, null, null, reserveInfo
+                "DELETE",userId, null, null, null, null,
+                null, null,  null, null, null, ogTxt
             );
             ReserveManageResult res = client.sendReserveManageRequest(req);
             JOptionPane.showMessageDialog(this, res.getMessage());
             if (res.isSuccess()) {
-                btnSearchActionPerformed(null);
+                btnSearchActionPerformed(null); // 다시 조회해서 테이블 리프레시
             }
         } catch (Exception e) {
             JOptionPane.showMessageDialog(this, "서버 오류: " + e.getMessage());
             e.printStackTrace();
         }
     }//GEN-LAST:event_btnDeleteActionPerformed
+    
+    
     //신청 예약 승인
     private void btnApprovedActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnApprovedActionPerformed
         int row = tblReservationHistory.getSelectedRow();
@@ -441,26 +455,26 @@ public class ReservationHistoryView extends javax.swing.JFrame {
 
     // 테이블 값 읽기 (컬럼 순서 그대로)
     String building  = tblReservationHistory.getValueAt(row, 0).toString();
-    String userId    = tblReservationHistory.getValueAt(row, 1).toString();
-    String room      = tblReservationHistory.getValueAt(row, 2).toString();
+    String room      = tblReservationHistory.getValueAt(row, 1).toString();
+    String userId    = tblReservationHistory.getValueAt(row, 2).toString();
     String year      = tblReservationHistory.getValueAt(row, 3).toString();
     String month     = tblReservationHistory.getValueAt(row, 4).toString();
     String day       = tblReservationHistory.getValueAt(row, 5).toString();
-    String start     = tblReservationHistory.getValueAt(row, 6).toString();
-    String end       = tblReservationHistory.getValueAt(row, 7).toString();
-    String week      = tblReservationHistory.getValueAt(row, 8).toString();
+    String startTime = tblReservationHistory.getValueAt(row, 6).toString();
+    String endTime   = tblReservationHistory.getValueAt(row, 7).toString();
+    String weekDay   = tblReservationHistory.getValueAt(row, 8).toString();
 
     // 파일에서 찾을 문자열 형식 맞추기
     String dateStr = String.format("%s/%s/%s", year, month, day);
     String reserveInfo = String.format("%s,%s,%s,%s,%s,%s", 
-            building, room, dateStr, week, start, end);
+            building, room, dateStr, weekDay, startTime, endTime);
 
     try {
         String role = findUserRole(userId);
 
         ReserveManageRequest req = new ReserveManageRequest(
-                "APPROVE", userId, null, null,
-                reserveInfo, null, null, null, role, null
+                "APPROVE", userId, null, null, null,
+                reserveInfo, null, null, null, null, role, null
         );
         ReserveManageResult res = client.sendReserveManageRequest(req);
         JOptionPane.showMessageDialog(this, res.getMessage());
@@ -483,6 +497,8 @@ public class ReservationHistoryView extends javax.swing.JFrame {
         JOptionPane.showMessageDialog(this, "이미 처리된 예약입니다.");
         return;
     }
+    
+    
     //거절 사유 입력
     String reason = JOptionPane.showInputDialog(this, "거절 사유를 입력하세요:");
     if (reason == null || reason.trim().isEmpty()) {
@@ -491,25 +507,25 @@ public class ReservationHistoryView extends javax.swing.JFrame {
     }
 
     String building  = tblReservationHistory.getValueAt(row, 0).toString();
-    String userId    = tblReservationHistory.getValueAt(row, 1).toString();
-    String room      = tblReservationHistory.getValueAt(row, 2).toString();
+    String room      = tblReservationHistory.getValueAt(row, 1).toString();
+    String userId    = tblReservationHistory.getValueAt(row, 2).toString();
     String year      = tblReservationHistory.getValueAt(row, 3).toString();
     String month     = tblReservationHistory.getValueAt(row, 4).toString();
     String day       = tblReservationHistory.getValueAt(row, 5).toString();
-    String start     = tblReservationHistory.getValueAt(row, 6).toString();
-    String end       = tblReservationHistory.getValueAt(row, 7).toString();
-    String week      = tblReservationHistory.getValueAt(row, 8).toString();
+    String startTime     = tblReservationHistory.getValueAt(row, 6).toString();
+    String endTime       = tblReservationHistory.getValueAt(row, 7).toString();
+    String weekDay      = tblReservationHistory.getValueAt(row, 8).toString();
 
     String dateStr = String.format("%s/%s/%s", year, month, day);
     String reserveInfo = String.format("%s,%s,%s,%s,%s,%s", 
-            building, room, dateStr, week, start, end);
+            building, room, dateStr, weekDay, startTime, endTime);
 
     try {
         String role = findUserRole(userId);
 
         ReserveManageRequest req = new ReserveManageRequest(
-                "REJECT", userId, null, null,
-                reserveInfo, null, null, null, role, reason
+                "REJECT", userId, null, null, null,
+                reserveInfo, null, null, null, null, role, reason
         );
         ReserveManageResult res = client.sendReserveManageRequest(req);
         JOptionPane.showMessageDialog(this, res.getMessage());
@@ -518,6 +534,10 @@ public class ReservationHistoryView extends javax.swing.JFrame {
         JOptionPane.showMessageDialog(this, "서버 오류: " + e.getMessage());
     }
     }//GEN-LAST:event_btnRejected1ActionPerformed
+    
+    private void cmbBuildingSelectActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_cmbBuildingSelectActionPerformed
+        // TODO add your handling code here:
+    }//GEN-LAST:event_cmbBuildingSelectActionPerformed
 
     /**
      * @param args the command line arguments
@@ -527,11 +547,12 @@ public class ReservationHistoryView extends javax.swing.JFrame {
     private javax.swing.JButton btnApproved;
     private javax.swing.JButton btnBack;
     private javax.swing.JButton btnDelete;
-    private javax.swing.JButton btnEdit;
     private javax.swing.JButton btnRejected1;
     private javax.swing.JButton btnSearch;
+    private javax.swing.JComboBox<String> cmbBuildingSelect;
     private javax.swing.JComboBox<String> cmbRoomSelect;
     private javax.swing.JScrollPane jScrollPane1;
+    private javax.swing.JLabel lblBuildingSelect;
     private javax.swing.JLabel lblDate;
     private javax.swing.JLabel lblReservationTableTitle;
     private javax.swing.JLabel lblRoomSelect;
