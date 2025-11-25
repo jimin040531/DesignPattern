@@ -70,34 +70,31 @@ public class TextFileReservationChecker extends AbstractReservationChecker {
      * 포맷: 건물(0), 강의실(1), 날짜(2), 요일(3), 시작(4), 종료(5), ID(6), 역할(7), 목적(8), 인원(9), 상태(10), 사유(11)
      * 조건: 상태가 "REJECTED"가 아닌 경우(WAIT, APPROVED)만 true 반환
      */
+    // 상태 문자열 반환 메서드
     @Override
-    protected boolean hasActiveReservation(String room, String date, String time) {
-        System.out.println(String.format("[DEBUG] 검색중: 방=%s, 날짜=%s, 시간=%s", room, date, time));
+    protected String getReservationStatus(String room, String date, String time) {
         try (BufferedReader br = new BufferedReader(new FileReader(reservationFile))) {
             String line;
             while ((line = br.readLine()) != null) {
                 String[] parts = line.split(",");
-                if (parts.length >= 11) {
-                    String rRoom = parts[1].trim();     // 강의실
-                    String rDate = parts[2].trim();     // 날짜 (yyyy/MM/dd)
-                    String rStart = parts[4].trim();    // 시작시간
-                    String rStatus = parts[10].trim();  // 상태 (APPROVED, WAIT, REJECTED)
+                if (parts.length >= 12) { // 12칸 포맷
+                    String rRoom = parts[1].trim();
+                    String rDate = parts[2].trim();
+                    String rStart = parts[4].trim();
+                    String rStatus = parts[10].trim(); // APPROVED, WAIT, REJECTED
 
-                    // 날짜 포맷 통일 ('-' -> '/')
-                    String normalizedDate = date.replace("-", "/");
-                    String normalizedRDate = rDate.replace("-", "/");
+                    String normalizedDate = date.replace("-", "/").replace(" ", "");
+                    String normalizedRDate = rDate.replace("-", "/").replace(" ", "");
 
                     if (rRoom.equals(room) && normalizedRDate.equals(normalizedDate) && rStart.equals(time)) {
-                        // 거절된 예약은 없는 셈 침 (즉, 승인되거나 대기중인 것만 "예약됨"으로 간주)
+                        // 거절된 건 무시, 나머지는 상태 반환
                         if (!"REJECTED".equals(rStatus)) {
-                            return true;
+                            return rStatus; // "APPROVED" or "WAIT" 리턴
                         }
                     }
                 }
             }
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        return false;
+        } catch (IOException e) { e.printStackTrace(); }
+        return null; // 예약 없음
     }
 }

@@ -28,10 +28,11 @@ public abstract class AbstractReservationChecker {
             return "CLASS"; 
         }
 
-        // 2. 예약 현황 체크 (ReservationInfo.txt)
-        // 거절(REJECTED)된 건 무시하고, 승인(APPROVED)이나 대기(WAIT)만 체크
-        if (hasActiveReservation(room, date, time)) {
-            return "RESERVED"; // 예약 있음 (노란색/빨간색 등)
+        // 2. 예약 현황 체크 (상세 상태 문자열 반환)
+        // null이 아니면 그 상태(WAIT, APPROVED)를 그대로 반환
+        String status = getReservationStatus(room, date, time);
+        if (status != null) {
+            return status; 
         }
 
         // 3. 아무것도 없음
@@ -40,5 +41,5 @@ public abstract class AbstractReservationChecker {
 
     // 하위 클래스에서 구체적으로 구현할 메서드 (Hooks)
     protected abstract boolean hasRegularClass(String room, String day, String time, String date);
-    protected abstract boolean hasActiveReservation(String room, String date, String time);
+    protected abstract String getReservationStatus(String room, String date, String time);
 }

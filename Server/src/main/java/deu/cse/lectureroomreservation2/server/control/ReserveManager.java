@@ -361,18 +361,15 @@ public class ReserveManager {
         return checker.checkStatus(room, dateString, dayName, startTime);
     }
 
-    // 한글 상태 메시지 변환 (일별 테이블용)
+    // 한글 상태 메시지 변환 
     private static String convertStatusToKorean(String code) {
         switch (code) {
-            case "CLASS":
-                return "정규 수업";
-            case "RESERVED":
-                return "예약 대기";
-            case "AVAILABLE":
-                return "예약 가능";
-            default:
-                return "";
-        } 
+            case "CLASS": return "정규 수업";
+            case "WAIT": return "예약 대기";      
+            case "APPROVED": return "예약 확정";    
+            case "AVAILABLE": return "예약 가능";
+            default: return "";
+        }
     }
 
     private static String calculateEndTime(String startTime) {
@@ -545,14 +542,13 @@ public class ReserveManager {
             List<String> lines = new ArrayList<>();
             boolean updated = false;
 
-            // 클라이언트에서 온 정보 공백 제거 (안전 장치)
+            // 클라이언트에서 온 정보 공백 제거
             String targetInfo = reserveInfo.trim();
 
             try (BufferedReader br = new BufferedReader(new FileReader(file))) {
                 String line;
                 while ((line = br.readLine()) != null) {
-                    // [핵심 수정] 날짜 변환 없이 contains로 바로 확인
-                    // 데이터가 정확하다면 변환 없이도 찾아야 함
+                    // 데이터 찾기
                     if (line.contains(targetInfo)) {
                         String[] arr = line.split(",", -1);
                         
@@ -572,13 +568,44 @@ public class ReserveManager {
                 }
             } catch (Exception e) { return new ReserveManageResult(false, "오류: " + e.getMessage(), null); }
             
-            if (!updated) return new ReserveManageResult(false, "예약을 찾을 수 없습니다.\n(정보 불일치)", null);
+            if (!updated) return new ReserveManageResult(false, "예약을 찾을 수 없습니다.", null);
             
             try (BufferedWriter bw = new BufferedWriter(new FileWriter(file))) {
                 for (String l : lines) { bw.write(l); bw.newLine(); }
             } catch (Exception e) { return new ReserveManageResult(false, "저장 오류", null); }
             
-            String msg = command.equals("APPROVE") ? "[예약 승인]\n"+reserveInfo : "[예약 거절]\n"+reserveInfo+"\n사유: "+reason;
+            // ============================================================
+            // [Observer 패턴 활용] 알림 메시지 포맷팅 (요구사항 반영)
+            // reserveInfo 형식: "건물,강의실,날짜,요일,시작,종료" (쉼표로 구분됨)
+            // ============================================================
+            String msg = "";
+            try {
+                String[] tokens = reserveInfo.split(",");
+                if (tokens.length >= 5) {
+                    String building = tokens[0]; // 건물
+                    String room = tokens[1];     // 강의실
+                    String date = tokens[2];     // 날짜
+                    // tokens[3]은 요일
+                    String start = tokens[4];    // 시작시간
+                    
+                    if (command.equals("APPROVE")) {
+                        // 포맷: 예약 날짜/건물/강의실/시작시간/ 예약이 승인되었습니다.
+                        msg = String.format("%s / %s / %s호 / %s / 예약이 승인되었습니다.", 
+                                date, building, room, start);
+                    } else {
+                        // 포맷: 예약 날짜/건물/강의실/시작시간/거절사유 
+                        msg = String.format("%s / %s / %s호 / %s / 거절사유 : %s / 예약이 거절 되었습니다.", 
+                                date, building, room, start, reason);
+                    }
+                } else {
+                    // 포맷 파싱 실패 시 기본 메시지
+                    msg = (command.equals("APPROVE") ? "예약 승인" : "예약 거절") + ": " + reserveInfo;
+                }
+            } catch (Exception e) {
+                msg = "알림 생성 중 오류 발생";
+            }
+
+            // 알림 전송 (Observer에게 통지)
             NotificationService.getInstance().notifyObserver(userId, msg);
             
             return new ReserveManageResult(true, command + " 완료", null);
