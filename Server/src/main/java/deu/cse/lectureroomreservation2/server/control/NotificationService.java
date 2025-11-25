@@ -2,8 +2,9 @@
  * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
  * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
  */
+
 package deu.cse.lectureroomreservation2.server.control;
-import java.util.HashMap;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.Map;
 import java.util.List;
 import java.util.ArrayList;
@@ -13,11 +14,10 @@ import java.util.ArrayList;
  */
 public class NotificationService implements NotificationSubject {
     private static NotificationService instance;
-    private Map<String, Observer> activeUsers; // 로그인 중인 사용자(Observer) 목록
+    private final Map<String, Observer> activeUsers = new ConcurrentHashMap<>();
+    // 로그인 중인 사용자(Observer) 목록
 
-    private NotificationService() {
-        activeUsers = new HashMap<>();
-    }
+    private NotificationService(){}
 
     public static synchronized NotificationService getInstance() {
         if (instance == null) {
@@ -40,10 +40,11 @@ public class NotificationService implements NotificationSubject {
 
     @Override
     public void notifyObserver(String userId, String message) {
-        if (activeUsers.containsKey(userId)) {
+        Observer observer = activeUsers.get(userId);
+                
+        if (observer != null) {
             // 1. 로그인 상태: 즉시 전송 (Observer 패턴 동작)
             System.out.println(">> [알림 전송] 실시간 알림 -> " + userId);
-            Observer observer = activeUsers.get(userId);
             observer.update(message);
         } else {
             // 2. 로그아웃 상태: 파일 저장 (기존 noticeController 활용)
