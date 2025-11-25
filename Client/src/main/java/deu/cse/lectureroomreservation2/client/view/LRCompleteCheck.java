@@ -182,6 +182,11 @@ public class LRCompleteCheck extends javax.swing.JFrame {
     }// GEN-LAST:event_viewSelectTimeActionPerformed
 
     private void LastLRButton1ActionPerformed(java.awt.event.ActionEvent evt) throws Exception {
+        System.out.println(">> 예약 요청 전송: 건물명=" + this.buildingName + ", 강의실=" + roomNumber);
+        if (this.buildingName == null) {
+            javax.swing.JOptionPane.showMessageDialog(this, "오류: 건물 이름이 없습니다. 다시 시도해주세요.");
+            return;
+        }
         // 1. 입력값 검증
         String purpose = txtPurpose.getText().trim();
         String countStr = txtUserCount.getText().trim();
@@ -217,7 +222,7 @@ public class LRCompleteCheck extends javax.swing.JFrame {
             result = client.sendModifyReserveRequest(id, IsChange, roomNumber, date, day, role);
         } else {
             // 신규 예약
-            result = client.sendReserveRequest(id, role, buildingName, roomNumber, date, day, purpose, userCount);
+            result = client.sendReserveRequest(id, role, this.buildingName, roomNumber, date, day, purpose, userCount);
         }
 
         // 4. 결과 처리

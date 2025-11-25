@@ -16,18 +16,18 @@ import java.util.Set;
  * Strategy Pattern: 교수 예약 전략 (SFR-208) [적용된 패턴] 1. Builder: 알림 객체 생성 2.
  * Iterator: 학생 예약 탐색 3. Observer: 알림 전송
  */
-public class ProfessorReservationStrategy implements ReservationStrategy {
+public class ProfessorReservation implements ReservationBehavior {
 
     // [Builder Pattern] 4. Client가 AbstractBuilder를 사용
     private NotificationBuilder notificationBuilder;
 
-    public ProfessorReservationStrategy() {
+    public ProfessorReservation() {
         // [Builder Pattern] 3. 구상 빌더 주입
         this.notificationBuilder = new StudentCancellationBuilder();
     }
 
     @Override
-    public ReserveResult execute(ReservationDetails details) {
+    public ReserveResult reserve(ReservationDetails details) {
 
         String profId = details.getId();
         String room = details.getRoomNumber();

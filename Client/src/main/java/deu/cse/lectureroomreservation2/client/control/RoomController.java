@@ -477,8 +477,27 @@ public class RoomController {
         
         // 현재 선택된 건물 이름 가져오기
         String currentBuilding = (String) view.getBuildingComboBox().getSelectedItem();
-        new LRCompleteCheck(view.getUserid(), view.getRole(), currentBuilding ,roomR, fullDate, fullDay, client, oldReserveInfo).setVisible(true);
-        //view.dispose();
+        
+        // 디버깅 로그
+        System.out.println(">> 예약 버튼 클릭됨. 선택된 건물: " + currentBuilding);
+
+        // 2. 값이 없으면 방어 코드
+        if (currentBuilding == null || currentBuilding.isEmpty()) {
+            JOptionPane.showMessageDialog(view, "건물을 선택해주세요.");
+            return;
+        }
+
+        // 3. 생성자에 전달
+        new LRCompleteCheck(
+            view.getUserid(), 
+            view.getRole(), 
+            currentBuilding, // <--- 이 값이 정확히 넘어가야 함
+            roomR, 
+            fullDate, 
+            fullDay, 
+            client, 
+            oldReserveInfo
+        ).setVisible(true);
     }
 
     private void updateChoosedDate() {

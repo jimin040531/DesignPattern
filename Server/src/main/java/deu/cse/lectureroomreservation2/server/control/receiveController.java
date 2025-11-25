@@ -1,7 +1,3 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
- */
 package deu.cse.lectureroomreservation2.server.control;
 
 import deu.cse.lectureroomreservation2.common.ReserveResult;
@@ -28,12 +24,9 @@ public class receiveController {
     // 3. 경로 계산 로직 (팀원마다 다른 환경 대응)
     private static String calculateResourcePath() {
         String projectPath = System.getProperty("user.dir");
-        // IDE나 실행 환경에 따라 'Server' 폴더 안일 수도, 밖일 수도 있음
         if (projectPath.endsWith("Server")) {
-            // Server가 현재 작업 디렉터리인 경우
             return projectPath + File.separator + "src" + File.separator + "main" + File.separator + "resources";
         } else {
-            // 전체 솔루션 루트에서 실행되는 경우
             return projectPath + File.separator + "Server"
                     + File.separator + "src" + File.separator + "main" + File.separator + "resources";
         }
@@ -43,13 +36,11 @@ public class receiveController {
     static {
         System.out.println(">>> 현재 데이터 파일 경로: " + filePath);
 
-        // 디렉터리 없으면 생성
         File dir = new File(filePath);
         if (!dir.exists()) {
             dir.mkdirs();
         }
 
-        // 리소스 파일 복사 (파일이 없을 때만 복사하여 데이터 유지)
         copyResourceIfNotExists("UserInfo.txt", UserFileName);
         copyResourceIfNotExists("noticeSave.txt", noticeFileName);
         copyResourceIfNotExists("ScheduleInfo.txt", ScheduleInfoFileName);
@@ -57,15 +48,11 @@ public class receiveController {
         copyResourceIfNotExists("BuildingInfo.txt", BuildingInfoFileName);
     }
 
-    // 리소스 파일을 처음 한 번만 복사
     private static void copyResourceIfNotExists(String resourceName, String destPath) {
         File destFile = new File(destPath);
-
-        // 이미 파일이 존재하면 덮어쓰지 않고 유지
         if (destFile.exists()) {
             return;
         }
-
         try (InputStream in = receiveController.class.getClassLoader().getResourceAsStream(resourceName)) {
             if (in != null) {
                 Files.copy(in, destFile.toPath());
@@ -79,30 +66,12 @@ public class receiveController {
         }
     }
 
-    // --- Getters ---
-    public static String getFilepath() {
-        return filePath;
-    }
-
-    public static String getUserFileName() {
-        return UserFileName;
-    }
-
-    public static String getNoticeFileName() {
-        return noticeFileName;
-    }
-
-    public static String getScheduleInfoFileName() {
-        return ScheduleInfoFileName;
-    }
-
-    public static String getReservationInfoFileName() {
-        return ReservationInfoFileName;
-    }
-
-    public static String getBuildingInfoFileName() {
-        return BuildingInfoFileName;
-    }
+    public static String getFilepath() { return filePath; }
+    public static String getUserFileName() { return UserFileName; }
+    public static String getNoticeFileName() { return noticeFileName; }
+    public static String getScheduleInfoFileName() { return ScheduleInfoFileName; }
+    public static String getReservationInfoFileName() { return ReservationInfoFileName; }
+    public static String getBuildingInfoFileName() { return BuildingInfoFileName; }
 
     // 예약 요청 처리
     public ReserveResult handleReserve(ReserveRequest req) {
@@ -111,9 +80,10 @@ public class receiveController {
                 .roomNumber(req.getRoomNumber())
                 .date(req.getDate())
                 .day(req.getDay())
-                // [수정] 아래 두 줄을 추가해야 클라이언트가 보낸 목적/인원수가 반영됩니다.
                 .purpose(req.getPurpose()) 
                 .userCount(req.getUserCount())
+                // ★★★ [핵심 수정] 이 줄이 빠져 있어서 null이 저장되었습니다. ★★★
+                .buildingName(req.getBuildingName()) 
                 .build();
 
         // 2. ReserveManager에는 details 객체 하나만 전달

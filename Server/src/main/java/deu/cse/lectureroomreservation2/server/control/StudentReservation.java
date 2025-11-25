@@ -16,13 +16,13 @@ import java.util.Set;
  * - 수용 인원 50% 제한 (Singleton 사용)
  * - 3시간 연속 예약 불가
  */
-public class StudentReservationStrategy implements ReservationStrategy {
+public class StudentReservation implements ReservationBehavior {
 
     // 예약 정보 파일 경로 (연속 예약 확인용)
     private final String reservationFile = receiveController.getReservationInfoFileName();
 
     @Override
-    public ReserveResult execute(ReservationDetails details) {
+    public ReserveResult reserve(ReservationDetails details) {
         String id = details.getId();
         String room = details.getRoomNumber();
         String buildingName = details.getBuildingName();
