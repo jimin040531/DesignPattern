@@ -561,6 +561,16 @@ public class ReserveManager {
                 return new ReserveManageResult(false, "파일 저장 오류: " + e.getMessage(), null);
             }
 
+            String msg;
+            if (command.equals("APPROVE")) {
+                msg = "[예약 승인]\n" + reserveInfo + "\n승인되었습니다.";
+            } else {
+                msg = "[예약 거절]\n" + reserveInfo + "\n사유: " + reason;
+            }
+
+            // 실시간 or 오프라인 저장 자동 처리됨
+            NotificationService.getInstance().notifyObserver(userId, msg);
+            
             return new ReserveManageResult(true, 
             (command.equals("APPROVE") ? "승인 완료!" : "거절 완료!"), null);
         }

@@ -43,7 +43,8 @@ public class ClientHandler implements Runnable, Observer {
     private final Socket socket;
     private final Server server;
     private final BuildingManager buildingManager;
-
+   
+    private String userId;
     // [Observer 패턴] 3. 출력 스트림을 멤버 변수로 승격 (update 메서드에서 쓰기 위해)
     private ObjectOutputStream out;
 
@@ -104,9 +105,9 @@ public class ClientHandler implements Runnable, Observer {
                 synchronized (server.getLoggedInUsers()) {
                     server.getLoggedInUsers().add(id); // 로그인 성공한 사용자 등록
                 }
-
+                this.userId = id;
                 // [Observer 패턴] 5. 로그인 성공 시 알림 서비스에 등록 (구독 시작)
-                NotificationService.getInstance().registerObserver(id, this);
+                NotificationService.getInstance().registerObserver(userId, this);
             }
 
             out.writeObject(status);
@@ -645,9 +646,8 @@ public class ClientHandler implements Runnable, Observer {
                 synchronized (server.getLoggedInUsers()) {
                     server.getLoggedInUsers().remove(id); // 로그아웃 처리
                 }
-
                 //연결 종료시 알림 구독 해지
-                NotificationService.getInstance().removeObserver(id);
+                NotificationService.getInstance().removeObserver(this.userId);
             }
 
             try {
