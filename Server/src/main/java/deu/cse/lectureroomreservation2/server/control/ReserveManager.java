@@ -390,8 +390,40 @@ public class ReserveManager {
         return String.format("%s,%s,%s", room, date, day); // 임시 포맷
     }
 
-    public static boolean equalsReserveInfo(String info1, String info2) {
-        return info1.trim().equals(info2.trim());
+    public static boolean equalsReserveInfo(String fileLine, String clientRequest) {
+        try {
+            // 1. 파일 라인 파싱 (CSV: 쉼표 기준)
+            // 포맷: 건물,강의실,날짜,요일,시작,종료,...
+            String[] fParts = fileLine.split(",");
+            if (fParts.length < 6) return false;
+
+            String fRoom = fParts[1].trim();
+            String fDate = fParts[2].trim().replace("-", "/"); // 날짜 포맷 통일
+            String fStart = fParts[4].trim();
+
+            // 2. 클라이언트 요청 파싱 (Slash 기준)
+            // 포맷: "916/2025/11/27/ 12:00 12:50/목요일" (MyReservationView에서 생성됨)
+            String[] cParts = clientRequest.split("/");
+            
+            // 최소한 방, 년, 월, 일, 시간 정보는 있어야 함
+            if (cParts.length < 5) return false;
+
+            String cRoom = cParts[0].trim();
+            
+            // 날짜 조립 (2025, 11, 27 -> 2025/11/27)
+            String cDate = cParts[1].trim() + "/" + cParts[2].trim() + "/" + cParts[3].trim();
+            
+            // 시간 파싱 ("12:00 12:50" -> "12:00")
+            String timePart = cParts[4].trim();
+            String cStart = timePart.split(" ")[0];
+
+            // 3. 핵심 키(강의실, 날짜, 시작시간)가 일치하면 같은 예약임
+            return fRoom.equals(cRoom) && fDate.equals(cDate) && fStart.equals(cStart);
+
+        } catch (Exception e) {
+            // 파싱 중 에러 나면 다른 데이터로 간주
+            return false;
+        }
     }
 
     public static List<String> cancelStudentReservesForProfessor(String roomNumber, String date, String day) {
@@ -548,7 +580,7 @@ public class ReserveManager {
     
     // 미사용 또는 클라이언트 호환용 (빈 구현)
     public static List<String> getReserveInfoById(String id) {
-        return new ArrayList<>();
+        return getReserveInfoAdvanced(id, null, null);
     }
     
     //ReservationInfo.txt 읽어 데이터 필터링

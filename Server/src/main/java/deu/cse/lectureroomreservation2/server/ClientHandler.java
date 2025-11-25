@@ -236,28 +236,33 @@ public class ClientHandler implements Runnable, Observer {
                         }
                         // 클라이언트 요청 - 기존 예약 정보를 새 예약 정보로 변경
                         if ("MODIFY_RESERVE".equals(command)) {
-                            // 1. 파라미터 읽기
+                            // 1. 파라미터 읽기 (순서 중요!)
                             String userId = in.readUTF();
                             String oldReserveInfo = in.readUTF();
+                            String buildingName = in.readUTF(); // [추가] 읽기
                             String newRoomNumber = in.readUTF();
                             String newDate = in.readUTF();
                             String newDay = in.readUTF();
-                            String giverole = in.readUTF(); // 역할
+                            String purpose = in.readUTF();      // [추가] 읽기
+                            int userCount = in.readInt();       // [추가] 읽기
+                            String giverole = in.readUTF();
 
-                            // 2. [Builder 적용] ReservationDetails 객체 생성
-                            // Note: ReserveManager.updateReserve는 이제 ReservationDetails 객체 하나만 받습니다.
+                            // 2. Builder에 모든 정보 담기
                             ReservationDetails details = new ReservationDetails.Builder(userId, giverole)
                                     .oldReserveInfo(oldReserveInfo)
+                                    .buildingName(buildingName) // [설정]
                                     .newRoomNumber(newRoomNumber)
                                     .newDate(newDate)
                                     .newDay(newDay)
+                                    .purpose(purpose)           // [설정]
+                                    .userCount(userCount)       // [설정]
                                     .build();
 
-                            // 3. ReserveManager에는 details 객체 하나만 전달
                             ReserveResult reserveResult = ReserveManager.updateReserve(details);
-
-                            out.writeObject(reserveResult);
-                            out.flush();
+                            synchronized (this) {
+                                out.writeObject(reserveResult);
+                                out.flush();
+                            }
                         }
                         // 클라이언트 요청 - 예약 정보로 교수 예약 여부 조회 요청 받는 부분 - 교수 예약O true, 교수 예약X false
                         if ("FIND_PROFESSOR_BY_RESERVE".equals(command)) {

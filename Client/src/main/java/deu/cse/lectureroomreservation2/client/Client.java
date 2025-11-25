@@ -156,23 +156,46 @@ public class Client {
      * //예약 취소 실패: 해당 예약 정보를 찾을 수 없습니다.
      */
     // 예약 변경 요청 처리(사용자 id, 기존 예약 정보, 새로운 강의실 번호, 새로운 날짜, 새로운 요일)
-    public synchronized ReserveResult sendModifyReserveRequest(String id, String oldReserveInfo, String newRoomNumber,
-            String newDate, String newDay, String role)
+    public synchronized ReserveResult sendModifyReserveRequest(
+            String id, 
+            String oldReserveInfo, 
+            String buildingName, // [추가]
+            String newRoomNumber,
+            String newDate, 
+            String newDay, 
+            String purpose,      // [추가]
+            int userCount,       // [추가]
+            String role)
             throws IOException, ClassNotFoundException {
+        
         out.writeUTF("MODIFY_RESERVE");
         out.flush();
+        
         out.writeUTF(id);
         out.flush();
         out.writeUTF(oldReserveInfo);
         out.flush();
+        
+        // [추가된 데이터 전송]
+        out.writeUTF(buildingName);
+        out.flush();
+        
         out.writeUTF(newRoomNumber);
         out.flush();
         out.writeUTF(newDate);
         out.flush();
         out.writeUTF(newDay);
         out.flush();
+        
+        // [추가된 데이터 전송]
+        out.writeUTF(purpose);
+        out.flush();
+        out.writeInt(userCount);
+        out.flush();
+        
         out.writeUTF(role);
         out.flush();
+        
         return (ReserveResult) in.readObject();
     }
 

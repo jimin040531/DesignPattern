@@ -218,8 +218,18 @@ public class LRCompleteCheck extends javax.swing.JFrame {
         // 3. 예약 요청 전송 (수정된 sendReserveRequest 사용)
         ReserveResult result;
         if (IsChange != null) {
-            // 예약 변경 (변경 로직은 기존 유지 - 필요시 파라미터 추가)
-            result = client.sendModifyReserveRequest(id, IsChange, roomNumber, date, day, role);
+            // [수정] 예약 변경 요청 시에도 모든 정보(건물, 목적, 인원)를 포함하여 전송
+            result = client.sendModifyReserveRequest(
+                    id, 
+                    IsChange, 
+                    this.buildingName, // 건물 이름
+                    roomNumber, 
+                    date, 
+                    day, 
+                    purpose,           // 사용 목적
+                    userCount,         // 인원 수
+                    role
+            );
         } else {
             // 신규 예약
             result = client.sendReserveRequest(id, role, this.buildingName, roomNumber, date, day, purpose, userCount);
