@@ -26,7 +26,7 @@ public class BuildingManager {
 
     // 2. 생성자를 private으로 막아 외부에서 new 금지
     private BuildingManager() {
-        this.filePath = ReceiveController.getBuildingInfoFileName();
+        this.filePath = receiveController.getBuildingInfoFileName();
         this.allRoomData = new ArrayList<>();
         
         // 생성자에서 딱 한 번 파일을 읽어 메모리에 저장 (속도 향상)
