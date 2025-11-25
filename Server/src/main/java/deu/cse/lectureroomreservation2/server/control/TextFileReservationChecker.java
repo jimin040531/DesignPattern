@@ -4,6 +4,8 @@
  */
 package deu.cse.lectureroomreservation2.server.control;
 import java.io.*;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 /**
  *
  * @author rbcks
@@ -17,21 +19,42 @@ public class TextFileReservationChecker extends AbstractReservationChecker {
      * 포맷: 년도(0), 학기(1), 건물(2), 강의실(3), 요일(4), 시작(5), 종료(6), 과목(7), 교수(8), 유형(9)
      */
     @Override
-    protected boolean hasRegularClass(String room, String day, String time) {
-        // 파일의 요일("월")과 입력 요일("월요일") 형식을 맞춤
+    protected boolean hasRegularClass(String room, String day, String time, String date) {
         String shortDay = day.length() > 1 ? day.substring(0, 1) : day;
+
+        // [추가] 날짜를 기반으로 학기 계산 (1~6월: 1학기, 7~12월: 2학기)
+        String targetSemester = "1";
+        try {
+            // date 형식: yyyy/MM/dd 또는 yyyy-MM-dd 호환 처리
+            String normalizedDate = date.replace(" ", "").replace("/", "-");
+            LocalDate localDate = LocalDate.parse(normalizedDate, DateTimeFormatter.ofPattern("yyyy-MM-dd"));
+            int month = localDate.getMonthValue();
+            
+            if (month >= 7 && month <= 12) {
+                targetSemester = "2";
+            }
+        } catch (Exception e) {
+            // 날짜 파싱 실패 시 기본값 1학기로 진행하거나 에러 로그
+            System.err.println("[Warning] 날짜 파싱 오류, 기본 1학기로 조회: " + date);
+        }
 
         try (BufferedReader br = new BufferedReader(new FileReader(scheduleFile))) {
             String line;
             while ((line = br.readLine()) != null) {
                 String[] parts = line.split(",");
                 if (parts.length >= 10) {
-                    String sRoom = parts[3].trim();   // 강의실
-                    String sDay = parts[4].trim();    // 요일
-                    String sStart = parts[5].trim();  // 시작시간
-                    String sType = parts[9].trim();   // 유형(수업)
+                    String sSemester = parts[1].trim(); // 파일의 학기 정보
+                    String sRoom = parts[3].trim();
+                    String sDay = parts[4].trim();
+                    String sStart = parts[5].trim();
+                    String sType = parts[9].trim();
 
-                    if (sRoom.equals(room) && sDay.equals(shortDay) && sStart.equals(time) && "수업".equals(sType)) {
+                    // [수정] 학기(sSemester)가 현재 날짜의 학기(targetSemester)와 일치하는지 확인
+                    if (sSemester.equals(targetSemester) &&
+                        sRoom.equals(room) && 
+                        sDay.equals(shortDay) && 
+                        sStart.equals(time) && 
+                        "수업".equals(sType)) {
                         return true;
                     }
                 }

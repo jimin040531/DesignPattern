@@ -23,8 +23,9 @@ public abstract class AbstractReservationChecker {
     public final String checkStatus(String room, String date, String day, String time) {
         
         // 1. 정규 수업 체크 (ScheduleInfo.txt)
-        if (hasRegularClass(room, day, time)) {
-            return "CLASS"; // 수업 있음 (빨간색 등)
+        // 날짜(date) 정보를 추가로 전달하여 학기를 구분할 수 있게 함
+        if (hasRegularClass(room, day, time, date)) {
+            return "CLASS"; 
         }
 
         // 2. 예약 현황 체크 (ReservationInfo.txt)
@@ -38,6 +39,6 @@ public abstract class AbstractReservationChecker {
     }
 
     // 하위 클래스에서 구체적으로 구현할 메서드 (Hooks)
-    protected abstract boolean hasRegularClass(String room, String day, String time);
+    protected abstract boolean hasRegularClass(String room, String day, String time, String date);
     protected abstract boolean hasActiveReservation(String room, String date, String time);
 }
