@@ -42,6 +42,7 @@ public class AdminMainView extends javax.swing.JFrame {
         jLabel1 = new javax.swing.JLabel();
         prof_pass_change = new javax.swing.JButton();
         prof_LogOut = new javax.swing.JButton();
+        btnViewRoom = new javax.swing.JButton();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
 
@@ -84,28 +85,36 @@ public class AdminMainView extends javax.swing.JFrame {
             }
         });
 
+        btnViewRoom.setText("강의실 현황 조회");
+        btnViewRoom.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnViewRoomActionPerformed(evt);
+            }
+        });
+
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
         layout.setHorizontalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(layout.createSequentialGroup()
+                .addContainerGap()
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addGroup(layout.createSequentialGroup()
-                        .addContainerGap()
                         .addComponent(prof_pass_change)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 70, Short.MAX_VALUE)
                         .addComponent(prof_LogOut, javax.swing.GroupLayout.PREFERRED_SIZE, 102, javax.swing.GroupLayout.PREFERRED_SIZE))
                     .addGroup(layout.createSequentialGroup()
-                        .addContainerGap()
                         .addComponent(jLabel1)
                         .addGap(0, 0, Short.MAX_VALUE)))
                 .addContainerGap())
             .addGroup(layout.createSequentialGroup()
                 .addGap(46, 46, 46)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
-                    .addComponent(btnUserManagement, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                    .addComponent(btnReservationHistory, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                    .addComponent(btnTimetableManagement, javax.swing.GroupLayout.DEFAULT_SIZE, 193, Short.MAX_VALUE))
+                    .addComponent(btnViewRoom, javax.swing.GroupLayout.DEFAULT_SIZE, 193, Short.MAX_VALUE)
+                    .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                        .addComponent(btnUserManagement, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                        .addComponent(btnReservationHistory, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                        .addComponent(btnTimetableManagement, javax.swing.GroupLayout.DEFAULT_SIZE, 193, Short.MAX_VALUE)))
                 .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
         layout.setVerticalGroup(
@@ -119,7 +128,9 @@ public class AdminMainView extends javax.swing.JFrame {
                 .addComponent(btnReservationHistory, javax.swing.GroupLayout.PREFERRED_SIZE, 63, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addGap(18, 18, 18)
                 .addComponent(btnTimetableManagement, javax.swing.GroupLayout.PREFERRED_SIZE, 60, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 45, Short.MAX_VALUE)
+                .addGap(18, 18, 18)
+                .addComponent(btnViewRoom, javax.swing.GroupLayout.PREFERRED_SIZE, 60, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 27, Short.MAX_VALUE)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(prof_pass_change, javax.swing.GroupLayout.PREFERRED_SIZE, 31, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(prof_LogOut, javax.swing.GroupLayout.PREFERRED_SIZE, 31, javax.swing.GroupLayout.PREFERRED_SIZE))
@@ -170,6 +181,15 @@ public class AdminMainView extends javax.swing.JFrame {
         }
     }//GEN-LAST:event_prof_LogOutActionPerformed
 
+    private void btnViewRoomActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnViewRoomActionPerformed
+        // TODO add your handling code here:
+        // ViewRoom 화면을 "A" (관리자) 권한으로 엽니다.
+        // 마지막 인자 null은 예약 변경 모드가 아니라는 뜻
+        ViewRoom viewRoom = new ViewRoom(client, userId, "A", null);
+        viewRoom.setVisible(true);
+        this.dispose(); // 현재 관리자 메인 화면은 닫기
+    }//GEN-LAST:event_btnViewRoomActionPerformed
+
     /**
      * @param args the command line arguments
      */
@@ -178,6 +198,7 @@ public class AdminMainView extends javax.swing.JFrame {
     private javax.swing.JButton btnReservationHistory;
     private javax.swing.JButton btnTimetableManagement;
     private javax.swing.JButton btnUserManagement;
+    private javax.swing.JButton btnViewRoom;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JButton prof_LogOut;
     private javax.swing.JButton prof_pass_change;

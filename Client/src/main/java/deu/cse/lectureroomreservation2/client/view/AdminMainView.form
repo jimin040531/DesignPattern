@@ -41,9 +41,12 @@
           <Group type="102" alignment="0" attributes="0">
               <EmptySpace min="-2" pref="46" max="-2" attributes="0"/>
               <Group type="103" groupAlignment="0" max="-2" attributes="0">
-                  <Component id="btnUserManagement" max="32767" attributes="0"/>
-                  <Component id="btnReservationHistory" max="32767" attributes="0"/>
-                  <Component id="btnTimetableManagement" pref="193" max="32767" attributes="0"/>
+                  <Component id="btnViewRoom" pref="193" max="32767" attributes="0"/>
+                  <Group type="103" groupAlignment="0" max="-2" attributes="0">
+                      <Component id="btnUserManagement" max="32767" attributes="0"/>
+                      <Component id="btnReservationHistory" max="32767" attributes="0"/>
+                      <Component id="btnTimetableManagement" pref="193" max="32767" attributes="0"/>
+                  </Group>
               </Group>
               <EmptySpace max="32767" attributes="0"/>
           </Group>
@@ -60,7 +63,9 @@
               <Component id="btnReservationHistory" min="-2" pref="63" max="-2" attributes="0"/>
               <EmptySpace type="separate" max="-2" attributes="0"/>
               <Component id="btnTimetableManagement" min="-2" pref="60" max="-2" attributes="0"/>
-              <EmptySpace pref="45" max="32767" attributes="0"/>
+              <EmptySpace type="separate" max="-2" attributes="0"/>
+              <Component id="btnViewRoom" min="-2" pref="60" max="-2" attributes="0"/>
+              <EmptySpace pref="27" max="32767" attributes="0"/>
               <Group type="103" groupAlignment="3" attributes="0">
                   <Component id="prof_pass_change" alignment="3" min="-2" pref="31" max="-2" attributes="0"/>
                   <Component id="prof_LogOut" alignment="3" min="-2" pref="31" max="-2" attributes="0"/>
@@ -118,6 +123,14 @@
       </Properties>
       <Events>
         <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="prof_LogOutActionPerformed"/>
+      </Events>
+    </Component>
+    <Component class="javax.swing.JButton" name="btnViewRoom">
+      <Properties>
+        <Property name="text" type="java.lang.String" value="&#xac15;&#xc758;&#xc2e4; &#xd604;&#xd669; &#xc870;&#xd68c;"/>
+      </Properties>
+      <Events>
+        <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="btnViewRoomActionPerformed"/>
       </Events>
     </Component>
   </SubComponents>

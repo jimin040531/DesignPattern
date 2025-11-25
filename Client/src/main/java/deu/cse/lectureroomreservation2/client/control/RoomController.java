@@ -4,6 +4,7 @@ package deu.cse.lectureroomreservation2.client.control;
 import com.toedter.calendar.IDateEvaluator;
 import com.toedter.calendar.JCalendar;
 import deu.cse.lectureroomreservation2.client.Client;
+import deu.cse.lectureroomreservation2.client.view.AdminMainView;
 import deu.cse.lectureroomreservation2.client.view.LRCompleteCheck;
 import deu.cse.lectureroomreservation2.client.view.MyReservationView;
 import deu.cse.lectureroomreservation2.client.view.ProfessorMainMenu;
@@ -93,25 +94,44 @@ public class RoomController {
                     // [신규 기능] 클릭 시 서버에 실시간 인원 현황 요청 및 UI 업데이트
                     // -------------------------------------------------------
                     if (choosedDate != null) {
-                        // 날짜 포맷 정리 (예: "2025 / 06 / 03 / " -> "2025/06/03")
                         String[] dateParts = choosedDate.split("/");
                         String dateSimple = dateParts[0].trim() + "/" + dateParts[1].trim() + "/" + dateParts[2].trim();
-                        
-                        String selectedBuilding = (String) view.getBuildingComboBox().getSelectedItem();
-                        
-                        // 서버 요청 (Client.java에 추가한 메서드 호출)
-                        int[] stats = client.getReservationStats(selectedBuilding, roomR, dateSimple, startR);
-                        int currentCount = stats[0]; // 현재 예약된 인원 (대기+확정)
-                        int maxCapacity = stats[1];  // 강의실 최대 수용 인원
-                        
-                        // 50% 제한 인원 계산
-                        int limit50 = (int)(maxCapacity * 0.5); 
 
-                        // 라벨 텍스트 업데이트
-                        // 표시 예: "예약 현황: 5 / 25 명 (정원 50명)"
-                        String statusText = String.format("<html>예약 현황: <font color='red'>%d</font> / %d 명 (총 정원 %d명)</html>", 
-                                                          currentCount, limit50, maxCapacity);
-                        view.getUserCountLabel().setText(statusText);
+                        String selectedBuilding = (String) view.getBuildingComboBox().getSelectedItem();
+
+                        int[] stats = client.getReservationStats(selectedBuilding, roomR, dateSimple, startR);
+                        
+                        int currentCount = stats[0]; // 현재 예약 인원
+                        int maxCapacity = stats[1];  // 전체 수용 인원 (예: 50)
+                        
+                        // 1. 기본 텍스트: "35 / 50 명"
+                        String statusText = String.format("예약 현황: %d / %d 명", currentCount, maxCapacity);
+                        String color = "blue"; // 기본 색상
+
+                        // 2. 역할별 제한 로직 적용
+                        if ("S".equals(view.getRole())) {
+                            int studentLimit = (int)(maxCapacity * 0.5); // 학생 제한 (25명)
+                            
+                            if (currentCount >= studentLimit) {
+                                // 학생 제한을 넘었을 때
+                                statusText += " (학생 정원 마감)";
+                                color = "red";
+                            } else {
+                                // 학생 예약 가능할 때 (추가 정보 표시)
+                                statusText += String.format(" (학생 제한 %d명)", studentLimit);
+                            }
+                        } else {
+                            // 교수일 때
+                            if (currentCount >= maxCapacity) {
+                                statusText += " (만석)";
+                                color = "red";
+                            }
+                        }
+
+                        // 3. 최종 HTML 라벨 적용
+                        view.getUserCountLabel().setText(
+                            String.format("<html><font color='%s'>%s</font></html>", color, statusText)
+                        );
                     }
                     // -------------------------------------------------------
                 }
@@ -170,6 +190,16 @@ public class RoomController {
         
         // ★ [최초 실행] 버튼 잠그기 실행
         lockCalendarButtons();
+        
+        // [추가] ★ 조교(관리자) 권한 처리 로직 ★
+        if ("A".equals(view.getRole())) {
+            // 1. 예약 버튼 숨기기 (추천 방법)
+            view.getReservationButton().setVisible(false); 
+
+            // 2. 텍스트 변경 (선택 사항)
+            // 예약 현황 라벨 옆이나 안내 문구를 조금 더 명확하게 변경 가능
+            view.getReservationButton().setText("조회 전용");
+        }
     }
 
     /**
@@ -441,13 +471,20 @@ public class RoomController {
 
     // --- 버튼 핸들러 ---
     private void handleGoBackButton() {
+        // 학생이면 학생 메인으로
         if (view.getRole().equals("S")) {
             new StudentMainMenu(view.getUserid(), client).setVisible(true);
         }
-        if (view.getRole().equals("P")) {
+        // 교수면 교수 메인으로
+        else if (view.getRole().equals("P")) {
             new ProfessorMainMenu(view.getUserid(), client).setVisible(true);
         }
-        view.dispose();
+        // [추가] 조교(관리자)면 관리자 메인으로 이동
+        else if (view.getRole().equals("A")) {
+            new AdminMainView(view.getUserid(), client).setVisible(true);
+        }
+        
+        view.dispose(); // 현재 창 닫기
     }
 
     private void handleReservationButton() {
