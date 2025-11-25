@@ -4,7 +4,15 @@ import deu.cse.lectureroomreservation2.common.ReserveResult;
 import deu.cse.lectureroomreservation2.server.model.Notification;
 import deu.cse.lectureroomreservation2.server.model.Reservation;
 import deu.cse.lectureroomreservation2.server.model.ReservationIterator;
+import java.io.BufferedReader;
+import java.io.FileReader;
+import java.io.IOException;
+import java.time.LocalDate;
+import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 /**
  * Strategy Pattern: 교수 예약 전략 (SFR-208) [적용된 패턴] 1. Builder: 알림 객체 생성 2.
@@ -27,7 +35,7 @@ public class ProfessorReservationStrategy implements ReservationStrategy {
         String room = details.getRoomNumber();
         String date = details.getDate(); // "yyyy / MM / dd / HH:mm HH:mm"
         String day = details.getDay();
-
+        
         // 1. 날짜 및 시간 파싱
         String[] tokens = date.split("/");
         // "2025 / 06 / 03" 형태로 변환 (공백 제거)
@@ -97,7 +105,55 @@ public class ProfessorReservationStrategy implements ReservationStrategy {
                 );
             }
         }
-
+        
+        int requestCount = details.getUserCount();  //요청 인원
+        
+        // BuildingManager의 유일한 인스턴스를 가져옴
+        BuildingManager bm = BuildingManager.getInstance();
+        int maxCapacity = bm.getRoomCapacity(room); // 강의실 정원
+        if (requestCount > maxCapacity) {
+                return new ReserveResult(false, 
+                String.format("인원 초과: 신청(%d명)인원이 강의실 정원(%d명)를 초과합니다.", 
+                requestCount, maxCapacity));
+        }
+        
+        // (3) 3시간 연속 예약 제한 검사
+        String startTimeStr = times[0]; 
+        // 날짜비교용
+        String dateStr = tokens[0].trim() + "-" + tokens[1].trim() + "-" + tokens[2].trim(); 
+        String id = details.getId();
+        // LocalTime, LocalDate 변환
+        LocalDate reserveDate = LocalDate.parse(dateStr, DateTimeFormatter.ofPattern("yyyy-MM-dd"));
+        LocalTime requestStart = LocalTime.parse(startTimeStr);
+        
+        // 파일에서 해당 교수가 해당 날짜에 이미 예약한 시간(Hour)들을 가져옴
+        Set<Integer> bookedHours = getUserBookedHours(id, dateStr);
+        
+        int currentHour = requestStart.getHour(); // 예: 10시 신청 시 10
+        
+        /*
+        9,10,11 -> 12X
+        9,10,12 -> 11X
+        9,11,12 -> 10X
+        10,11,12 -> 9X
+        */
+        // Case A: 12시 신청 -> (9시, 10시, 11시)가 이미 있음 -> 9,10,11 연속됨 -> 불가
+        if (bookedHours.contains(currentHour - 3) && bookedHours.contains(currentHour -2) && bookedHours.contains(currentHour -1) ) {
+            return new ReserveResult(false, "4시간 연속으로 수업을 들을 수 없어 예약이 불가능합니다.");
+        }
+        // Case B: 11시 신청 -> (9시, 10시, 12시)가 이미 있음 -> 8,9,10 연속됨 -> 불가
+        if (bookedHours.contains(currentHour - 2) && bookedHours.contains(currentHour - 1) && bookedHours.contains(currentHour +1) ) {
+            return new ReserveResult(false, "4시간 연속으로 수업을 들을 수 없어 예약이 불가능합니다.");
+        }
+        // Case C: 10시 신청 -> (9시, 11시, 12시)가 이미 있음 -> 10,11,12 연속됨 -> 불가
+        if (bookedHours.contains(currentHour -1) && bookedHours.contains(currentHour + 1) && bookedHours.contains(currentHour + 2)) {
+            return new ReserveResult(false, "4시간 연속으로 수업을 들을 수 없어 예약이 불가능합니다.");
+        }
+        // Case C: 9시 신청 -> (10시, 11시, 12시)가 이미 있음 -> 10,11,12 연속됨 -> 불가
+        if (bookedHours.contains(currentHour +1) && bookedHours.contains(currentHour + 2) && bookedHours.contains(currentHour + 3)) {
+            return new ReserveResult(false, "시간 연속으로 수업을 들을 수 없어 예약이 불가능합니다.");
+        }
+        
         // 4. 교수 예약 확정 (대기 없이 바로 APPROVED)
         // 포맷: 건물,강의실,날짜,요일,시작,끝,ID,P,목적,인원(0),APPROVED,-
         String building = BuildingManager.getInstance().getBuildingName(room);
@@ -107,5 +163,40 @@ public class ProfessorReservationStrategy implements ReservationStrategy {
         );
 
         return ReserveManager.writeReservationToFile(profId, csvLine, "P");
+    }
+    
+    
+    // 예약 정보 파일 경로 (연속 예약 확인용)
+    private final String reservationFile = receiveController.getReservationInfoFileName();
+    private Set<Integer> getUserBookedHours(String userId, String targetDate) {
+        Set<Integer> hours = new HashSet<>();
+        // 파일엔 "2025/06/03" 형식으로 저장되어 있으므로 변환
+        String targetDateSlash = targetDate.replace("-", "/"); 
+
+        try (BufferedReader br = new BufferedReader(new FileReader(reservationFile))) {
+            String line;
+            while ((line = br.readLine()) != null) {
+                String[] parts = line.split(",");
+                // 인덱스: 날짜(2), 시작시간(4), ID(6), 상태(10)
+                if (parts.length < 11) continue;
+                
+                String rDate = parts[2].trim();
+                String rStart = parts[4].trim(); // "09:00"
+                String rId = parts[6].trim();
+                String rStatus = parts[10].trim(); 
+
+                // ID 일치, 날짜 일치, 거절된 예약이 아닌 경우
+                if (rId.equals(userId) && rDate.equals(targetDateSlash) && !"REJECTED".equals(rStatus)) {
+                    try {
+                        // "09:00" -> 9 (int)
+                        int h = Integer.parseInt(rStart.split(":")[0]);
+                        hours.add(h);
+                    } catch (Exception e) { /* 시간 파싱 오류 무시 */ }
+                }
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return hours;
     }
 }
