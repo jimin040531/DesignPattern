@@ -26,6 +26,4 @@ public class EncryptedUserFileManager extends UserFileManager {
         super.saveUser(encryptedUser);
     }
 
-    // 나머지 메서드(searchUsers, deleteUser, loadAllUsers, isDuplicateId)는
-    // UserFileManager의 그대로 사용 (오버라이드 안 해도 자동 상속)
 }
