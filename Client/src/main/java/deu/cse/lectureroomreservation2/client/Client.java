@@ -222,16 +222,47 @@ public class Client {
      * //예약 변경 실패: 해당 예약 정보를 찾을 수 없습니다.
      */
     // 공지사항 수신 및 확인 처리
-    public synchronized void checkAndShowNotices(javax.swing.JFrame parentFrame) throws IOException {
+    public void checkAndShowNotices(javax.swing.JFrame parentFrame) {
         while (true) {
-            String msgType = in.readUTF();
-            if ("NOTICE_END".equals(msgType)) {
+            try {
+                List<String> notices = new java.util.ArrayList<>();
+
+                // 1. 서버에 요청 보내기 (이 부분만 동기화하여 다른 요청과 겹치지 않게 함)
+                synchronized (this) {
+                    try {
+                        out.writeUTF("CHECK_NOTICES"); // 서버에 "알림 내놔" 요청
+                        out.flush();
+
+                        int count = in.readInt(); // 몇 개나 있는지 개수 수신
+
+                        for (int i = 0; i < count; i++) {
+                            notices.add(in.readUTF()); // 개수만큼 알림 내용 수신
+                        }
+                    } catch (java.net.SocketTimeoutException ste) {
+                        // 타임아웃은 무시하고 계속 진행
+                    }
+                }
+
+                // 2. 받은 알림이 있으면 화면에 표시 (동기화 블록 밖에서 처리)
+                for (String noticeText : notices) {
+                    javax.swing.SwingUtilities.invokeLater(() -> {
+                        javax.swing.JOptionPane.showMessageDialog(
+                            parentFrame, 
+                            noticeText, 
+                            "실시간 알림",
+                            javax.swing.JOptionPane.INFORMATION_MESSAGE
+                        );
+                    });
+                }
+
+                // 3. 잠시 대기 (1~2초) - 너무 자주 물어보면 서버 부하 발생
+                Thread.sleep(2000); 
+
+            } catch (InterruptedException ie) {
+                break; // 스레드 종료 신호 시 루프 탈출
+            } catch (IOException e) {
+                System.err.println("알림 확인 중 연결 종료됨: " + e.getMessage());
                 break;
-            }
-            if ("NOTICE".equals(msgType)) {
-                String noticeText = in.readUTF();
-                javax.swing.JOptionPane.showMessageDialog(parentFrame, noticeText, "공지사항",
-                        javax.swing.JOptionPane.INFORMATION_MESSAGE);
             }
         }
     }

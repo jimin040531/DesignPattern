@@ -53,9 +53,18 @@ public class ClientHandler implements Runnable, Observer {
         this.server = server;
         this.buildingManager = BuildingManager.getInstance();
     }
-
-    // [Observer 패턴] 4. 알림 수신 시 실행될 메서드 구현
+    private final List<String> pendingNotices = new ArrayList<>(); // 알림 대기열
+    // 2. update 메서드 수정
     @Override
+    public void update(String message) {
+        synchronized (pendingNotices) {
+            pendingNotices.add(message); // 즉시 전송하지 않고 큐에 쌓음
+        }
+        System.out.println(">> [ClientHandler] 알림 큐에 저장됨: " + message);
+    }
+    
+    // [Observer 패턴] 4. 알림 수신 시 실행될 메서드 구현
+    /*@Override
     public void update(String message) {
         try {
             if (out != null) {
@@ -68,7 +77,7 @@ public class ClientHandler implements Runnable, Observer {
         } catch (IOException e) {
             System.err.println("알림 전송 실패: " + e.getMessage());
         }
-    }
+    }*/
 
     @Override
     public void run() {
@@ -119,15 +128,15 @@ public class ClientHandler implements Runnable, Observer {
                 System.out.println("로그인 성공 하여 역할 " + status.getRole() + "를 가집니다.");
                 if ("STUDENT".equals(status.getRole())) {
                     List<String> notices = noticeController.getNotices(id);
-                    for (String notice : notices) {
-                        out.writeUTF("NOTICE");
-                        out.flush();
-                        out.writeUTF(notice);
-                        out.flush();
-                        noticeController.removeNotice(id, notice);
+                    synchronized (pendingNotices) { // 리스트 접근 동기화
+                        for (String notice : notices) {
+                            // 소켓으로 바로 보내지 말고, 대기열에 추가!
+                            pendingNotices.add(notice); 
+                            
+                            // (선택) 파일에서 읽은 공지는 삭제 처리
+                            noticeController.removeNotice(id, notice);
+                        }
                     }
-                    out.writeUTF("NOTICE_END");
-                    out.flush();
                 }
 
                 while (true) {
@@ -135,8 +144,25 @@ public class ClientHandler implements Runnable, Observer {
                         String command = in.readUTF();
 
                         System.out.println(">> 수신 명령: " + command); // 여기 추가
+                        
+                        // 클라이언트가 주기적으로 알림을 확인하러 올 때 처리
+                        if ("CHECK_NOTICES".equals(command)) {
+                            synchronized (pendingNotices) {
+                                // 쌓인 알림 개수 전송
+                                out.writeInt(pendingNotices.size());
 
-                        // [신규] 예약 현황 통계 요청 처리
+                                // 알림 내용 전송
+                                for (String notice : pendingNotices) {
+                                    out.writeUTF(notice);
+                                }
+                                out.flush();
+
+                                // 전송 후 비우기
+                                pendingNotices.clear();
+                            }
+                            continue; // 중요: 아래 다른 로직을 실행하지 않고 루프 처음으로 돌아감
+                        }
+                        // 예약 현황 통계 요청 처리
                         if ("GET_RESERVATION_STATS".equals(command)) {
                             String buildingName = in.readUTF();
                             String room = in.readUTF();

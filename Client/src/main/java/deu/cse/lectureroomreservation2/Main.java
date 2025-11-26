@@ -17,7 +17,6 @@ import java.util.regex.Pattern;
  * @author SAMSUNG
  */
 public class Main {
-
     /**
      * @param args the command line arguments
      */
