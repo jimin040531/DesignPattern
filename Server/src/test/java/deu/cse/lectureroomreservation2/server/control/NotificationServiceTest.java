@@ -17,29 +17,30 @@ import static org.junit.jupiter.api.Assertions.*;
  * (Observer 인터페이스를 구현하는 내부 클래스를 직접 작성하여 사용)
  */
 
-// 1. Observer 인터페이스의 계약을 이행하는 테스트 전용 구현체
-class TestObserver implements Observer {
-
-    private boolean updated = false;
-    private String receivedMessage = null;
-
-    @Override
-    public void update(String message) {
-        // 알림을 받으면 상태를 기록
-        this.updated = true;
-        this.receivedMessage = message;
-    }
-
-    public boolean isUpdated() {
-        return updated;
-    }
-
-    public String getReceivedMessage() {
-        return receivedMessage;
-    }
-}
-
 public class NotificationServiceTest {
+
+    // 1. Observer 인터페이스의 계약을 이행하는 테스트 전용 구현체를 
+    //    NotificationServiceTest 클래스의 'static' 중첩 클래스로 변경
+    static class TestObserver implements Observer {
+
+        private boolean updated = false;
+        private String receivedMessage = null;
+
+        @Override
+        public void update(String message) {
+            // 알림을 받으면 상태를 기록
+            this.updated = true;
+            this.receivedMessage = message;
+        }
+
+        public boolean isUpdated() {
+            return updated;
+        }
+
+        public String getReceivedMessage() {
+            return receivedMessage;
+        }
+    } // TestObserver 끝
 
     private NotificationService notificationService;
     private TestObserver testObserver; // 테스트 전용 Observer
@@ -53,7 +54,8 @@ public class NotificationServiceTest {
         notificationService = NotificationService.getInstance();
         
         // 테스트 전용 Observer 인스턴스 생성
-        testObserver = new TestObserver();
+        // 오류 메시지가 요구하던 boolean 생성자가 없으므로, 기본 생성자 그대로 사용
+        testObserver = new TestObserver(); 
         
         // 테스트 간의 독립성을 위해 테스트 사용자 ID를 모두 해지하고 시작
         notificationService.removeObserver(TEST_USER_ID_ONLINE);
@@ -72,10 +74,12 @@ public class NotificationServiceTest {
         
         // 2. 등록 후 알림 전송 (호출되어야 함)
         notificationService.notifyObserver(TEST_USER_ID_ONLINE, TEST_MESSAGE);
+        // isUpdated() 메서드 호출
         assertTrue(testObserver.isUpdated(), "등록 후에는 알림이 즉시 전파되어야 합니다.");
         
         // 3. 상태 초기화 (testObserver가 아닌 다른 임시 객체)
-        TestObserver dummyObserver = new TestObserver();
+        // dummyObserver에도 기본 생성자 사용
+        TestObserver dummyObserver = new TestObserver(); 
         
         // 4. 해지 (removeObserver)
         notificationService.removeObserver(TEST_USER_ID_ONLINE);
@@ -102,7 +106,9 @@ public class NotificationServiceTest {
         notificationService.notifyObserver(TEST_USER_ID_ONLINE, TEST_MESSAGE);
         
         // 3. 검증: TestObserver 내부의 상태(updated)를 직접 확인
+        // isUpdated() 메서드 호출
         assertTrue(testObserver.isUpdated(), "등록된 Observer의 update() 메서드가 호출되어야 합니다.");
+        // getReceivedMessage() 메서드 호출
         assertEquals(TEST_MESSAGE, testObserver.getReceivedMessage(), "수신 메시지 내용이 정확해야 합니다.");
 
         // 테스트 정리

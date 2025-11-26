@@ -187,7 +187,7 @@ public class LoginFrame extends javax.swing.JFrame {
         // 2. [대기 알림창 UI 생성]
         // ---------------------------------------------------------
         final javax.swing.JDialog waitDialog = new javax.swing.JDialog(this, "접속 대기 중...", true); // true = 모달(다른 작업 불가)
-        waitDialog.setSize(400, 200);
+        waitDialog.setSize(400, 300);
         waitDialog.setLocationRelativeTo(this);
         waitDialog.setDefaultCloseOperation(javax.swing.JDialog.DO_NOTHING_ON_CLOSE); // X 버튼 눌러도 안 닫히게 막음(강제 대기)
         

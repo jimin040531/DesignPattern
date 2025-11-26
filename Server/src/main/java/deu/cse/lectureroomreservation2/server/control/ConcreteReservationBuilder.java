@@ -94,7 +94,7 @@ public class ConcreteReservationBuilder implements ReservationBuilder {
 
     // 2. 날짜 검증 (학생은 당일 예약 불가 + 과거 예약 불가)
     private void validateReservationDate() {
-        if ("S".equals(reservationDetails.getRole())) {
+        if ("S".equals(reservationDetails.getRole()) || "P".equals(reservationDetails.getRole())) {
             String dateStr = reservationDetails.getDate();
             try {
                 // 날짜 포맷 통일 (yyyy/MM/dd)
