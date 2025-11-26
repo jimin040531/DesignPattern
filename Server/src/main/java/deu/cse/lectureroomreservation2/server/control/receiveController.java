@@ -75,18 +75,25 @@ public class receiveController {
 
     // 예약 요청 처리
     public ReserveResult handleReserve(ReserveRequest req) {
-        // 1. Builder를 사용하여 ReservationDetails 객체 생성
-        ReservationDetails details = new ReservationDetails.Builder(req.getId(), req.getRole())
-                .roomNumber(req.getRoomNumber())
-                .date(req.getDate())
-                .day(req.getDay())
-                .purpose(req.getPurpose()) 
-                .userCount(req.getUserCount())
-                // ★★★ [핵심 수정] 이 줄이 빠져 있어서 null이 저장되었습니다. ★★★
-                .buildingName(req.getBuildingName()) 
-                .build();
+        
+        // 1. 구상 빌더 인스턴스 생성
+        ReservationBuilder builder = new ConcreteReservationBuilder(req.getId(), req.getRole());
+        
+        // 2. 디렉터 인스턴스 생성 및 빌더 설정
+        ReservationDirector director = new ReservationDirector();
+        director.setBuilder(builder);
+        
+        // 3. 디렉터에게 조립 요청 (startTime, endTime 제거)
+        ReservationDetails details = director.constructReservation(
+                req.getBuildingName(),
+                req.getRoomNumber(),
+                req.getDate(), // 이 필드에 날짜와 시간 정보가 모두 담겨있음
+                req.getDay(),
+                req.getPurpose(),
+                req.getUserCount()
+        ); // constructReservation 호출 끝
 
-        // 2. ReserveManager에는 details 객체 하나만 전달
+        // 4. ReserveManager에 details 객체 전달
         return ReserveManager.reserve(details);
     }
 }

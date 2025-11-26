@@ -11,136 +11,111 @@ public class ReservationDetails {
     private final String role;
 
     // --- '신규 예약'용 ---
-    private final String buildingName;
-    private final String roomNumber;
-    private final String date;
-    private final String day;
-    private final int userCount;  // 사용 인원
-    private final String purpose; // 사용 목적
-
-    // --- '예약 변경'용 ---
-    private final String oldReserveInfo;
-    private final String newRoomNumber;
-    private final String newDate;
-    private final String newDay;
-
+    private String buildingName;
+    private String roomNumber;
+    private String date;    
+    private String day;   
+    private int userCount;    
+    private String purpose;   
     
-    // private 생성자 (Builder를 통해서만 생성)
-    private ReservationDetails(Builder builder) {
-        this.id = builder.id;
-        this.role = builder.role;
-        this.buildingName = builder.buildingName;
-        this.roomNumber = builder.roomNumber;
-        this.date = builder.date;
-        this.day = builder.day;
-        this.oldReserveInfo = builder.oldReserveInfo;
-        this.newRoomNumber = builder.newRoomNumber;
-        this.newDate = builder.newDate;
-        this.newDay = builder.newDay;
-        
-        // 추가
-        this.userCount = builder.userCount;
-        this.purpose = builder.purpose;
+    // --- '예약 변경'용 ---
+    private String oldReserveInfo; 
+    private String newRoomNumber;
+    private String newDate;
+    private String newDay;
+    
+    // 필수 파라미터만 받는 생성자 (Builder가 Product 생성 시 사용)
+    public ReservationDetails(String id, String role) {
+        this.id = id;
+        this.role = role;
     }
 
-    // --- Getters ---
-    public String getId() { return id; }
-    public String getRole() { return role; }
-    public String getBuildingName() { return buildingName; }
-    public String getRoomNumber() { return roomNumber; }
-    public String getDate() { return date; }
-    public String getDay() { return day; }
-    public String getOldReserveInfo() { return oldReserveInfo; }
-    public String getNewRoomNumber() { return newRoomNumber; }
-    public String getNewDate() { return newDate; }
-    public String getNewDay() { return newDay; }
-    public int getUserCount() { return userCount; }
-    public String getPurpose() { return purpose; }
+    public void setBuildingName(String buildingName) {
+        this.buildingName = buildingName;
+    }
+
+    public void setRoomNumber(String roomNumber) {
+        this.roomNumber = roomNumber;
+    }
+
+    public void setDate(String date) {
+        this.date = date; // date 필드가 시간 정보를 포함하는 문자열을 받음
+    }
+
+    public void setDay(String day) {
+        this.day = day;
+    }
     
-    /**
-     * The Builder Class
-     */
-    public static class Builder {
-        // 필수 파라미터
-        private final String id;
-        private final String role;
+    public void setUserCount(int userCount) {
+        this.userCount = userCount;
+    }
 
-        // 선택적 파라미터
-        private String buildingName;
-        private String roomNumber;
-        private String date;
-        private String day;
-        private String oldReserveInfo;
-        private String newRoomNumber;
-        private String newDate;
-        private String newDay;
-        
-        // 추가
-        private int userCount = 1; // 기본값 1
-        private String purpose = "-";
-        
-        // 필수 파라미터는 Builder 생성자에서 받음
-        public Builder(String id, String role) {
-            this.id = id;
-            this.role = role;
-        }
-        
-        // 건물 이름 설정 메서드
-        public Builder buildingName(String buildingName) {
-            this.buildingName = buildingName;
-            return this;
-        }
-        
-        // --- '신규 예약'용 메서드 ---
-        public Builder roomNumber(String roomNumber) {
-            this.roomNumber = roomNumber;
-            return this;
-        }
+    public void setPurpose(String purpose) {
+        this.purpose = purpose;
+    }
+    
+    public void setOldReserveInfo(String oldReserveInfo) {
+        this.oldReserveInfo = oldReserveInfo;
+    }
 
-        public Builder date(String date) {
-            this.date = date;
-            return this;
-        }
+    public void setNewRoomNumber(String newRoomNumber) {
+        this.newRoomNumber = newRoomNumber;
+    }
 
-        public Builder day(String day) {
-            this.day = day;
-            return this;
-        }
+    public void setNewDate(String newDate) {
+        this.newDate = newDate;
+    }
 
-        // --- '예약 변경'용 메서드 ---
-        public Builder oldReserveInfo(String oldReserveInfo) {
-            this.oldReserveInfo = oldReserveInfo;
-            return this;
-        }
-        
-        public Builder newRoomNumber(String newRoomNumber) {
-            this.newRoomNumber = newRoomNumber;
-            return this;
-        }
+    public void setNewDay(String newDay) {
+        this.newDay = newDay;
+    }
 
-        public Builder newDate(String newDate) {
-            this.newDate = newDate;
-            return this;
-        }
+    public String getId() {
+        return id;
+    }
 
-        public Builder newDay(String newDay) {
-            this.newDay = newDay;
-            return this;
-        }
-        
-        public Builder userCount(int userCount) {
-            this.userCount = userCount;
-            return this;
-        }
-        
-        public Builder purpose(String purpose) {
-            this.purpose = purpose;
-            return this;
-        }
+    public String getRole() {
+        return role;
+    }
 
-        // build() 메서드
-        public ReservationDetails build() {
-            return new ReservationDetails(this);
-        }
+    public String getBuildingName() {
+        return buildingName;
+    }
+
+    public String getRoomNumber() {
+        return roomNumber;
+    }
+
+    public String getDate() {
+        return date; // 시간 정보가 포함된 문자열 반환
+    }
+
+    public String getDay() {
+        return day;
+    }
+
+    public int getUserCount() {
+        return userCount;
+    }
+
+    public String getPurpose() {
+        return purpose;
+    }
+
+    // ★ 예약 변경용 Getters
+    public String getOldReserveInfo() {
+        return oldReserveInfo;
+    }
+
+    public String getNewRoomNumber() {
+        return newRoomNumber;
+    }
+
+    public String getNewDate() {
+        return newDate;
+    }
+
+    public String getNewDay() {
+        return newDay;
     }
 }

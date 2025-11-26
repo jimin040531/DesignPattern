@@ -286,27 +286,30 @@ public class ClientHandler implements Runnable, Observer {
                         }
                         // 클라이언트 요청 - 기존 예약 정보를 새 예약 정보로 변경
                         if ("MODIFY_RESERVE".equals(command)) {
-                            // 1. 파라미터 읽기 (순서 중요!)
+                            // 1. 파라미터 읽기 (기존 로직 유지)
                             String userId = in.readUTF();
                             String oldReserveInfo = in.readUTF();
-                            String buildingName = in.readUTF(); // [추가] 읽기
+                            String buildingName = in.readUTF();
                             String newRoomNumber = in.readUTF();
                             String newDate = in.readUTF();
                             String newDay = in.readUTF();
-                            String purpose = in.readUTF();      // [추가] 읽기
-                            int userCount = in.readInt();       // [추가] 읽기
+                            String purpose = in.readUTF();
+                            int userCount = in.readInt();
                             String giverole = in.readUTF();
-
-                            // 2. Builder에 모든 정보 담기
-                            ReservationDetails details = new ReservationDetails.Builder(userId, giverole)
-                                    .oldReserveInfo(oldReserveInfo)
-                                    .buildingName(buildingName) // [설정]
-                                    .newRoomNumber(newRoomNumber)
-                                    .newDate(newDate)
-                                    .newDay(newDay)
-                                    .purpose(purpose)           // [설정]
-                                    .userCount(userCount)       // [설정]
-                                    .build();
+                            
+                            // 1. 필수 생성자 (id, role)로 객체 생성
+                            ReservationDetails details = new ReservationDetails(userId, giverole); 
+                            
+                            // 2. Setter를 사용하여 예약 변경 관련 정보 설정 (oldReserveInfo, new...)
+                            details.setOldReserveInfo(oldReserveInfo);
+                            details.setBuildingName(buildingName);
+                            details.setNewRoomNumber(newRoomNumber);
+                            details.setNewDate(newDate);
+                            details.setNewDay(newDay);
+                            
+                            // 3. Setter를 사용하여 추가 정보 설정 (purpose, userCount)
+                            details.setPurpose(purpose);
+                            details.setUserCount(userCount);       
 
                             ReserveResult reserveResult = ReserveManager.updateReserve(details);
                             synchronized (this) {
