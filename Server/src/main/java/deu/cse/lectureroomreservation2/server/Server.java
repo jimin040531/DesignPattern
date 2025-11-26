@@ -70,6 +70,7 @@ public class Server {
     // 서버 시작
     public void start() {
         int port = 5000;
+        printServerHealthCheck();
         try (ServerSocket serverSocket = new ServerSocket(port)) {
             System.out.println("Server port : " + port + " Waiting now...");
 
@@ -84,7 +85,21 @@ public class Server {
             e.printStackTrace();
         }
     }
-
+    
+    private void printServerHealthCheck() {
+        System.out.println("\n=== [System Init] 서버 초기 상태 점검 (Strategy Pattern) ===");
+        deu.cse.lectureroomreservation2.server.control.SystemMonitor monitor 
+            = new deu.cse.lectureroomreservation2.server.control.SystemMonitor();
+            
+        // 전략 1: 파일 확인
+        System.out.println(monitor.checkSystem());
+        
+        // 전략 2: 메모리 확인 (전략 교체)
+        monitor.setStrategy(new deu.cse.lectureroomreservation2.server.control.ResourceCheckStrategy());
+        System.out.println(monitor.checkSystem());
+        System.out.println("======================================================\n");
+    }
+    
     /**
      * @param args the command line arguments
      */

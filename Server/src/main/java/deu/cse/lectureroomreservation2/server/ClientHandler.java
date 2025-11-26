@@ -28,6 +28,8 @@ import deu.cse.lectureroomreservation2.server.control.ReservationDetails;
 // [Observer 패턴] 1. Observer 임포트
 import deu.cse.lectureroomreservation2.server.control.Observer;
 import deu.cse.lectureroomreservation2.server.control.NotificationService;
+import deu.cse.lectureroomreservation2.server.control.ResourceCheckStrategy;
+import deu.cse.lectureroomreservation2.server.control.SystemMonitor;
 
 import java.io.*;
 import java.net.Socket;
@@ -162,6 +164,28 @@ public class ClientHandler implements Runnable, Observer {
                             }
                             continue; // 중요: 아래 다른 로직을 실행하지 않고 루프 처음으로 돌아감
                         }
+                        
+                        if ("CHECK_SYSTEM_STATUS".equals(command)) {
+                            SystemMonitor monitor = new SystemMonitor();
+                        
+                            // 1. 파일 검사 (기본)
+                            String fileResult = monitor.checkSystem();
+
+                            // 2. 메모리 검사 (전략 교체!)
+                            monitor.setStrategy(new ResourceCheckStrategy());
+                            String resourceResult = monitor.checkSystem();
+
+                            String finalResult = fileResult + "\n" + resourceResult;
+
+                            // 서버 터미널 로그 출력
+                            System.out.println(">> [관리자 요청] 시스템 상태 점검 결과:");
+                            System.out.println(finalResult);
+
+                            // 클라이언트로 결과 전송
+                            out.writeUTF(finalResult);
+                            out.flush();
+                        }
+                        
                         // 예약 현황 통계 요청 처리
                         if ("GET_RESERVATION_STATS".equals(command)) {
                             String buildingName = in.readUTF();
