@@ -7,15 +7,12 @@ import deu.cse.lectureroomreservation2.server.model.ReservationIterator;
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
-import java.time.LocalTime;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 
 /**
  * Strategy Pattern: 교수 예약 전략 (최종 정책 반영)
  * [적용된 패턴] 1. Builder: 알림 객체 생성 2.Iterator: 학생 예약 탐색 3. Observer: 알림 전송
- * 최종 정책: 총 예약 건수 3개 제한
+ * 최종 정책: 총 예약 건수 3개 제한 (날짜 불문)
  */
 public class ProfessorReservation implements ReservationBehavior {
 
@@ -55,14 +52,16 @@ public class ProfessorReservation implements ReservationBehavior {
             return new ReserveResult(false, "이미 다른 교수가 해당 시간에 예약했습니다.");
         }
 
-        // (2) 최종 정책: 최대 예약 건수 (3개) 제한 
-        int existingBookedCount = getUserBookedCount(profId, dateStr); 
+        // (2) [수정됨] 최종 정책: 총 예약 건수 (3개) 제한 (날짜 불문)
+        // 기존: int existingBookedCount = getUserBookedCount(profId, dateStr);
+        // 변경: 날짜 상관없이 교수의 총 예약 수 확인
+        int totalBookedCount = getTotalReservedCount(profId);
         final int MAX_RESERVATIONS = 3;
 
-        if (existingBookedCount >= MAX_RESERVATIONS) {
+        if (totalBookedCount >= MAX_RESERVATIONS) {
             return new ReserveResult(false, 
-                String.format("예약 건수 초과: 교수는 특정 날짜에 최대 %d건(총 3시간)까지만 예약 가능합니다. (현재 %d건)", 
-                MAX_RESERVATIONS, existingBookedCount));
+                String.format("예약 건수 초과: 교수는 날짜와 상관없이 총 %d건(총 3시간)까지만 예약 가능합니다. (현재 %d건 보유 중)", 
+                MAX_RESERVATIONS, totalBookedCount));
         }
 
         // (3) 정원 초과 확인
@@ -120,22 +119,23 @@ public class ProfessorReservation implements ReservationBehavior {
         return ReserveManager.writeReservationToFile(profId, csvLine, "P");
     }
     
-    // 예약 건수 카운팅 헬퍼 (학생/교수 모두 동일 로직 사용 가능)
-    private int getUserBookedCount(String userId, String targetDateStr) {
+    // [수정됨] 날짜와 상관없이 교수가 가진 총 유효 예약 건수 반환
+    private int getTotalReservedCount(String userId) {
         int count = 0;
-        String targetDateSlash = targetDateStr.replace("-", "/"); 
 
         try (BufferedReader br = new BufferedReader(new FileReader(reservationFile))) {
             String line;
             while ((line = br.readLine()) != null) {
                 String[] parts = line.split(",");
+                // 인덱스: ID(6), 상태(10)
                 if (parts.length < 11) continue;
                 
-                String rDate = parts[2].trim();
                 String rId = parts[6].trim();
                 String rStatus = parts[10].trim(); 
 
-                if (rId.equals(userId) && rDate.equals(targetDateSlash) && !"REJECTED".equals(rStatus)) {
+                // 날짜 비교 로직 제거 -> 전체 날짜 대상
+                // ID가 일치하고, 거절(REJECTED) 상태가 아니면 카운트
+                if (rId.equals(userId) && !"REJECTED".equals(rStatus)) {
                     count++;
                 }
             }

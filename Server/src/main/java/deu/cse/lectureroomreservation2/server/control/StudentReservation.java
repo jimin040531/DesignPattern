@@ -5,16 +5,13 @@ import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
 import java.time.LocalDate;
-import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
-import java.util.HashSet;
-import java.util.Set;
 
 /**
  * 학생 예약 전략 구현체
  * - 당일 예약 불가
  * - 수용 인원 50% 제한 (Singleton 사용)
- * - 총 예약 건수 2개 제한 
+ * - 총 예약 건수 2개 제한 (날짜 불문 전체 합계)
  */
 public class StudentReservation implements ReservationBehavior {
 
@@ -38,10 +35,8 @@ public class StudentReservation implements ReservationBehavior {
         // -----------------------------------------
         String dateStr = dateOnly.replace("/", "-").trim(); // 날짜비교용
         
-        // LocalTime, LocalDate 변환
+        // LocalDate 변환
         LocalDate reserveDate = LocalDate.parse(dateStr, DateTimeFormatter.ofPattern("yyyy-MM-dd"));
-        // LocalTime requestStart = LocalTime.parse(startTimeStr); 
-        // 파싱 필요 없으나, 하위 호환성 위해 유지 가능
 
         // -----------------------------------------
         // 2. 제약 조건 검사
@@ -52,16 +47,16 @@ public class StudentReservation implements ReservationBehavior {
             return new ReserveResult(false, "당일 예약은 불가능합니다. 최소 하루 전에 예약해주세요.");
         }
 
-        // (2) 최종 정책: 최대 예약 건수 (2개) 제한
-        int existingBookedCount = getUserBookedCount(id, dateStr); 
-        final int MAX_RESERVATIONS = 2;
+        // (2) [수정됨] 최종 정책: 총 예약 건수 (2개) 제한 (날짜 불문)
+        // 기존 getUserBookedCount(id, dateStr) 대신 getTotalReservedCount(id) 사용
+        int totalBookedCount = getTotalReservedCount(id); 
+        final int MAX_TOTAL_RESERVATIONS = 2;
 
-        if (existingBookedCount >= MAX_RESERVATIONS) {
+        if (totalBookedCount >= MAX_TOTAL_RESERVATIONS) {
             return new ReserveResult(false, 
-                String.format("예약 건수 초과: 학생은 특정 날짜에 최대 %d건(총 2시간)까지만 예약 가능합니다. (현재 %d건)", 
-                MAX_RESERVATIONS, existingBookedCount));
+                String.format("예약 건수 초과: 학생은 날짜와 상관없이 총 %d건까지만 예약할 수 있습니다. (현재 %d건 보유 중)", 
+                MAX_TOTAL_RESERVATIONS, totalBookedCount));
         }
-        // 3시간 연속 예약 검사 로직은 정책에서 제외되었으므로 제거함
 
         // (3) [Singleton 패턴 사용] 수용 인원 50% 제한
         BuildingManager bm = BuildingManager.getInstance();
@@ -139,26 +134,24 @@ public class StudentReservation implements ReservationBehavior {
     }
     
     /**
-     * 헬퍼 메서드: 특정 날짜에 해당 학생이 가진 유효한 예약 건수 반환
+     * [수정됨] 헬퍼 메서드: 날짜와 상관없이 해당 학생이 가진 총 유효 예약 건수 반환
      */
-    private int getUserBookedCount(String userId, String targetDateStr) {
+    private int getTotalReservedCount(String userId) {
         int count = 0;
-        // 파일엔 "2025/06/03" 형식으로 저장되어 있으므로 변환
-        String targetDateSlash = targetDateStr.replace("-", "/"); 
-
+        
         try (BufferedReader br = new BufferedReader(new FileReader(reservationFile))) {
             String line;
             while ((line = br.readLine()) != null) {
                 String[] parts = line.split(",");
-                // 인덱스: 날짜(2), ID(6), 상태(10)
+                // 인덱스: ID(6), 상태(10)
                 if (parts.length < 11) continue;
                 
-                String rDate = parts[2].trim();
                 String rId = parts[6].trim();
                 String rStatus = parts[10].trim(); 
 
-                // ID 일치, 날짜 일치, 거절된 예약이 아닌 경우
-                if (rId.equals(userId) && rDate.equals(targetDateSlash) && !"REJECTED".equals(rStatus)) {
+                // 날짜 비교 로직 제거 -> 전체 날짜 대상
+                // ID가 일치하고, 거절된(REJECTED) 예약이 아닌 경우 카운트 (WAIT, APPROVED 모두 포함)
+                if (rId.equals(userId) && !"REJECTED".equals(rStatus)) {
                     count++;
                 }
             }

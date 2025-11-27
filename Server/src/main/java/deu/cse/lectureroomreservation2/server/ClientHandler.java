@@ -23,11 +23,13 @@ import deu.cse.lectureroomreservation2.server.control.TimeTableController;
 import deu.cse.lectureroomreservation2.server.control.UserRequestController;
 import deu.cse.lectureroomreservation2.server.control.ChangePassController;
 import deu.cse.lectureroomreservation2.server.control.BuildingManager;
+import deu.cse.lectureroomreservation2.server.control.ConcreteReservationBuilder;
 import deu.cse.lectureroomreservation2.server.control.ReservationDetails;
 
 // [Observer 패턴] 1. Observer 임포트
 import deu.cse.lectureroomreservation2.server.control.Observer;
 import deu.cse.lectureroomreservation2.server.control.NotificationService;
+import deu.cse.lectureroomreservation2.server.control.ReservationBuilder;
 import deu.cse.lectureroomreservation2.server.control.ResourceCheckStrategy;
 import deu.cse.lectureroomreservation2.server.control.SystemMonitor;
 
@@ -286,75 +288,85 @@ public class ClientHandler implements Runnable, Observer {
                         }
                         // 클라이언트 요청 - 기존 예약 정보를 새 예약 정보로 변경
                         if ("MODIFY_RESERVE".equals(command)) {
-                            // 1. 파라미터 읽기 (기존 로직 유지)
-                            String userId = in.readUTF();
-                            String oldReserveInfo = in.readUTF();
-                            String buildingName = in.readUTF();
-                            String newRoomNumber = in.readUTF();
-                            String newDate = in.readUTF(); // "yyyy / MM / dd / HH:mm HH:mm" 형태
-                            String newDay = in.readUTF();
-                            String purpose = in.readUTF();
-                            int userCount = in.readInt();
-                            String giverole = in.readUTF();
+                            try {
+                                // 1. 데이터 수신 (기존 코드 유지)
+                                String userId = in.readUTF();
+                                String oldReserveInfo = in.readUTF();
+                                String buildingName = in.readUTF();
+                                String newRoomNumber = in.readUTF();
+                                String newDate = in.readUTF(); // "yyyy / MM / dd / HH:mm HH:mm"
+                                String newDay = in.readUTF();
+                                String purpose = in.readUTF();
+                                int userCount = in.readInt();
+                                String giverole = in.readUTF();
 
-                            // 1. newDate에서 시간 정보 분리
-                            String newDateOnly;
-                            String newStartTime;
-                            String newEndTime;
+                                // 2. 날짜/시간 분리 로직 (Builder에 넣기 위해 분해)
+                                String newDateOnly;
+                                String newStartTime;
+                                String newEndTime;
 
-                            String cleanedDate = newDate.trim();
-                            // 요일 제거 로직: 문자열 끝에 있는 (요일)을 안전하게 제거
-                            if (cleanedDate.contains("(")) {
-                                cleanedDate = cleanedDate.substring(0, cleanedDate.indexOf('(')).trim();
-                            }
+                                String cleanedDate = newDate.trim();
+                                if (cleanedDate.contains("(")) {
+                                    cleanedDate = cleanedDate.substring(0, cleanedDate.indexOf('(')).trim();
+                                }
+                                String[] tokens = cleanedDate.split("/");
 
-                            String[] tokens = cleanedDate.split("/");
-
-                            if (tokens.length >= 4) {
-                                newDateOnly = tokens[0].trim() + "/" + tokens[1].trim() + "/" + tokens[2].trim();
-                                String timePart = tokens[3].trim();
-                                String[] times = timePart.split(" ");
-
-                                if (times.length == 2) {
-                                    newStartTime = times[0].trim();
-                                    newEndTime = times[1].trim();
+                                if (tokens.length >= 4) {
+                                    newDateOnly = tokens[0].trim() + "/" + tokens[1].trim() + "/" + tokens[2].trim();
+                                    String timePart = tokens[3].trim();
+                                    String[] times = timePart.split(" ");
+                                    if (times.length == 2) {
+                                        newStartTime = times[0].trim();
+                                        newEndTime = times[1].trim();
+                                    } else {
+                                        throw new IllegalArgumentException("시간 형식이 잘못되었습니다.");
+                                    }
                                 } else {
-                                    // 시간 분리 실패 시 오류 반환
-                                    ReserveResult error = new ReserveResult(false, "예약 변경 실패: 시간 정보 파싱 오류 (시작/종료 시간 없음)");
+                                    throw new IllegalArgumentException("날짜 형식이 잘못되었습니다.");
+                                }
+
+                                // 1. 빌더 생성 (ID, Role 주입)
+                                ReservationBuilder builder = new ConcreteReservationBuilder(userId, giverole);
+
+                                // 2. 빌더에 필수 정보 주입 (여기서 검증될 날짜와 시간을 넣습니다)
+                                builder.buildBaseInfo(buildingName, newRoomNumber, newDateOnly, newDay, newStartTime, newEndTime);
+
+                                // 3. 선택 정보 주입
+                                builder.buildPurpose(purpose);
+                                builder.buildUserCount(userCount);
+
+                                // 4. 객체 생성 및 검증 (여기서 2시간 초과나 당일 예약이면 예외 발생!)
+                                ReservationDetails details = builder.getReservationDetails();
+
+                                // 5. '예약 변경'에만 필요한 추가 정보 설정 (Details에 Setter가 있어야 함)
+                                details.setOldReserveInfo(oldReserveInfo);
+                                details.setNewDate(newDate);        // 전체 날짜 문자열 (StudentUpdate 등에서 사용)
+                                details.setNewRoomNumber(newRoomNumber);
+                                details.setNewDay(newDay);
+
+                                // 6. 변경 로직 수행
+                                ReserveResult reserveResult = ReserveManager.updateReserve(details);
+
+                                synchronized (this) {
+                                    out.writeObject(reserveResult);
+                                    out.flush();
+                                }
+
+                            } catch (IllegalArgumentException | IllegalStateException e) {
+                                // [중요] 빌더 검증 실패 시 에러 메시지를 클라이언트에게 전송
+                                System.out.println(">> 예약 변경 검증 실패: " + e.getMessage());
+                                ReserveResult error = new ReserveResult(false, "변경 실패: " + e.getMessage());
+                                synchronized (this) {
                                     out.writeObject(error);
                                     out.flush();
-                                    return;
                                 }
-                            } else {
-                                // 날짜 토큰 개수 부족 시 오류 반환 
-                                ReserveResult error = new ReserveResult(false, "예약 변경 실패: 날짜 형식 오류 (토큰 개수 부족)");
-                                out.writeObject(error);
-                                out.flush();
-                                return;
-                            }
-
-                            // 2. 필수 생성자 (id, role)로 객체 생성
-                            ReservationDetails details = new ReservationDetails(userId, giverole);
-
-                            // 3. Setter를 사용하여 예약 변경 관련 정보 설정
-                            details.setOldReserveInfo(oldReserveInfo);
-                            details.setBuildingName(buildingName);
-                            details.setNewRoomNumber(newRoomNumber);
-                            details.setNewDate(newDateOnly); // ★★★ 날짜만 설정 ★★★
-                            details.setNewDay(newDay);
-
-                            // 4. ReservationDetails의 start/endTime에 변경될 시간 정보 설정
-                            details.setStartTime(newStartTime);
-                            details.setEndTime(newEndTime);
-
-                            // 5. Setter를 사용하여 추가 정보 설정
-                            details.setPurpose(purpose);
-                            details.setUserCount(userCount);
-
-                            ReserveResult reserveResult = ReserveManager.updateReserve(details);
-                            synchronized (this) {
-                                out.writeObject(reserveResult);
-                                out.flush();
+                            } catch (Exception e) {
+                                e.printStackTrace();
+                                ReserveResult error = new ReserveResult(false, "서버 오류: " + e.getMessage());
+                                synchronized (this) {
+                                    out.writeObject(error);
+                                    out.flush();
+                                }
                             }
                         }
                         // 클라이언트 요청 - 예약 정보로 교수 예약 여부 조회 요청 받는 부분 - 교수 예약O true, 교수 예약X false
