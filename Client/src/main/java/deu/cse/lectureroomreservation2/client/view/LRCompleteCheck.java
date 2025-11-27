@@ -216,26 +216,62 @@ public class LRCompleteCheck extends javax.swing.JFrame {
         }
 
         // 3. 예약 요청 전송 (수정된 sendReserveRequest 사용)
+        String fullDateInfo = date; // date 멤버 변수에 "yyyy / MM / dd / HH:mm HH:mm" 저장 가정
+        String dateOnly;
+        String startTime;
+        String endTime;
+        
+        String[] tokens = fullDateInfo.split("/");
+        if (tokens.length == 4) {
+            // 날짜 부분 추출: "yyyy / MM / dd"
+            dateOnly = tokens[0].trim() + "/" + tokens[1].trim() + "/" + tokens[2].trim();
+            
+            // 시간 부분 추출: "HH:mm HH:mm" -> "HH:mm" (시작), "HH:mm" (종료)
+            String[] times = tokens[3].trim().split(" ");
+            if (times.length == 2) {
+                startTime = times[0];
+                endTime = times[1];
+            } else {
+                JOptionPane.showMessageDialog(this, "시간 정보가 올바르지 않습니다.", "파싱 오류", JOptionPane.ERROR_MESSAGE);
+                return;
+            }
+        } else {
+            JOptionPane.showMessageDialog(this, "날짜 형식 오류: '년/월/일/시간' 형식이 아닙니다.", "파싱 오류", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+
+        // 4. 예약 요청 전송 (수정된 sendReserveRequest 사용)
         ReserveResult result;
         if (IsChange != null) {
-            // [수정] 예약 변경 요청 시에도 모든 정보(건물, 목적, 인원)를 포함하여 전송
+            
             result = client.sendModifyReserveRequest(
                     id, 
                     IsChange, 
-                    this.buildingName, // 건물 이름
+                    this.buildingName, 
                     roomNumber, 
-                    date, 
+                    fullDateInfo, // ★★★ newDate 파라미터에는 복합 문자열 그대로 전달 ★★★
                     day, 
-                    purpose,           // 사용 목적
-                    userCount,         // 인원 수
+                    purpose, 
+                    userCount, 
                     role
             );
         } else {
             // 신규 예약
-            result = client.sendReserveRequest(id, role, this.buildingName, roomNumber, date, day, purpose, userCount);
+            result = client.sendReserveRequest(
+                    id, 
+                    role, 
+                    this.buildingName, 
+                    roomNumber, 
+                    dateOnly,   // 날짜만 분리하여 전달 
+                    day, 
+                    startTime,  // 시작 시간 분리하여 전달
+                    endTime,    // 종료 시간 분리하여 전달
+                    purpose, 
+                    userCount
+            );
         }
 
-        // 4. 결과 처리
+        // 5. 결과 처리
         new viewResultLR().viewResult(result.getResult(), result.getReason());
         
         if (result.getResult()) {

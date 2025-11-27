@@ -12,7 +12,7 @@ package deu.cse.lectureroomreservation2.server.control;
 public interface ReservationBuilder {
     
     // 조립의 핵심 단계: 예약에 필수적인 정보 설정 (시간 정보 제거)
-    void buildBaseInfo(String buildingName, String roomNumber, String date, String day);
+    void buildBaseInfo(String buildingName, String roomNumber, String date, String day, String startTime, String endTime);
     
     // 조립의 선택적 단계
     void buildPurpose(String purpose);

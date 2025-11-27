@@ -4,6 +4,9 @@
  */
 package deu.cse.lectureroomreservation2.server.control;
 
+import java.time.Duration;
+import java.time.LocalTime;
+
 /**
  *
  * @author Jimin
@@ -17,13 +20,14 @@ public class ConcreteReservationBuilder implements ReservationBuilder {
     }
 
     @Override
-    public void buildBaseInfo(String buildingName, String roomNumber, String date, String day) {
+    public void buildBaseInfo(String buildingName, String roomNumber, String date, String day, String startTime, String endTime) {
         // 조립 단계 1: 핵심 예약 정보 설정
         reservationDetails.setBuildingName(buildingName);
         reservationDetails.setRoomNumber(roomNumber);
         reservationDetails.setDate(date);
         reservationDetails.setDay(day);
-        // setStartTime, setEndTime 호출 제거
+        reservationDetails.setStartTime(startTime);
+        reservationDetails.setEndTime(endTime);
     }
 
     @Override
@@ -40,6 +44,30 @@ public class ConcreteReservationBuilder implements ReservationBuilder {
 
     @Override
     public ReservationDetails getReservationDetails() {
+        validateReservationDuration();
         return reservationDetails;
+    }
+    
+    // 2시간 제한을 검증하는 헬퍼 메서드
+    private void validateReservationDuration() {
+        String startTime = reservationDetails.getStartTime();
+        String endTime = reservationDetails.getEndTime();
+        
+        try {
+            // 시간 파싱 (HH:mm 형식)
+            LocalTime start = LocalTime.parse(startTime);
+            LocalTime end = LocalTime.parse(endTime);
+            
+            // Duration 계산
+            long durationMinutes = Duration.between(start, end).toMinutes();
+            
+            // 요구사항: 최대 2시간(120분) 검사
+            if (durationMinutes <= 0 || durationMinutes > 120) {
+                throw new IllegalArgumentException("예약 시간은 최소 1분, 최대 2시간(120분)을 초과할 수 없습니다.");
+            }
+        } catch (Exception e) {
+            // 시간 파싱 오류 또는 유효성 검사 실패 시 생성 실패
+            throw new IllegalStateException("예약 시간 정보가 유효하지 않거나 형식이 잘못되었습니다: " + e.getMessage());
+        }
     }
 }

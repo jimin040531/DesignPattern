@@ -14,7 +14,9 @@ public class ReservationDetails {
     private String buildingName;
     private String roomNumber;
     private String date;    
-    private String day;   
+    private String day;
+    private String startTime;
+    private String endTime;
     private int userCount;    
     private String purpose;   
     
@@ -44,6 +46,14 @@ public class ReservationDetails {
 
     public void setDay(String day) {
         this.day = day;
+    }
+    
+    public void setStartTime(String startTime) {
+        this.startTime = startTime;
+    }
+
+    public void setEndTime(String endTime) {
+        this.endTime = endTime;
     }
     
     public void setUserCount(int userCount) {
@@ -94,6 +104,14 @@ public class ReservationDetails {
         return day;
     }
 
+    public String getStartTime() {
+        return startTime;
+    }
+
+    public String getEndTime() {
+        return endTime;
+    }
+    
     public int getUserCount() {
         return userCount;
     }

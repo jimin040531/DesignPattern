@@ -19,6 +19,7 @@ public class ReservationDirector {
     // 복합 객체 조립 과정 캡슐화 (시간 정보 파라미터 제거)
     public ReservationDetails constructReservation(
             String buildingName, String roomNumber, String date, String day,
+            String startTime, String endTime,
             String purpose, int userCount) { // ★ startTime, endTime 제거
         
         if (this.builder == null) {
@@ -26,7 +27,7 @@ public class ReservationDirector {
         }
         
         // 1. 필수 정보 조립 
-        builder.buildBaseInfo(buildingName, roomNumber, date, day); // ★ startTime, endTime 제거
+        builder.buildBaseInfo(buildingName, roomNumber, date, day, startTime, endTime);
         
         // 2. 선택적 정보 조립
         builder.buildPurpose(purpose);

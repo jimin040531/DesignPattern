@@ -9,23 +9,24 @@ public class ReserveRequest implements Serializable {
     private String roomNumber;
     private String date;
     private String day;
-    
-    // [수정] 기존 notice 삭제 -> purpose, userCount 추가
     private String purpose; 
     private int userCount;
-
-    // [수정] 생성자 파라미터 변경 (7개)
-    public ReserveRequest(String id, String role, String buildingName, String roomNumber, String date, String day, String purpose, int userCount) {
+    private String startTime;
+    private String endTime;
+    
+    public ReserveRequest(String id, String role, String buildingName, String roomNumber, String date, String day, String startTime, String endTime, String purpose, int userCount) {
         this.id = id;
         this.role = role;
         this.buildingName = buildingName;
         this.roomNumber = roomNumber;
         this.date = date;
         this.day = day;
+        this.startTime = startTime;
+        this.endTime = endTime;
         this.purpose = purpose;
         this.userCount = userCount;
 
-        System.out.println("클라이언트 ReserveRequest : " + id + " " + role + " " + roomNumber + " " + date + " " + day + " " + purpose + " " + userCount + " 보냄");
+        System.out.println("클라이언트 ReserveRequest : " + id + " " + role + " " + roomNumber + " " + date + " " + day + " " + startTime + " " + endTime + " " + purpose + " " + userCount + " 보냄");
     }
     
     public String getBuildingName() {
@@ -52,7 +53,14 @@ public class ReserveRequest implements Serializable {
         return day;
     }
 
-    // [수정] Getter 변경
+    public String getStartTime() {
+        return startTime;
+    }
+
+    public String getEndTime() {
+        return endTime;
+    }
+    
     public String getPurpose() {
         return purpose;
     }

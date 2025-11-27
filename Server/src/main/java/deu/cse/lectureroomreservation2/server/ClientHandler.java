@@ -45,7 +45,7 @@ public class ClientHandler implements Runnable, Observer {
     private final Socket socket;
     private final Server server;
     private final BuildingManager buildingManager;
-   
+
     private String userId;
     // [Observer 패턴] 3. 출력 스트림을 멤버 변수로 승격 (update 메서드에서 쓰기 위해)
     private ObjectOutputStream out;
@@ -57,6 +57,7 @@ public class ClientHandler implements Runnable, Observer {
     }
     private final List<String> pendingNotices = new ArrayList<>(); // 알림 대기열
     // 2. update 메서드 수정
+
     @Override
     public void update(String message) {
         synchronized (pendingNotices) {
@@ -64,7 +65,7 @@ public class ClientHandler implements Runnable, Observer {
         }
         System.out.println(">> [ClientHandler] 알림 큐에 저장됨: " + message);
     }
-    
+
     // [Observer 패턴] 4. 알림 수신 시 실행될 메서드 구현
     /*@Override
     public void update(String message) {
@@ -80,7 +81,6 @@ public class ClientHandler implements Runnable, Observer {
             System.err.println("알림 전송 실패: " + e.getMessage());
         }
     }*/
-
     @Override
     public void run() {
         boolean acquired = false;
@@ -133,8 +133,8 @@ public class ClientHandler implements Runnable, Observer {
                     synchronized (pendingNotices) { // 리스트 접근 동기화
                         for (String notice : notices) {
                             // 소켓으로 바로 보내지 말고, 대기열에 추가!
-                            pendingNotices.add(notice); 
-                            
+                            pendingNotices.add(notice);
+
                             // (선택) 파일에서 읽은 공지는 삭제 처리
                             noticeController.removeNotice(id, notice);
                         }
@@ -146,7 +146,7 @@ public class ClientHandler implements Runnable, Observer {
                         String command = in.readUTF();
 
                         System.out.println(">> 수신 명령: " + command); // 여기 추가
-                        
+
                         // 클라이언트가 주기적으로 알림을 확인하러 올 때 처리
                         if ("CHECK_NOTICES".equals(command)) {
                             synchronized (pendingNotices) {
@@ -164,10 +164,10 @@ public class ClientHandler implements Runnable, Observer {
                             }
                             continue; // 중요: 아래 다른 로직을 실행하지 않고 루프 처음으로 돌아감
                         }
-                        
+
                         if ("CHECK_SYSTEM_STATUS".equals(command)) {
                             SystemMonitor monitor = new SystemMonitor();
-                        
+
                             // 1. 파일 검사 (기본)
                             String fileResult = monitor.checkSystem();
 
@@ -185,14 +185,14 @@ public class ClientHandler implements Runnable, Observer {
                             out.writeUTF(finalResult);
                             out.flush();
                         }
-                        
+
                         // 예약 현황 통계 요청 처리
                         if ("GET_RESERVATION_STATS".equals(command)) {
                             String buildingName = in.readUTF();
                             String room = in.readUTF();
                             String date = in.readUTF();
                             String startTime = in.readUTF();
-                            
+
                             // 2. 건물 이름을 포함하여 통계 요청 (자연관/공학관 구분)
                             int[] stats = ReserveManager.getReservationStats(buildingName, room, date, startTime);
 
@@ -291,25 +291,65 @@ public class ClientHandler implements Runnable, Observer {
                             String oldReserveInfo = in.readUTF();
                             String buildingName = in.readUTF();
                             String newRoomNumber = in.readUTF();
-                            String newDate = in.readUTF();
+                            String newDate = in.readUTF(); // "yyyy / MM / dd / HH:mm HH:mm" 형태
                             String newDay = in.readUTF();
                             String purpose = in.readUTF();
                             int userCount = in.readInt();
                             String giverole = in.readUTF();
-                            
-                            // 1. 필수 생성자 (id, role)로 객체 생성
-                            ReservationDetails details = new ReservationDetails(userId, giverole); 
-                            
-                            // 2. Setter를 사용하여 예약 변경 관련 정보 설정 (oldReserveInfo, new...)
+
+                            // 1. newDate에서 시간 정보 분리
+                            String newDateOnly;
+                            String newStartTime;
+                            String newEndTime;
+
+                            String cleanedDate = newDate.trim();
+                            // 요일 제거 로직: 문자열 끝에 있는 (요일)을 안전하게 제거
+                            if (cleanedDate.contains("(")) {
+                                cleanedDate = cleanedDate.substring(0, cleanedDate.indexOf('(')).trim();
+                            }
+
+                            String[] tokens = cleanedDate.split("/");
+
+                            if (tokens.length >= 4) {
+                                newDateOnly = tokens[0].trim() + "/" + tokens[1].trim() + "/" + tokens[2].trim();
+                                String timePart = tokens[3].trim();
+                                String[] times = timePart.split(" ");
+
+                                if (times.length == 2) {
+                                    newStartTime = times[0].trim();
+                                    newEndTime = times[1].trim();
+                                } else {
+                                    // 시간 분리 실패 시 오류 반환
+                                    ReserveResult error = new ReserveResult(false, "예약 변경 실패: 시간 정보 파싱 오류 (시작/종료 시간 없음)");
+                                    out.writeObject(error);
+                                    out.flush();
+                                    return;
+                                }
+                            } else {
+                                // 날짜 토큰 개수 부족 시 오류 반환 
+                                ReserveResult error = new ReserveResult(false, "예약 변경 실패: 날짜 형식 오류 (토큰 개수 부족)");
+                                out.writeObject(error);
+                                out.flush();
+                                return;
+                            }
+
+                            // 2. 필수 생성자 (id, role)로 객체 생성
+                            ReservationDetails details = new ReservationDetails(userId, giverole);
+
+                            // 3. Setter를 사용하여 예약 변경 관련 정보 설정
                             details.setOldReserveInfo(oldReserveInfo);
                             details.setBuildingName(buildingName);
                             details.setNewRoomNumber(newRoomNumber);
-                            details.setNewDate(newDate);
+                            details.setNewDate(newDateOnly); // ★★★ 날짜만 설정 ★★★
                             details.setNewDay(newDay);
-                            
-                            // 3. Setter를 사용하여 추가 정보 설정 (purpose, userCount)
+
+                            // 4. ReservationDetails의 start/endTime에 변경될 시간 정보 설정
+                            details.setStartTime(newStartTime);
+                            details.setEndTime(newEndTime);
+
+                            // 5. Setter를 사용하여 추가 정보 설정
                             details.setPurpose(purpose);
-                            details.setUserCount(userCount);       
+                            details.setUserCount(userCount);
 
                             ReserveResult reserveResult = ReserveManager.updateReserve(details);
                             synchronized (this) {
@@ -439,15 +479,15 @@ public class ClientHandler implements Runnable, Observer {
                                     // 시간표 추가
                                     try {
                                         controller.addScheduleToFile(
-                                                req.getYear(), 
-                                                req.getSemester(), 
-                                                req.getBuilding(), 
+                                                req.getYear(),
+                                                req.getSemester(),
+                                                req.getBuilding(),
                                                 req.getRoom(),
                                                 req.getDay(),
                                                 req.getStart(),
                                                 req.getEnd(),
                                                 req.getSubject(),
-                                                req.getProfessor(), 
+                                                req.getProfessor(),
                                                 req.getType()
                                         );
                                         result = new ScheduleResult(true, "등록 성공", null);
@@ -459,9 +499,9 @@ public class ClientHandler implements Runnable, Observer {
                                 case "DELETE" -> {
                                     // 시간표 삭제
                                     boolean deleted = controller.deleteScheduleFromFile(
-                                            req.getYear(),  
-                                            req.getSemester(), 
-                                            req.getBuilding(), 
+                                            req.getYear(),
+                                            req.getSemester(),
+                                            req.getBuilding(),
                                             req.getRoom(),
                                             req.getDay(),
                                             req.getStart(),
@@ -473,15 +513,15 @@ public class ClientHandler implements Runnable, Observer {
                                 case "UPDATE" -> {
                                     // 시간표 수정
                                     boolean updated = controller.updateSchedule(
-                                            req.getYear(),        // 🚨 추가됨
-                                            req.getSemester(),    // 🚨 추가됨
-                                            req.getBuilding(),    // 🚨 추가됨
+                                            req.getYear(), // 🚨 추가됨
+                                            req.getSemester(), // 🚨 추가됨
+                                            req.getBuilding(), // 🚨 추가됨
                                             req.getRoom(),
                                             req.getDay(),
                                             req.getStart(),
                                             req.getEnd(),
                                             req.getSubject(),
-                                            req.getProfessor(),   // 🚨 추가됨
+                                            req.getProfessor(), // 🚨 추가됨
                                             req.getType()
                                     );
                                     result = new ScheduleResult(updated, updated ? "수정 성공" : "수정 실패", null);
@@ -585,21 +625,6 @@ public class ClientHandler implements Runnable, Observer {
                                         result = ReserveManager.searchUserAndReservations(
                                                 req.getUserId(), req.getBuilding(), req.getRoom(), req.getDate()
                                         );
-                                    
-                                    /* 수정 기능 삭제
-                                    case "UPDATE" -> {
-                                        // [수정] Builder 패턴 적용
-                                        ReservationDetails details = new ReservationDetails.Builder(req.getUserId(), req.getRole())
-                                                .oldReserveInfo(req.getOldReserveInfo())
-                                                .newRoomNumber(req.getNewRoom())
-                                                .newDate(req.getNewDate())
-                                                .newDay(req.getNewDay())
-                                                .build();
-                                        ReserveResult updateRes = ReserveManager.updateReserve(details);
-                                        result = new ReserveManageResult(updateRes.getResult(), updateRes.getReason(), null);
-                                    }
-                                    */
-
                                     case "DELETE" -> {
                                         ReserveResult deleteRes = ReserveManager.cancelReserve(
                                                 req.getUserId(), req.getReserveInfo()
@@ -718,18 +743,4 @@ public class ClientHandler implements Runnable, Observer {
             }
         }
     }
-    /*
-     * private void handleStudent(ObjectInputStream in, ObjectOutputStream out,
-     * String id) {
-     * System.out.println("학생 기능 처리: " + id);
-     * }
-     * * private void handleProfessor(ObjectInputStream in, ObjectOutputStream out,
-     * String id) {
-     * System.out.println("교수 기능 처리: " + id);
-     * }
-     * * private void handleAdmin(ObjectInputStream in, ObjectOutputStream out, String
-     * id) {
-     * System.out.println("관리자 기능 처리: " + id);
-     * }
-     */
 }

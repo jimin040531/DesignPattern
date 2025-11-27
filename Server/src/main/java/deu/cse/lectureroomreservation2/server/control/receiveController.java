@@ -66,34 +66,52 @@ public class receiveController {
         }
     }
 
-    public static String getFilepath() { return filePath; }
-    public static String getUserFileName() { return UserFileName; }
-    public static String getNoticeFileName() { return noticeFileName; }
-    public static String getScheduleInfoFileName() { return ScheduleInfoFileName; }
-    public static String getReservationInfoFileName() { return ReservationInfoFileName; }
-    public static String getBuildingInfoFileName() { return BuildingInfoFileName; }
+    public static String getFilepath() {
+        return filePath;
+    }
 
-    // 예약 요청 처리
+    public static String getUserFileName() {
+        return UserFileName;
+    }
+
+    public static String getNoticeFileName() {
+        return noticeFileName;
+    }
+
+    public static String getScheduleInfoFileName() {
+        return ScheduleInfoFileName;
+    }
+
+    public static String getReservationInfoFileName() {
+        return ReservationInfoFileName;
+    }
+
+    public static String getBuildingInfoFileName() {
+        return BuildingInfoFileName;
+    }
+
     public ReserveResult handleReserve(ReserveRequest req) {
-        
-        // 1. 구상 빌더 인스턴스 생성
+
+        // 2. 구상 빌더 인스턴스 생성
         ReservationBuilder builder = new ConcreteReservationBuilder(req.getId(), req.getRole());
-        
-        // 2. 디렉터 인스턴스 생성 및 빌더 설정
+
+        // 3. 디렉터 인스턴스 생성 및 빌더 설정
         ReservationDirector director = new ReservationDirector();
         director.setBuilder(builder);
-        
-        // 3. 디렉터에게 조립 요청 (startTime, endTime 제거)
+
+        // 4. 디렉터에게 조립 요청 (분리된 시간 정보 전달)
         ReservationDetails details = director.constructReservation(
                 req.getBuildingName(),
                 req.getRoomNumber(),
-                req.getDate(), // 이 필드에 날짜와 시간 정보가 모두 담겨있음
+                req.getDate(), 
                 req.getDay(),
+                req.getStartTime(), 
+                req.getEndTime(), 
                 req.getPurpose(),
                 req.getUserCount()
         ); // constructReservation 호출 끝
 
-        // 4. ReserveManager에 details 객체 전달
+        // 5. ReserveManager에 details 객체 전달
         return ReserveManager.reserve(details);
     }
 }

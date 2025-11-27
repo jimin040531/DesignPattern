@@ -82,12 +82,17 @@ public class Client {
     public synchronized ReserveResult sendReserveRequest(String id, String role, 
             String buildingName, // [추가됨]
             String roomNumber, String date, String day, 
+            String startTime, String endTime,
             String purpose, int userCount) 
             throws IOException, ClassNotFoundException {
         
         // ReserveRequest 생성자 변경 반영
-        ReserveRequest req = new ReserveRequest(id, role, buildingName, roomNumber, date, day, purpose, userCount);
-        
+        ReserveRequest req = new ReserveRequest(id, role, 
+                                                buildingName, 
+                                                roomNumber, 
+                                                date, day, 
+                                                startTime, endTime, 
+                                                purpose, userCount);
         out.writeUTF("RESERVE");
         out.flush();
         out.writeObject(req);
@@ -159,12 +164,12 @@ public class Client {
     public synchronized ReserveResult sendModifyReserveRequest(
             String id, 
             String oldReserveInfo, 
-            String buildingName, // [추가]
+            String buildingName,
             String newRoomNumber,
-            String newDate, 
+            String newDate, // "2025 / 06 / 04 / 10:00 11:00" 형태 유지 가정
             String newDay, 
-            String purpose,      // [추가]
-            int userCount,       // [추가]
+            String purpose,    
+            int userCount,   
             String role)
             throws IOException, ClassNotFoundException {
         
