@@ -34,7 +34,7 @@ public class StudentCancellationBuilder extends NotificationBuilder {
     public void buildMessageContent(String room, String date, String time) {
         String title = "예약 취소 알림";
         
-        // [수정됨] 드디어 변수(cancellationReason)를 사용하여 메시지를 만듭니다!
+        // 드디어 변수(cancellationReason)를 사용하여 메시지를 만듭니다!
         String body = String.format("[%s호] [%s %s] 예약이 다음 사유로 취소되었습니다: %s", 
                 room, date, time, cancellationReason);
         
