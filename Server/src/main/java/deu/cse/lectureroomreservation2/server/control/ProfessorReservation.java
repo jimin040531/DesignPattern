@@ -72,7 +72,7 @@ public class ProfessorReservation implements ReservationBehavior {
         }
 
         // ============================================================
-        // [Iterator Pattern] 겹치는 학생 예약 탐색 및 취소 (로직 복구)
+        // [Iterator Pattern] 겹치는 학생 예약 탐색 및 취소
         // ============================================================
         List<String> allLines = ReserveManager.getAllReservations();
         ReservationAggregate reservationList = new StudentReservationList(allLines);
@@ -86,10 +86,10 @@ public class ProfessorReservation implements ReservationBehavior {
             String fileRoom = res.getRoom().trim();
             String fileStart = res.getStart().trim();
 
-            // 비교 로직: 방 번호, 날짜, 시작 시간이 같고 + '학생' 예약인 경우
+            // 방 번호, 날짜, 시작 시간이 같고 + '학생' 예약인 경우
             if (res.isValidStudentReservation() 
                     && fileRoom.equals(room)
-                    && fileDate.equals(dateOnly) // ★ 공백 제거된 날짜끼리 비교 (핵심)
+                    && fileDate.equals(dateOnly) // 공백 제거된 날짜끼리 비교
                     && fileStart.equals(startTime)) {
 
                 // 1. 예약 취소 실행
