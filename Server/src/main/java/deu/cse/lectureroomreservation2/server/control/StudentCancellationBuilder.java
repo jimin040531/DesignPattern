@@ -13,18 +13,30 @@ import deu.cse.lectureroomreservation2.server.model.RecipientInfo;
  */
 // 학생 예약 취소 알림 전용 빌더
 public class StudentCancellationBuilder extends NotificationBuilder {
+    
+    // 취소 사유 저장 (기본값)
+    private String cancellationReason = "교수님 일정"; 
+
+    // Setter
+    public void setCancellationReason(String reason) {
+        if (reason != null && !reason.trim().isEmpty()) {
+            this.cancellationReason = reason;
+        }
+    }
+
     @Override
     public void buildRecipientInfo(String userId, String role) {
-        // 작은 객체 1 생성 및 조립
         RecipientInfo info = new RecipientInfo(userId, role);
         notification.setRecipientInfo(info);
     }
 
     @Override
     public void buildMessageContent(String room, String date, String time) {
-        // 작은 객체 2 생성 및 조립 (취소 알림 메시지 포맷팅)
         String title = "예약 취소 알림";
-        String body = String.format("교수님 일정으로 인해 [%s]호 [%s %s] 예약이 취소되었습니다.", room, date, time);
+        
+        // [수정됨] 드디어 변수(cancellationReason)를 사용하여 메시지를 만듭니다!
+        String body = String.format("[%s호] [%s %s] 예약이 다음 사유로 취소되었습니다: %s", 
+                room, date, time, cancellationReason);
         
         MessageContent content = new MessageContent(title, body);
         notification.setMessageContent(content);
@@ -32,7 +44,6 @@ public class StudentCancellationBuilder extends NotificationBuilder {
 
     @Override
     public void buildPriority() {
-        // 취소 알림은 중요하므로 높음(HIGH)으로 설정
         notification.setPriority("HIGH");
     }
 }
