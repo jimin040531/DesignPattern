@@ -67,16 +67,16 @@ public class ScheduleFileManager {
         }
     }
 
-    // ScheduleInfo.txt 전체를 백업 복사본으로 저장하는 기능
     public boolean backupFile(String backupFileName) {
         try {
             // 원본: 현재 사용 중인 시간표 파일 (ScheduleInfo.txt)
-            Path source = Paths.get(filePath);
+            Path source = Paths.get(filePath);   // 예: .../Server/src/main/resources/ScheduleInfo.txt
 
-            // 백업 파일: 매개변수로 받은 이름 (예: "ScheduleInfo_backup.txt")
-            Path target = Paths.get("src/main/resources/" + backupFileName);
-            System.out.println("백업 source 절대경로 = " + source.toAbsolutePath());
-            System.out.println("백업 target 절대경로 = " + target.toAbsolutePath());
+            // 백업 파일: 서버 데이터 폴더 + 백업 이름
+            Path target = Paths.get(receiveController.getFilepath(), backupFileName);
+
+            System.out.println("백업 source = " + source.toAbsolutePath());
+            System.out.println("백업 target = " + target.toAbsolutePath());
 
             Files.copy(source, target, StandardCopyOption.REPLACE_EXISTING);
             return true;
@@ -87,13 +87,20 @@ public class ScheduleFileManager {
     }
 
 // 백업 파일을 ScheduleInfo.txt 로 복원하는 기능
+    // 백업 파일을 ScheduleInfo.txt 로 복원하는 기능
     public boolean restoreFile(String backupFileName) {
         try {
-            // 백업 파일 경로
-            Path source = Paths.get(backupFileName);
-
             // 원본 시간표 파일 경로 (ScheduleInfo.txt)
             Path target = Paths.get(filePath);
+
+            // 원본 파일이 있는 폴더 (src/main/resources)
+            Path resourcesDir = target.getParent(); // .../src/main/resources
+
+            // 그 폴더 안의 백업 파일 (예: ScheduleInfo_backup.txt)
+            Path source = resourcesDir.resolve(backupFileName);
+
+            System.out.println("복원 source 절대경로 = " + source.toAbsolutePath());
+            System.out.println("복원 target 절대경로 = " + target.toAbsolutePath());
 
             Files.copy(source, target, StandardCopyOption.REPLACE_EXISTING);
             return true;
