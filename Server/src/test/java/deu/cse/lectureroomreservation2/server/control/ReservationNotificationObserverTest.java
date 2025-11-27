@@ -39,7 +39,7 @@ class TestObserver implements Observer {
 
 //테스트용(Mock) Subject 클래스, activeUsers 등록 여부로 온라인/오프라인을 판단한다.
 class TestableNotificationService {
-
+    
     private final Map<String, Observer> activeUsers = new HashMap<>();
     private final Map<String, List<String>> offlineMessages = new HashMap<>();
 
@@ -54,13 +54,10 @@ class TestableNotificationService {
     }
 
     public void notifyObserver(String userId, String message) {
-
         Observer observer = activeUsers.get(userId);
-
         if (observer != null) {
             System.out.println("[알림 전송] userId=" + userId + " (온라인) → 즉시 update() 호출");
             observer.update(message);
-
         } else {
             System.out.println("[알림 전송] userId=" + userId + " (오프라인) → 메시지 저장");
             offlineMessages
@@ -74,9 +71,7 @@ class TestableNotificationService {
     }
 }
 
-
 public class ReservationNotificationObserverTest {
-
     private TestableNotificationService notifier;
 
     @BeforeEach
@@ -84,53 +79,39 @@ public class ReservationNotificationObserverTest {
         notifier = new TestableNotificationService();
     }
 
-
     // 온라인 사용자 → 즉시 알림 전달 테스트
     @Test
     void testOnlineUserReceivesNotification() {
 
-        System.out.println("\n==============================");
-        System.out.println("[온라인 사용자 알림 테스트 시작]");
-        System.out.println("==============================");
+        System.out.println("\n======== [온라인 사용자 알림 테스트] ========");
+        
+        TestObserver onlineUser = new TestObserver(true);       // 온라인 사용자 생성
 
-        // 온라인 사용자 생성
-        TestObserver onlineUser = new TestObserver(true);
-        System.out.println("[상태] user1 온라인 여부: " + onlineUser.isOnline());
-
-        // 등록 → 온라인으로 간주됨
-        notifier.registerObserver("user1", onlineUser);
+        notifier.registerObserver("user1", onlineUser);         //등록 → 온라인으로 간주됨
 
         System.out.println("[알림 전송 시도] '예약이 승인되었습니다'");
         notifier.notifyObserver("user1", "예약이 승인되었습니다");
 
-        // update() 실행 확인
         assertEquals(1, onlineUser.receivedMessages.size());
         assertEquals("예약이 승인되었습니다", onlineUser.receivedMessages.get(0));
 
         System.out.println("[검증 결과] user1이 정상적으로 알림을 수신함");
-        System.out.println("[테스트 종료]\n");
     }
 
     
     // 오프라인 사용자 → 메시지 저장 테스트
     @Test
     void testOfflineUserStoresMessage() {
-
-        System.out.println("\n==============================");
-        System.out.println("[오프라인 사용자 메시지 저장 테스트 시작]");
-        System.out.println("==============================");
-
+        System.out.println("\n======== [오프라인 사용자 메시지 저장 테스트 시작] ========");
         System.out.println("[상태] user2는 activeUsers에 없으므로 오프라인 상태");
-
+        
         notifier.notifyObserver("user2", "예약이 거절되었습니다");
-
         List<String> stored = notifier.getOfflineMessages("user2");
-
+        
         assertEquals(1, stored.size());
         assertEquals("예약이 거절되었습니다", stored.get(0));
 
         System.out.println("[검증 결과] user2 오프라인 메시지 저장 정상");
-        System.out.println("[테스트 종료]\n");
     }
 
 
@@ -138,10 +119,7 @@ public class ReservationNotificationObserverTest {
     @Test
     void testMultipleOfflineMessages() {
 
-        System.out.println("\n==============================");
-        System.out.println("[오프라인 사용자 다중 메시지 저장 테스트 시작]");
-        System.out.println("==============================");
-
+        System.out.println("\n======== [오프라인 사용자 다중 메시지 저장 테스트 시작] ========");
         System.out.println("[상태] user3는 오프라인 상태 → 메시지가 누적 저장되어야 함");
 
         notifier.notifyObserver("user3", "예약이 승인되었습니다");
@@ -154,7 +132,6 @@ public class ReservationNotificationObserverTest {
         assertEquals("예약이 거절되었습니다", stored.get(1));
 
         System.out.println("[검증 결과] user3 오프라인 메시지 2개 정상 저장");
-        System.out.println("[테스트 종료]\n");
     }
 
 
@@ -162,18 +139,12 @@ public class ReservationNotificationObserverTest {
     @Test
     void testRemoveObserver() {
 
-        System.out.println("\n==============================");
-        System.out.println("[Observer 제거 테스트 시작]");
-        System.out.println("==============================");
+        System.out.println("\n======== [오프라인 사용자 알림 저장 테스트] ========");
 
         TestObserver obs = new TestObserver(true);
-        System.out.println("[상태] user4 온라인 여부: " + obs.isOnline());
-
+        
         notifier.registerObserver("user4", obs);
-        System.out.println("[처리] user4 등록 완료 → 온라인 처리");
-
         notifier.removeObserver("user4");
-        System.out.println("[처리] user4 제거 완료 → 오프라인 처리");
 
         System.out.println("[알림 전송 시도] '삭제 후 메시지'");
         notifier.notifyObserver("user4", "삭제 후 메시지");
@@ -182,6 +153,5 @@ public class ReservationNotificationObserverTest {
         assertEquals(0, obs.receivedMessages.size());
 
         System.out.println("[검증 결과] 제거된 user4에게 알림이 전달되지 않음");
-        System.out.println("[테스트 종료]\n");
     }
 }
