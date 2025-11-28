@@ -47,8 +47,7 @@ public class StudentReservation implements ReservationBehavior {
             return new ReserveResult(false, "당일 예약은 불가능합니다. 최소 하루 전에 예약해주세요.");
         }
 
-        // (2) [수정됨] 최종 정책: 총 예약 건수 (2개) 제한 (날짜 불문)
-        // 기존 getUserBookedCount(id, dateStr) 대신 getTotalReservedCount(id) 사용
+        // 총 예약 건수 (2개) 제한 (날짜 불문)
         int totalBookedCount = getTotalReservedCount(id); 
         final int MAX_TOTAL_RESERVATIONS = 2;
 
