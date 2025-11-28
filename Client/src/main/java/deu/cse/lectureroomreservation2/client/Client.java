@@ -104,12 +104,12 @@ public class Client {
      * [신규] 특정 강의실/월/시간대에 예약된 날짜(day) 목록을 서버에 요청합니다. (ObjectStream 버전에 맞게 수정됨)
      */
     @SuppressWarnings("unchecked")
-    public synchronized List<String> getMonthlyReservedDates(String roomNum, int year, int month, String startTime)
+    public synchronized List<String> getMonthlyReservedDates(String buildingName, String roomNum, int year, int month, String startTime)
             throws IOException, ClassNotFoundException {
 
         out.writeUTF("GET_MONTHLY_RESERVED_DATES");
         out.flush();
-
+        out.writeUTF(buildingName);
         out.writeUTF(roomNum);
         out.flush();
         out.writeInt(year);
@@ -445,11 +445,12 @@ public class Client {
     /**
      * [신규] 주별 현황 API 호출
      */
-    public synchronized Map<String, List<String[]>> getWeeklySchedule(String roomNum, LocalDate monday)
+    public synchronized Map<String, List<String[]>> getWeeklySchedule(String buildingName, String roomNum, LocalDate monday)
             throws IOException, ClassNotFoundException {
 
         out.writeUTF("GET_WEEKLY_SCHEDULE");
         out.flush();
+        out.writeUTF(buildingName);
         out.writeUTF(roomNum);
         out.flush();
         out.writeObject(monday); // LocalDate 객체 전송
@@ -475,10 +476,11 @@ public class Client {
     }
 
     // 강의실 조회 state 요청 처리
-    public synchronized String getRoomState(String room, String day, String start, String end, String date)
+    public synchronized String getRoomState(String buildingName, String room, String day, String start, String end, String date)
             throws IOException {
         out.writeUTF("GET_ROOM_STATE");
         out.flush();
+        out.writeUTF(buildingName);
         out.writeUTF(room);
         out.flush();
         out.writeUTF(day);

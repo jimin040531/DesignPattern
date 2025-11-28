@@ -63,7 +63,7 @@
   </build>
   <properties>
     <maven.compiler.release>21</maven.compiler.release>
-    <exec.mainClass>deu.cse.lectureroomreservation2.LectureRoomReservation2</exec.mainClass>
+    <exec.mainClass>deu.cse.lectureroomreservation2.LectureRoomReservation2.server.Server</exec.mainClass>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
   </properties>
 </project>

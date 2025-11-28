@@ -99,6 +99,11 @@ public class ConcreteReservationBuilder implements ReservationBuilder {
                 String cleanDate = dateStr.replace("-", "/").trim();
                 LocalDate reserveDate = LocalDate.parse(cleanDate, DateTimeFormatter.ofPattern("yyyy/MM/dd"));
 
+                // [추가된 로직]: 과거 날짜 체크
+                if (reserveDate.isBefore(LocalDate.now())) {
+                    // 과거 날짜를 예약하려고 할 때
+                    throw new IllegalArgumentException("과거 날짜로는 예약할 수 없습니다.");
+                }
                 // 오늘 날짜와 비교 (예약 날짜가 오늘보다 뒤여야 함 -> 내일부터 가능)
                 if (!reserveDate.isAfter(LocalDate.now())) {
                     throw new IllegalArgumentException("당일 예약은 불가능합니다. 최소 하루 전에 예약해주세요.");

@@ -227,15 +227,30 @@ public class ClientHandler implements Runnable, Observer {
                             out.writeUTF(result); // 예: "SUCCESS" 또는 오류 메시지
                             out.flush();
                         }
-                        // 예약 요청 처리
+                        // ClientHandler.java (RESERVE 명령 처리 부분)
                         if ("RESERVE".equals(command)) {
-                            // 클라이언트로부터 예약 요청 객체를 받음
-                            ReserveRequest req = (ReserveRequest) in.readObject();
-                            // 예약 처리 결과를 받아옴
-                            ReserveResult result = new receiveController().handleReserve(req);
-                            // 결과를 클라이언트에 전송
-                            out.writeObject(result);
-                            out.flush();
+                            try {
+                                // 클라이언트로부터 예약 요청 객체를 받음
+                                ReserveRequest req = (ReserveRequest) in.readObject();
+                                // 예약 처리 결과를 받아옴
+                                ReserveResult result = new receiveController().handleReserve(req);
+
+                                // 결과를 클라이언트에 전송 (성공 또는 ReserveManager에서 생성한 실패 결과)
+                                out.writeObject(result);
+                                out.flush();
+
+                            } catch (IllegalArgumentException | IllegalStateException e) {
+                                // Builder 검증 실패 시 (예: 당일 예약 불가, 2시간 초과)
+                                System.out.println(">> 예약 검증 실패: " + e.getMessage());
+                                ReserveResult error = new ReserveResult(false, "예약 실패: " + e.getMessage());
+                                out.writeObject(error); // 오류 결과를 클라이언트에 전송
+                                out.flush();
+                            } catch (Exception e) {
+                                e.printStackTrace();
+                                ReserveResult error = new ReserveResult(false, "서버 처리 중 오류가 발생했습니다.");
+                                out.writeObject(error);
+                                out.flush();
+                            }
                         }
                         // CHECK_MAX_TIME 명령 처리 추가
                         if ("CHECK_MAX_TIME".equals(command)) {
@@ -402,13 +417,14 @@ public class ClientHandler implements Runnable, Observer {
 
                         // 클라이언트가 이 요청을 보내고 오류가 났으므로, 응답을 추가하여 연결을 유지합니다.
                         if ("GET_WEEKLY_SCHEDULE".equals(command)) {
+                            String buildingName = in.readUTF();
                             String roomNum = in.readUTF();
                             // 클라이언트가 LocalDate 객체를 보내는지 확인 (주간 현황은 보통 주 시작 날짜를 보냅니다)
                             try {
                                 @SuppressWarnings("unchecked")
                                 LocalDate monday = (LocalDate) in.readObject(); // 주 시작일 (LocalDate)
                                 // ReserveManager.getWeeklySchedule(roomNum, monday) 호출 (ClassCastException 방지 위해 Map 전송)
-                                Map<String, List<String[]>> weeklySchedule = ReserveManager.getWeeklySchedule(roomNum, monday);
+                                Map<String, List<String[]>> weeklySchedule = ReserveManager.getWeeklySchedule(buildingName, roomNum, monday);
                                 out.writeObject(weeklySchedule);
                             } catch (Exception e) {
                                 // 파라미터가 잘못되거나 ReserveManager의 메서드가 없으면 빈 Map 응답
@@ -421,15 +437,15 @@ public class ClientHandler implements Runnable, Observer {
                         // "월별 현황 조회" 요청 처리
                         if ("GET_MONTHLY_STATUS".equals(command) || "GET_MONTHLY_RESERVED_DATES".equals(command)) { // <-- 명령 추가
                             System.out.println(">> 월별 현황 조회 명령 수신됨: " + command);
-
-                            // 클라이언트가 보내는 파라미터는 Room, Year, Month 순서여야 합니다.
+                            
+                            String buildingName = in.readUTF();
                             String room = in.readUTF();
                             int year = in.readInt(); // 이 부분에서 int 대신 String(915)을 읽으려다 오류날 수 있음
                             int month = in.readInt();
                             String startTime = in.readUTF();
 
                             // 템플릿 메서드 호출: "월별로 예약 상태를 조회한다"
-                            List<String> result = ReserveManager.getReservationStatusForMonth(room, year, month, startTime);
+                            List<String> result = ReserveManager.getReservationStatusForMonth(buildingName, room, year, month, startTime);
 
                             out.writeObject(result);
                             out.flush();
@@ -437,12 +453,13 @@ public class ClientHandler implements Runnable, Observer {
 
                         // 클라이언트 요청 - 강의실 조회 state 요청 받는 부분
                         if ("GET_ROOM_STATE".equals(command)) {
+                            String buildingName = in.readUTF();
                             String room = in.readUTF();
                             String day = in.readUTF();
                             String start = in.readUTF();
                             String end = in.readUTF();
                             String date = in.readUTF(); // "yyyy / MM / dd / HH:mm HH:mm" 형식
-                            String state = ReserveManager.getRoomState(room, day, start, end, date);
+                            String state = ReserveManager.getRoomState(buildingName, room, day, start, end, date);
                             out.writeUTF(state);
                             out.flush();
                         }

@@ -28,7 +28,7 @@ public class ProfessorUpdate implements ReservationUpdateBehavior {
         String startTimeStr = times[0]; 
         String endTimeStr = times[1];
 
-        String tempReserveCheck = ReserveManager.makeReserveInfo(newRoom, dateOnly, newDay);
+        String tempReserveCheck = ReserveManager.makeReserveInfo(newBuilding, newRoom, dateOnly, newDay, startTimeStr, endTimeStr);
 
         // 2. 다른 교수 예약 확인
         if (ReserveManager.hasOtherProfessorReserve(tempReserveCheck, id)) {

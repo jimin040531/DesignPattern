@@ -20,17 +20,17 @@ public abstract class AbstractReservationChecker {
      * 2. 승인/대기 중인 예약이 있는가? -> "RESERVED" (예약자 정보 등은 구현체에서 처리 가능)
      * 3. 둘 다 없으면 -> "AVAILABLE"
      */
-    public final String checkStatus(String room, String date, String day, String time) {
+    public final String checkStatus(String buildingName, String room, String date, String day, String time) {
         
         // 1. 정규 수업 체크 (ScheduleInfo.txt)
         // 날짜(date) 정보를 추가로 전달하여 학기를 구분할 수 있게 함
-        if (hasRegularClass(room, day, time, date)) {
+        if (hasRegularClass(buildingName, room, day, time, date)) { 
             return "CLASS"; 
         }
 
         // 2. 예약 현황 체크 (상세 상태 문자열 반환)
         // null이 아니면 그 상태(WAIT, APPROVED)를 그대로 반환
-        String status = getReservationStatus(room, date, time);
+        String status = getReservationStatus(buildingName, room, date, time);
         if (status != null) {
             return status; 
         }
@@ -40,6 +40,6 @@ public abstract class AbstractReservationChecker {
     }
 
     // 하위 클래스에서 구체적으로 구현할 메서드 (Hooks)
-    protected abstract boolean hasRegularClass(String room, String day, String time, String date);
-    protected abstract String getReservationStatus(String room, String date, String time);
+    protected abstract boolean hasRegularClass(String buildingName, String room, String day, String time, String date);
+    protected abstract String getReservationStatus(String buildingName, String room, String date, String time);
 }

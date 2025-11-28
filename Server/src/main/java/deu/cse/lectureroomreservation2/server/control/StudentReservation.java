@@ -67,7 +67,7 @@ public class StudentReservation implements ReservationBehavior {
         }
 
         // 해당 시간대의 기존 예약 인원 총합 구하기
-        int currentReservedCount = getExistingReservedCount(room, dateOnly, startTimeStr);
+        int currentReservedCount = getExistingReservedCount(buildingName, room, dateOnly, startTimeStr);
         int totalExpectedCount = currentReservedCount + requestCount;
         int limitCount = (int)(maxCapacity * 0.5);
 
@@ -104,20 +104,21 @@ public class StudentReservation implements ReservationBehavior {
     /**
      * 해당 강의실, 날짜, 시작 시간에 이미 예약된 총 인원수를 반환
      */
-    private int getExistingReservedCount(String room, String dateOnly, String startTime) {
+    private int getExistingReservedCount(String buildingName, String room, String dateOnly, String startTime) {
         int totalCount = 0;
         try (BufferedReader br = new BufferedReader(new FileReader(reservationFile))) {
             String line;
             while ((line = br.readLine()) != null) {
                 String[] parts = line.split(",");
                 if (parts.length < 11) continue;
-
+                
+                String rBuilding = parts[0].trim();
                 String rRoom = parts[1].trim();
                 String rDate = parts[2].trim();
                 String rStart = parts[4].trim();
                 String rStatus = parts[10].trim();
 
-                if (rRoom.equals(room) && rDate.equals(dateOnly) && rStart.equals(startTime)) {
+                if (rBuilding.equals(buildingName) && rRoom.equals(room) && rDate.equals(dateOnly) && rStart.equals(startTime)) {
                     if (!"REJECTED".equals(rStatus)) {
                         try {
                             totalCount += Integer.parseInt(parts[9].trim());

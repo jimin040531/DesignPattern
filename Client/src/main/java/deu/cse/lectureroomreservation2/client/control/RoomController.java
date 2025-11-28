@@ -588,7 +588,8 @@ public class RoomController {
         LocalDate monday = selectedDate.with(DayOfWeek.MONDAY);
         LocalDate friday = monday.plusDays(4);
         String roomNum = this.selectedRoom;
-
+        String selectedBuilding = (String) view.getBuildingComboBox().getSelectedItem();
+        
         DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy-MM-dd");
         view.getWeeklyDateLabel().setText(monday.format(dtf) + " ~ " + friday.format(dtf));
 
@@ -605,7 +606,7 @@ public class RoomController {
             @Override
             protected Map<String, List<String[]>> doInBackground() throws Exception {
                 // Client.java의 getWeeklySchedule 메서드도 이 타입을 반환해야 합니다.
-                return client.getWeeklySchedule(roomNum, monday);
+                return client.getWeeklySchedule(selectedBuilding, roomNum, monday);
             }
 
             @Override
@@ -800,7 +801,7 @@ public class RoomController {
         final int year = calendar.getYearChooser().getYear();
         final int month = calendar.getMonthChooser().getMonth() + 1;
         String roomNum = this.selectedRoom;
-
+        String selectedBuilding = (String) view.getBuildingComboBox().getSelectedItem();
         String selectedTimeSlot = (String) view.getMonthlyTimeSlotComboBox().getSelectedItem();
         if (selectedTimeSlot == null) {
             return;
@@ -813,7 +814,7 @@ public class RoomController {
             @Override
             protected List<String> doInBackground() throws Exception {
                 // [중요] Client.java 내부의 getMonthlyReservedDates는 이제 List<String>을 반환해야 함.
-                return client.getMonthlyReservedDates(roomNum, year, month, startTime);
+                return client.getMonthlyReservedDates(selectedBuilding, roomNum, year, month, startTime);
             }
 
             @Override
@@ -886,6 +887,7 @@ public class RoomController {
         updateChoosedDate(); // 선택된 날짜 갱신
         String dayOfWeek = (String) view.getDayOfWeekComboBox().getSelectedItem(); // "월요일"
         String roomNum = this.selectedRoom;
+        String selectedBuilding = (String) view.getBuildingComboBox().getSelectedItem();
         
         // 날짜 문자열 조합 (yyyy / MM / dd)
         String y = (String) view.getYearComboBox().getSelectedItem();
@@ -912,7 +914,7 @@ public class RoomController {
                         String dateTime = fullDate + " / " + start + " " + end;
                         
                         // 서버에 상태 요청 (예약가능, 정규수업, 예약중 등)
-                        String state = client.getRoomState(roomNum, dayOfWeek, start, end, dateTime);
+                        String state = client.getRoomState(selectedBuilding, roomNum, dayOfWeek, start, end, dateTime);
                         
                         rowDataList.add(new Object[]{start, end, roomNum, state, dayOfWeek});
                     }

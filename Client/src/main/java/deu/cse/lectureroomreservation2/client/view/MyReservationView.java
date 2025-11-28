@@ -58,7 +58,7 @@ public class MyReservationView extends javax.swing.JFrame {
                     // 컬럼 순서: 0:건물, 1:강의실, 2:날짜, 3:요일, 4:시작, 5:끝, 6:상태
                     
                     // 데이터 가져오기
-                    // String building = String.valueOf(MyReservationTable.getValueAt(row, 0)); // 필요 시 사용
+                    String buildingR = String.valueOf(MyReservationTable.getValueAt(row, 0)); // 필요 시 사용
                     roomR = String.valueOf(MyReservationTable.getValueAt(row, 1)); // 강의실
                     dateR = String.valueOf(MyReservationTable.getValueAt(row, 2)); // 날짜
                     dayR = String.valueOf(MyReservationTable.getValueAt(row, 3));  // 요일
@@ -74,7 +74,8 @@ public class MyReservationView extends javax.swing.JFrame {
                         String d = dParts[2];
                         
                         // 서버 포맷: room / y / m / d / start end / day
-                        cancelreservation = roomR + "/" + y + "/" + m + "/" + d + "/ " + startR + " " + endR + "/" + dayR;
+                        cancelreservation = String.format("%s,%s,%s,%s,%s,%s", 
+                            buildingR, roomR, dateR, dayR, startR, endR);
                         
                         System.out.println("선택된 예약 정보: " + cancelreservation);
                     }

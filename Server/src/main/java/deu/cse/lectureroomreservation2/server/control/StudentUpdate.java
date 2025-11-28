@@ -31,7 +31,7 @@ public class StudentUpdate implements ReservationUpdateBehavior {
         String endTimeStr = times[1]; // 이미 50분 뒤로 계산되어 옴 (Client ViewRoom 로직상)
 
         // 비교 및 확인용 임시 포맷 (HasProfessorReserve 등에서 사용)
-        String tempReserveCheck = ReserveManager.makeReserveInfo(newRoom, dateOnly, newDay);
+        String tempReserveCheck = ReserveManager.makeReserveInfo(newBuilding, newRoom, dateOnly, newDay, startTimeStr, endTimeStr);
         
         // 2. 제약 조건 확인
         // (1) 교수 예약 중복 확인

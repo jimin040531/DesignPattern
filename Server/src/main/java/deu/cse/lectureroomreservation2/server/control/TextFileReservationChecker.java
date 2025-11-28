@@ -19,7 +19,7 @@ public class TextFileReservationChecker extends AbstractReservationChecker {
      * 포맷: 년도(0), 학기(1), 건물(2), 강의실(3), 요일(4), 시작(5), 종료(6), 과목(7), 교수(8), 유형(9)
      */
     @Override
-    protected boolean hasRegularClass(String room, String day, String time, String date) {
+    protected boolean hasRegularClass(String buildingName, String room, String day, String time, String date) {
         String shortDay = day.length() > 1 ? day.substring(0, 1) : day;
 
         // [추가] 날짜를 기반으로 학기 계산 (1~6월: 1학기, 7~12월: 2학기)
@@ -44,6 +44,7 @@ public class TextFileReservationChecker extends AbstractReservationChecker {
                 String[] parts = line.split(",");
                 if (parts.length >= 10) {
                     String sSemester = parts[1].trim(); // 파일의 학기 정보
+                    String sBuilding = parts[2].trim();
                     String sRoom = parts[3].trim();
                     String sDay = parts[4].trim();
                     String sStart = parts[5].trim();
@@ -51,6 +52,7 @@ public class TextFileReservationChecker extends AbstractReservationChecker {
 
                     // [수정] 학기(sSemester)가 현재 날짜의 학기(targetSemester)와 일치하는지 확인
                     if (sSemester.equals(targetSemester) &&
+                        sBuilding.equals(buildingName) &&
                         sRoom.equals(room) && 
                         sDay.equals(shortDay) && 
                         sStart.equals(time) && 
@@ -72,12 +74,13 @@ public class TextFileReservationChecker extends AbstractReservationChecker {
      */
     // 상태 문자열 반환 메서드
     @Override
-    protected String getReservationStatus(String room, String date, String time) {
+    protected String getReservationStatus(String buildingName, String room, String date, String time) {
         try (BufferedReader br = new BufferedReader(new FileReader(reservationFile))) {
             String line;
             while ((line = br.readLine()) != null) {
                 String[] parts = line.split(",");
                 if (parts.length >= 12) { // 12칸 포맷
+                    String rBuilding = parts[0].trim();
                     String rRoom = parts[1].trim();
                     String rDate = parts[2].trim();
                     String rStart = parts[4].trim();
@@ -86,7 +89,7 @@ public class TextFileReservationChecker extends AbstractReservationChecker {
                     String normalizedDate = date.replace("-", "/").replace(" ", "");
                     String normalizedRDate = rDate.replace("-", "/").replace(" ", "");
 
-                    if (rRoom.equals(room) && normalizedRDate.equals(normalizedDate) && rStart.equals(time)) {
+                    if (rBuilding.equals(buildingName) && rRoom.equals(room) && normalizedRDate.equals(normalizedDate) && rStart.equals(time)) {
                         // 거절된 건 무시, 나머지는 상태 반환
                         if (!"REJECTED".equals(rStatus)) {
                             return rStatus; // "APPROVED" or "WAIT" 리턴
