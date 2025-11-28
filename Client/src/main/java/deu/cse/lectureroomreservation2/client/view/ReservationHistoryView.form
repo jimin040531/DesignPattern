@@ -42,6 +42,10 @@
                       <Component id="btnApproved" min="-2" pref="90" max="-2" attributes="0"/>
                       <EmptySpace type="separate" max="-2" attributes="0"/>
                       <Component id="btnRejected1" min="-2" pref="90" max="-2" attributes="0"/>
+                      <EmptySpace min="-2" pref="89" max="-2" attributes="0"/>
+                      <Component id="btnReservationBackup" min="-2" pref="76" max="-2" attributes="0"/>
+                      <EmptySpace type="separate" max="-2" attributes="0"/>
+                      <Component id="btnReservationRestore" min="-2" pref="76" max="-2" attributes="0"/>
                       <EmptySpace max="32767" attributes="0"/>
                       <Component id="btnDelete" min="-2" pref="90" max="-2" attributes="0"/>
                   </Group>
@@ -117,6 +121,8 @@
                   <Component id="btnDelete" alignment="3" min="-2" max="-2" attributes="0"/>
                   <Component id="btnApproved" alignment="3" min="-2" max="-2" attributes="0"/>
                   <Component id="btnRejected1" alignment="3" min="-2" max="-2" attributes="0"/>
+                  <Component id="btnReservationBackup" alignment="3" min="-2" max="-2" attributes="0"/>
+                  <Component id="btnReservationRestore" alignment="3" min="-2" max="-2" attributes="0"/>
               </Group>
               <EmptySpace min="-2" pref="12" max="-2" attributes="0"/>
           </Group>
@@ -339,6 +345,22 @@
       </Events>
     </Component>
     <Component class="javax.swing.JTextField" name="txtDate">
+    </Component>
+    <Component class="javax.swing.JButton" name="btnReservationBackup">
+      <Properties>
+        <Property name="text" type="java.lang.String" value="&#xbc31;&#xc5c5;"/>
+      </Properties>
+      <Events>
+        <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="btnReservationBackupActionPerformed"/>
+      </Events>
+    </Component>
+    <Component class="javax.swing.JButton" name="btnReservationRestore">
+      <Properties>
+        <Property name="text" type="java.lang.String" value="&#xbcf5;&#xc6d0;"/>
+      </Properties>
+      <Events>
+        <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="btnReservationRestoreActionPerformed"/>
+      </Events>
     </Component>
   </SubComponents>
 </Form>

@@ -79,20 +79,20 @@ public class Client {
     }
 
     // 예약 요청 처리
-    public synchronized ReserveResult sendReserveRequest(String id, String role, 
+    public synchronized ReserveResult sendReserveRequest(String id, String role,
             String buildingName, // [추가됨]
-            String roomNumber, String date, String day, 
+            String roomNumber, String date, String day,
             String startTime, String endTime,
-            String purpose, int userCount) 
+            String purpose, int userCount)
             throws IOException, ClassNotFoundException {
-        
+
         // ReserveRequest 생성자 변경 반영
-        ReserveRequest req = new ReserveRequest(id, role, 
-                                                buildingName, 
-                                                roomNumber, 
-                                                date, day, 
-                                                startTime, endTime, 
-                                                purpose, userCount);
+        ReserveRequest req = new ReserveRequest(id, role,
+                buildingName,
+                roomNumber,
+                date, day,
+                startTime, endTime,
+                purpose, userCount);
         out.writeUTF("RESERVE");
         out.flush();
         out.writeObject(req);
@@ -162,45 +162,45 @@ public class Client {
      */
     // 예약 변경 요청 처리(사용자 id, 기존 예약 정보, 새로운 강의실 번호, 새로운 날짜, 새로운 요일)
     public synchronized ReserveResult sendModifyReserveRequest(
-            String id, 
-            String oldReserveInfo, 
+            String id,
+            String oldReserveInfo,
             String buildingName,
             String newRoomNumber,
             String newDate, // "2025 / 06 / 04 / 10:00 11:00" 형태 유지 가정
-            String newDay, 
-            String purpose,    
-            int userCount,   
+            String newDay,
+            String purpose,
+            int userCount,
             String role)
             throws IOException, ClassNotFoundException {
-        
+
         out.writeUTF("MODIFY_RESERVE");
         out.flush();
-        
+
         out.writeUTF(id);
         out.flush();
         out.writeUTF(oldReserveInfo);
         out.flush();
-        
+
         // [추가된 데이터 전송]
         out.writeUTF(buildingName);
         out.flush();
-        
+
         out.writeUTF(newRoomNumber);
         out.flush();
         out.writeUTF(newDate);
         out.flush();
         out.writeUTF(newDay);
         out.flush();
-        
+
         // [추가된 데이터 전송]
         out.writeUTF(purpose);
         out.flush();
         out.writeInt(userCount);
         out.flush();
-        
+
         out.writeUTF(role);
         out.flush();
-        
+
         return (ReserveResult) in.readObject();
     }
 
@@ -252,16 +252,16 @@ public class Client {
                 for (String noticeText : notices) {
                     javax.swing.SwingUtilities.invokeLater(() -> {
                         javax.swing.JOptionPane.showMessageDialog(
-                            parentFrame, 
-                            noticeText, 
-                            "실시간 알림",
-                            javax.swing.JOptionPane.INFORMATION_MESSAGE
+                                parentFrame,
+                                noticeText,
+                                "실시간 알림",
+                                javax.swing.JOptionPane.INFORMATION_MESSAGE
                         );
                     });
                 }
 
                 // 3. 잠시 대기 (1~2초) - 너무 자주 물어보면 서버 부하 발생
-                Thread.sleep(2000); 
+                Thread.sleep(2000);
 
             } catch (InterruptedException ie) {
                 break; // 스레드 종료 신호 시 루프 탈출
@@ -536,7 +536,7 @@ public class Client {
             out.flush();
 
             // 건물 이름 전송
-            out.writeUTF(buildingName); 
+            out.writeUTF(buildingName);
             out.flush();
 
             out.writeUTF(room);
@@ -545,12 +545,12 @@ public class Client {
             out.flush();
             out.writeUTF(startTime);
             out.flush();
-            
+
             return (int[]) in.readObject();
 
         } catch (IOException | ClassNotFoundException e) {
             e.printStackTrace();
-            return new int[]{0, 0}; 
+            return new int[]{0, 0};
         }
     }
 
@@ -617,6 +617,54 @@ public class Client {
             }
         } catch (Exception e) {
             e.printStackTrace();
+        }
+    }
+
+    public ReserveManageResult backupReservation(String reservationInfo_backuptxt) {
+        try {
+            // 1) 서버에 명령 전송
+            out.writeUTF("RESERVE_BACKUP");
+            out.flush();
+
+            // 2) 백업 파일 이름 전송 (예: "ReservationInfo_backup.txt")
+            out.writeUTF(reservationInfo_backuptxt);
+            out.flush();
+
+            // 3) 서버에서 결과 객체 수신
+            Object obj = in.readObject();
+            if (obj instanceof ReserveManageResult) {
+                return (ReserveManageResult) obj;
+            } else {
+                // 예상치 못한 응답 형식
+                return new ReserveManageResult(false, "예약 백업: 서버 응답 형식 오류", null);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            // 예외가 나도 NPE 안 나게 실패 결과 리턴
+            return new ReserveManageResult(false, "예약 백업 중 오류 발생: " + e.getMessage(), null);
+        }
+    }
+
+    public ReserveManageResult restoreReservation(String reservationInfo_backuptxt) {
+        try {
+            // 1) 서버에 명령 전송
+            out.writeUTF("RESERVE_RESTORE");
+            out.flush();
+
+            // 2) 복원에 사용할 백업 파일 이름 전송
+            out.writeUTF(reservationInfo_backuptxt);
+            out.flush();
+
+            // 3) 서버에서 결과 객체 수신
+            Object obj = in.readObject();
+            if (obj instanceof ReserveManageResult) {
+                return (ReserveManageResult) obj;
+            } else {
+                return new ReserveManageResult(false, "예약 복원: 서버 응답 형식 오류", null);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            return new ReserveManageResult(false, "예약 복원 중 오류 발생: " + e.getMessage(), null);
         }
     }
 

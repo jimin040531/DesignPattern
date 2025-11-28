@@ -437,7 +437,7 @@ public class ClientHandler implements Runnable, Observer {
                         // "월별 현황 조회" 요청 처리
                         if ("GET_MONTHLY_STATUS".equals(command) || "GET_MONTHLY_RESERVED_DATES".equals(command)) { // <-- 명령 추가
                             System.out.println(">> 월별 현황 조회 명령 수신됨: " + command);
-                            
+
                             String buildingName = in.readUTF();
                             String room = in.readUTF();
                             int year = in.readInt(); // 이 부분에서 int 대신 String(915)을 읽으려다 오류날 수 있음
@@ -733,6 +733,46 @@ public class ClientHandler implements Runnable, Observer {
                             ScheduleResult result = new ScheduleResult(
                                     ok,
                                     ok ? "복원 성공" : "복원 실패",
+                                    null
+                            );
+                            out.writeObject(result);
+                            out.flush();
+                        }
+
+                        // ===========================
+                        // 📁 예약 내역 백업 요청
+                        // ===========================
+                        if ("RESERVE_BACKUP".equals(command)) {
+                            System.out.println(">> RESERVE_BACKUP 명령 수신됨");
+
+                            // 클라이언트에서 보낸 백업 파일 이름 받기
+                            String backupName = in.readUTF();    // 예: "ReservationInfo_backup.txt"
+
+                            boolean ok = ReserveManager.backupReservationFile(backupName);
+
+                            // 예약 관리 쪽 응답 형식에 맞춰서 결과 전송
+                            ReserveManageResult result = new ReserveManageResult(
+                                    ok,
+                                    ok ? "예약 내역 백업 성공" : "예약 내역 백업 실패",
+                                    null
+                            );
+                            out.writeObject(result);
+                            out.flush();
+                        }
+
+                        // ===========================
+                        // 🔄 예약 내역 복원 요청
+                        // ===========================
+                        if ("RESERVE_RESTORE".equals(command)) {
+                            System.out.println(">> RESERVE_RESTORE 명령 수신됨");
+
+                            String backupName = in.readUTF();    // 예: "ReservationInfo_backup.txt"
+
+                            boolean ok = ReserveManager.restoreReservationFile(backupName);
+
+                            ReserveManageResult result = new ReserveManageResult(
+                                    ok,
+                                    ok ? "예약 내역 복원 성공" : "예약 내역 복원 실패",
                                     null
                             );
                             out.writeObject(result);

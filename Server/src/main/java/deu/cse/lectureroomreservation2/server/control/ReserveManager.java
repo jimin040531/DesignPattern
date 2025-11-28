@@ -10,6 +10,10 @@ import java.time.YearMonth;
 import java.time.format.DateTimeFormatter;
 import java.time.format.TextStyle;
 import java.util.*;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 
 public class ReserveManager {
 
@@ -536,6 +540,50 @@ public class ReserveManager {
             e.printStackTrace();
         }
         return false;
+    }
+
+    // ============================================
+    // 📁 ReservationInfo.txt 백업 / 복원
+    // ============================================
+    public static boolean backupReservationFile(String backupFileName) {
+        synchronized (FILE_LOCK) {
+            try {
+                Path source = Paths.get(RESERVE_FILE);              // ReservationInfo.txt
+                Path target = source.getParent().resolve(backupFileName); // 같은 폴더의 backup 파일
+
+                System.out.println("예약 백업 source = " + source.toAbsolutePath());
+                System.out.println("예약 백업 target = " + target.toAbsolutePath());
+
+                Files.copy(source, target, StandardCopyOption.REPLACE_EXISTING);
+                return true;
+            } catch (IOException e) {
+                e.printStackTrace();
+                return false;
+            }
+        }
+    }
+
+    public static boolean restoreReservationFile(String backupFileName) {
+        synchronized (FILE_LOCK) {
+            try {
+                Path target = Paths.get(RESERVE_FILE);              // ReservationInfo.txt
+                Path source = target.getParent().resolve(backupFileName); // backup 파일
+
+                System.out.println("예약 복원 source = " + source.toAbsolutePath());
+                System.out.println("예약 복원 target = " + target.toAbsolutePath());
+
+                if (!Files.exists(source)) {
+                    System.out.println("예약 복원 실패: 백업 파일이 존재하지 않습니다.");
+                    return false;
+                }
+
+                Files.copy(source, target, StandardCopyOption.REPLACE_EXISTING);
+                return true;
+            } catch (IOException e) {
+                e.printStackTrace();
+                return false;
+            }
+        }
     }
 
     // [Iterator 패턴 지원] 파일의 모든 예약 정보를 문자열 리스트로 반환
