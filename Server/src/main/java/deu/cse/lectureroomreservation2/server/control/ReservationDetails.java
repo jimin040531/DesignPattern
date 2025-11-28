@@ -2,15 +2,13 @@ package deu.cse.lectureroomreservation2.server.control;
 
 /**
  * Builder Pattern: 예약/예약 변경에 필요한 모든 데이터를 캡슐화하는 클래스
- * (SFR-206: 교수는 '목적', 학생은 '인원' 등 옵션이 다르므로 Builder가 유용함)
+ * 교수는 '목적', 학생은 '인원' 등 옵션이 다르므로 Builder가 유용함
  */
 public class ReservationDetails {
-
     // --- 사용자 확인 용 ---
     private final String id;
     private final String role;
-
-    // --- '신규 예약'용 ---
+    // --- 신규 예약 용 ---
     private String buildingName;
     private String roomNumber;
     private String date;    
@@ -18,9 +16,8 @@ public class ReservationDetails {
     private String startTime;
     private String endTime;
     private int userCount;    
-    private String purpose;   
-    
-    // --- '예약 변경'용 ---
+    private String purpose;       
+    // --- 예약 변경 용 ---
     private String oldReserveInfo; 
     private String newRoomNumber;
     private String newDate;

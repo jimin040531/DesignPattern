@@ -21,20 +21,13 @@ public class ReservationDirector {
     public ReservationDetails constructReservation(
             String buildingName, String roomNumber, String date, String day,
             String startTime, String endTime,
-            String purpose, int userCount) {
-        
+            String purpose, int userCount) {        
         if (this.builder == null) {
             throw new IllegalStateException("Builder가 설정되지 않았습니다.");
         }
-        
-        // 1. 필수 정보 조립 
         builder.buildBaseInfo(buildingName, roomNumber, date, day, startTime, endTime);
-        
-        // 2. 선택적 정보 조립
         builder.buildPurpose(purpose);
         builder.buildUserCount(userCount);
-        
-        // 3. 완성된 객체(Product) 반환
         return builder.getReservationDetails();
     }
 }
