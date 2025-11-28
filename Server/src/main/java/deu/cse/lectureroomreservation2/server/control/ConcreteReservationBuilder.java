@@ -4,7 +4,6 @@
  */
 package deu.cse.lectureroomreservation2.server.control;
 
-import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
@@ -15,6 +14,7 @@ import java.time.format.DateTimeFormatter;
  */
 public class ConcreteReservationBuilder implements ReservationBuilder {
 
+    // Builder가 단계적으로 조립해 나가는 Product
     private ReservationDetails reservationDetails;
 
     public ConcreteReservationBuilder(String id, String role) {
@@ -22,7 +22,9 @@ public class ConcreteReservationBuilder implements ReservationBuilder {
     }
 
     @Override
-    public void buildBaseInfo(String buildingName, String roomNumber, String date, String day, String startTime, String endTime) {
+    public void buildBaseInfo(String buildingName, String roomNumber,
+                              String date, String day,
+                              String startTime, String endTime) {
         reservationDetails.setBuildingName(buildingName);
         reservationDetails.setRoomNumber(roomNumber);
         reservationDetails.setDate(date);
@@ -43,14 +45,14 @@ public class ConcreteReservationBuilder implements ReservationBuilder {
 
     @Override
     public ReservationDetails getReservationDetails() {
-        // [수정] 객체 반환 전, 제약 조건 2가지를 검증합니다.
-        validateReservationDuration(); // 1. 2시간 이내
-        validateReservationDate();     // 2. 최소 하루 전 (학생만)
+        // 객체 반환 전, 제약 조건 2가지를 검증
+        validateReservationDuration(); // 1. 2시간(학생) / 3시간(교수) 이내
+        validateReservationDate();     // 2. 학생은 최소 하루 전
 
         return reservationDetails;
     }
 
-    // 1. 시간 제한 검증 (수정됨)
+    // 1. 시간 제한 검증
     private void validateReservationDuration() {
         String startTime = reservationDetails.getStartTime();
         String endTime = reservationDetails.getEndTime();
@@ -68,7 +70,7 @@ public class ConcreteReservationBuilder implements ReservationBuilder {
                 throw new IllegalArgumentException("종료 시간은 시작 시간보다 뒤여야 합니다.");
             }
 
-            // [핵심 수정] 역할별 시간 제한 분기 처리
+            // 역할별 시간 제한 분기 처리
             if ("S".equals(role)) {
                 // 학생: 최대 2시간 (120분)
                 if (durationMinutes > 120) {
@@ -90,7 +92,7 @@ public class ConcreteReservationBuilder implements ReservationBuilder {
         }
     }
 
-    // 2. [수정] 날짜 검증 (학생은 당일 예약 불가)
+    // 2. 날짜 검증 (학생은 당일 예약 불가 + 과거 예약 불가)
     private void validateReservationDate() {
         if ("S".equals(reservationDetails.getRole())) {
             String dateStr = reservationDetails.getDate();
@@ -99,9 +101,8 @@ public class ConcreteReservationBuilder implements ReservationBuilder {
                 String cleanDate = dateStr.replace("-", "/").trim();
                 LocalDate reserveDate = LocalDate.parse(cleanDate, DateTimeFormatter.ofPattern("yyyy/MM/dd"));
 
-                // [추가된 로직]: 과거 날짜 체크
+                // 과거 날짜 체크
                 if (reserveDate.isBefore(LocalDate.now())) {
-                    // 과거 날짜를 예약하려고 할 때
                     throw new IllegalArgumentException("과거 날짜로는 예약할 수 없습니다.");
                 }
                 // 오늘 날짜와 비교 (예약 날짜가 오늘보다 뒤여야 함 -> 내일부터 가능)
@@ -109,11 +110,11 @@ public class ConcreteReservationBuilder implements ReservationBuilder {
                     throw new IllegalArgumentException("당일 예약은 불가능합니다. 최소 하루 전에 예약해주세요.");
                 }
             } catch (Exception e) {
-                // IllegalArgumentException(위에서 우리가 던진 것)은 그대로 상위로 전달
+                // 우리가 던진 IllegalArgumentException은 그대로 전달
                 if (e instanceof IllegalArgumentException) {
                     throw e;
                 }
-                // DateTimeParseException 등 다른 에러가 나면 날짜 형식이 잘못된 것이므로 예외 발생
+                // DateTimeParseException 등 → 날짜 형식 오류
                 throw new IllegalStateException("날짜 형식이 올바르지 않습니다: " + e.getMessage());
             }
         }

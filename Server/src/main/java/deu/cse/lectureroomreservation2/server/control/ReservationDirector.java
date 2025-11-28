@@ -10,17 +10,18 @@ package deu.cse.lectureroomreservation2.server.control;
  */
 public class ReservationDirector {
     
+    // AbstractBuilder에 대한 연관(Composition 아님)
     private ReservationBuilder builder; 
     
     public void setBuilder(ReservationBuilder builder) {
         this.builder = builder;
     }
     
-    // 복합 객체 조립 과정 캡슐화 (시간 정보 파라미터 제거)
+    // 복합 객체 조립 과정 캡슐화
     public ReservationDetails constructReservation(
             String buildingName, String roomNumber, String date, String day,
             String startTime, String endTime,
-            String purpose, int userCount) { // ★ startTime, endTime 제거
+            String purpose, int userCount) {
         
         if (this.builder == null) {
             throw new IllegalStateException("Builder가 설정되지 않았습니다.");
@@ -33,7 +34,7 @@ public class ReservationDirector {
         builder.buildPurpose(purpose);
         builder.buildUserCount(userCount);
         
-        // 3. 완성된 객체 반환
+        // 3. 완성된 객체(Product) 반환
         return builder.getReservationDetails();
     }
 }

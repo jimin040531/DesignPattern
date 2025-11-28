@@ -120,7 +120,7 @@ public class ReservationDetails {
         return purpose;
     }
 
-    // ★ 예약 변경용 Getters
+    // 예약 변경용 Getters
     public String getOldReserveInfo() {
         return oldReserveInfo;
     }
