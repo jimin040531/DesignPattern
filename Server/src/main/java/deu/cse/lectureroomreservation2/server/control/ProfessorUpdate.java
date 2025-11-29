@@ -2,17 +2,20 @@
 package deu.cse.lectureroomreservation2.server.control;
 
 import deu.cse.lectureroomreservation2.common.ReserveResult;
+import deu.cse.lectureroomreservation2.server.model.Notification;
+import deu.cse.lectureroomreservation2.server.model.Reservation;
+import deu.cse.lectureroomreservation2.server.model.ReservationIterator;
 import java.util.List;
 
 public class ProfessorUpdate implements ReservationUpdateBehavior {
 
     @Override
     public ReserveResult update(ReservationDetails details) {
-        
+
         String id = details.getId();
         String role = details.getRole();
         String oldReserveInfo = details.getOldReserveInfo();
-        
+
         String newRoom = details.getNewRoomNumber();
         String newBuilding = details.getBuildingName();
         String fullDateInfo = details.getNewDate();
@@ -23,9 +26,9 @@ public class ProfessorUpdate implements ReservationUpdateBehavior {
         // 1. 날짜/시간 파싱
         String[] tokens = fullDateInfo.split("/");
         String dateOnly = tokens[0].trim() + "/" + tokens[1].trim() + "/" + tokens[2].trim();
-        
+
         String[] times = tokens[3].trim().split(" ");
-        String startTimeStr = times[0]; 
+        String startTimeStr = times[0];
         String endTimeStr = times[1];
 
         String tempReserveCheck = ReserveManager.makeReserveInfo(newBuilding, newRoom, dateOnly, newDay, startTimeStr, endTimeStr);
@@ -41,28 +44,76 @@ public class ProfessorUpdate implements ReservationUpdateBehavior {
             return new ReserveResult(false, "기존 예약 삭제 실패");
         }
 
-        // 4. 학생 예약 취소 및 알림 (SFR-208)
-        List<String> affectedStudents = ReserveManager.cancelStudentReservesForProfessor(newRoom, dateOnly, startTimeStr); 
-        // (참고: ReserveManager.cancelStudentReservesForProfessor 메서드 내부 구현이 필요할 수 있음)
-        
+        NotificationBuilder notificationBuilder = new StudentCancellationBuilder();
+        List<String> allLines = ReserveManager.getAllReservations();
+        ReservationAggregate reservationList = new StudentReservationList(allLines);
+        ReservationIterator iterator = reservationList.iterator();
+
+        while (iterator.hasNext()) {
+            Reservation res = iterator.next();
+
+            // Null Check (안전장치)
+            if (res.getRoom() == null || res.getDate() == null || res.getStart() == null) {
+                continue;
+            }
+
+            // 파일 데이터 정규화 (공백 제거 및 포맷 통일)
+            String fileDate = res.getDate().replace("-", "/").replace(" ", "").trim();
+            String fileRoom = res.getRoom().trim();
+            String fileStart = res.getStart().trim();
+
+            // 비교할 대상 데이터 정규화
+            String targetDate = dateOnly.replace("-", "/").replace(" ", "").trim();
+
+            // 조건: 유효한 학생 예약 && 방/날짜/시간 일치
+            if (res.isValidStudentReservation()
+                    && fileRoom.equals(newRoom)
+                    && fileDate.equals(targetDate)
+                    && fileStart.equals(startTimeStr)) {
+
+                // (1) 예약 취소 실행
+                ReserveManager.cancelReserve(res.getUserId(), res.getRawLine());
+                System.out.println(">> [예약 변경] 학생 예약 취소됨: " + res.getUserId());
+
+                // (2) 알림 빌더 설정
+                notificationBuilder.createNewNotification();
+                if (notificationBuilder instanceof StudentCancellationBuilder) {
+                    // 변경 사유(목적) 전달
+                    ((StudentCancellationBuilder) notificationBuilder).setCancellationReason(purpose);
+                }
+
+                notificationBuilder.buildRecipientInfo(res.getUserId(), "S");
+                notificationBuilder.buildMessageContent(newRoom, targetDate, startTimeStr);
+                notificationBuilder.buildPriority();
+
+                Notification notification = notificationBuilder.getNotification();
+
+                // (3) 알림 전송
+                NotificationService.getInstance().notifyObserver(
+                        notification.getTargetUserId(),
+                        notification.getFormattedMessage()
+                );
+            }
+        }
+
         // 5. 새 예약 추가 (12칸 포맷)
         String csvLine = String.format("%s,%s,%s,%s,%s,%s,%s,%s,%s,%d,%s,%s",
-                newBuilding, 
-                newRoom, 
-                dateOnly, 
-                newDay, 
-                startTimeStr, 
-                endTimeStr, 
-                id, 
-                "P", 
-                purpose, 
-                userCount, 
+                newBuilding,
+                newRoom,
+                dateOnly,
+                newDay,
+                startTimeStr,
+                endTimeStr,
+                id,
+                "P",
+                purpose,
+                userCount,
                 "APPROVED", // 교수는 바로 승인
                 "-"
         );
 
         ReserveResult reserveResult = ReserveManager.writeReservationToFile(id, csvLine, "P");
-        
+
         // 6. 롤백
         if (!reserveResult.getResult()) {
             ReserveManager.restoreReservation(id, role, oldReserveInfo);
