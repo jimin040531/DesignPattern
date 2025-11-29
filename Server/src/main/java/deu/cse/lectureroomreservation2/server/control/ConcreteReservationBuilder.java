@@ -94,7 +94,32 @@ public class ConcreteReservationBuilder implements ReservationBuilder {
 
     // 2. 날짜 검증 (학생은 당일 예약 불가 + 과거 예약 불가)
     private void validateReservationDate() {
-        if ("S".equals(reservationDetails.getRole()) || "P".equals(reservationDetails.getRole())) {
+        if ("S".equals(reservationDetails.getRole())) {
+            String dateStr = reservationDetails.getDate();
+            try {
+                // 날짜 포맷 통일 (yyyy/MM/dd)
+                String cleanDate = dateStr.replace("-", "/").trim();
+                LocalDate reserveDate = LocalDate.parse(cleanDate, DateTimeFormatter.ofPattern("yyyy/MM/dd"));
+
+                // 과거 날짜 체크
+                if (reserveDate.isBefore(LocalDate.now())) {
+                    throw new IllegalArgumentException("과거 날짜로는 예약할 수 없습니다.");
+                }
+                // 오늘 날짜와 비교 (예약 날짜가 오늘보다 뒤여야 함 -> 내일부터 가능)
+                if (!reserveDate.isAfter(LocalDate.now())) {
+                    throw new IllegalArgumentException("당일 예약은 불가능합니다. 최소 하루 전에 예약해주세요.");
+                }
+            } catch (Exception e) {
+                // 우리가 던진 IllegalArgumentException은 그대로 전달
+                if (e instanceof IllegalArgumentException) {
+                    throw e;
+                }
+                // DateTimeParseException 등 → 날짜 형식 오류
+                throw new IllegalStateException("날짜 형식이 올바르지 않습니다: " + e.getMessage());
+            }
+        }
+        
+        if ("P".equals(reservationDetails.getRole())) {
             String dateStr = reservationDetails.getDate();
             try {
                 // 날짜 포맷 통일 (yyyy/MM/dd)

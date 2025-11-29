@@ -27,7 +27,7 @@ public class Main {
             } catch (ClassNotFoundException | IllegalAccessException | InstantiationException | UnsupportedLookAndFeelException e) {
             }
             new LoginFrame().setVisible(true);
-        });
+        }); 
     }
 
     public static void main(String[] args) {

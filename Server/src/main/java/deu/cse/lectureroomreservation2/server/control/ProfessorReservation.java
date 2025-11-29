@@ -80,7 +80,12 @@ public class ProfessorReservation implements ReservationBehavior {
 
         while (iterator.hasNext()) {
             Reservation res = iterator.next();
-
+            
+            // 파일에 빈 줄이나 잘못된 데이터가 있어 필드가 null인 경우 건너뜀
+            if (res.getRoom() == null || res.getDate() == null || res.getStart() == null) {
+                continue;
+            }
+            
             // 파일에서 읽어온 데이터도 공백 제거 및 포맷 통일 후 비교
             String fileDate = res.getDate().replace("-", "/").replace(" ", "").trim();
             String fileRoom = res.getRoom().trim();
