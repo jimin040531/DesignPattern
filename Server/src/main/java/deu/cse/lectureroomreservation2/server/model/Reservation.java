@@ -16,7 +16,7 @@ public class Reservation {
     private String userId;
     private String role;
     private String status;   // WAIT, APPROVED, REJECTED
-    private String rawLine;  // 파일 원본 라인 (삭제 시 식별용)
+    private String rawLine;  // 파일 원본 라인
 
     public Reservation(String line) {
         this.rawLine = line;

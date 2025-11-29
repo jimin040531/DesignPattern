@@ -248,12 +248,11 @@ public class TimeTableController {
         DaysOfWeek dayOfWeek = DaysOfWeek.fromKoreanDay(day);
         return scheduleManager.getSchedule(room, dayOfWeek, type);
     }
-    // ===========================
+    
     //  📁 시간표 전체 백업 / 복원
-    // ===========================
 
     /**
-     * 현재 사용 중인 시간표 파일(ScheduleInfo.txt)을 지정한 이름의 백업 파일로 복사한다.
+     * 현재 사용 중인 시간표 파일(ScheduleInfo.txt)을 지정한 이름의 백업 파일로 복사
      *
      * @param backupName 생성할 백업 파일 이름 (예: "ScheduleInfo_backup.txt")
      * @return true : 백업 성공 false : 백업 실패
@@ -263,7 +262,7 @@ public class TimeTableController {
     }
 
     /**
-     * 지정한 백업 파일을 읽어서 현재 시간표 파일(ScheduleInfo.txt)을 덮어쓴다.
+     * 지정한 백업 파일을 읽어서 현재 시간표 파일(ScheduleInfo.txt)을 덮어쓴다
      *
      * @param backupName 사용할 백업 파일 이름
      * @return true : 복원 성공 false : 복원 실패

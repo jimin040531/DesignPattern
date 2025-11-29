@@ -11,7 +11,7 @@ import java.util.concurrent.Semaphore;
  * @author rbcks
  */
 public class QueuedLoginProxy implements AuthService {
-    private final AuthService realSubject; // 진짜 로그인 담당자 (LoginController)
+    private final AuthService realSubject; // 로그인 담당자
     private final Semaphore limiter;       // 인원 제한기
 
     // 생성자: 진짜 담당자와 세마포어를 받아서 저장함

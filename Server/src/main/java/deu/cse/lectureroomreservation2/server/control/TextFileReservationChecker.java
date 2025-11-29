@@ -50,7 +50,7 @@ public class TextFileReservationChecker extends AbstractReservationChecker {
                     String sStart = parts[5].trim();
                     String sType = parts[9].trim();
 
-                    // [수정] 학기(sSemester)가 현재 날짜의 학기(targetSemester)와 일치하는지 확인
+                    // 학기가 현재 날짜의 학기와 일치하는지 확인
                     if (sSemester.equals(targetSemester) &&
                         sBuilding.equals(buildingName) &&
                         sRoom.equals(room) && 

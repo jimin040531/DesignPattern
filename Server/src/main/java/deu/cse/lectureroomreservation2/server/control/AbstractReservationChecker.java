@@ -10,7 +10,7 @@ package deu.cse.lectureroomreservation2.server.control;
  */
 /**
  * Template Method Pattern
- * 강의실 시간표 상태 확인의 전체 흐름(알고리즘)을 정의하는 추상 클래스
+ * 강의실 시간표 상태 확인의 전체 흐름을 정의하는 추상 클래스
  */
 public abstract class AbstractReservationChecker {
     /**

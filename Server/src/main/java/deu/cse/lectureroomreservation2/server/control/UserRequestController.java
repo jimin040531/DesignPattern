@@ -42,12 +42,12 @@ public class UserRequestController {
         String id = newUser[2];
         String password = newUser[3];
 
-        // ✔ 중복 검사 수정
+        // 중복 검사 수정
         if (userFileManager.isDuplicateId(id)) {
             throw new IllegalArgumentException("이미 존재하는 아이디입니다.");
         }
 
-        // ✔ 암호화 저장하도록 수정됨
+        // 암호화 저장하도록 수정됨
         UserManage user = new UserManage(role, name, id, password);
         userFileManager.saveUser(user);
 

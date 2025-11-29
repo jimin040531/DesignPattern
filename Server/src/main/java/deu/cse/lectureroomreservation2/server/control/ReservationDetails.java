@@ -2,7 +2,7 @@ package deu.cse.lectureroomreservation2.server.control;
 
 /**
  * Builder Pattern: 예약/예약 변경에 필요한 모든 데이터를 캡슐화하는 클래스
- * 교수는 '목적', 학생은 '인원' 등 옵션이 다르므로 Builder가 유용함
+ * 
  */
 public class ReservationDetails {
     // --- 사용자 확인 용 ---
@@ -23,7 +23,7 @@ public class ReservationDetails {
     private String newDate;
     private String newDay;
     
-    // 필수 파라미터만 받는 생성자 (Builder가 Product 생성 시 사용)
+    // 필수 파라미터만 받는 생성자
     public ReservationDetails(String id, String role) {
         this.id = id;
         this.role = role;
@@ -38,7 +38,7 @@ public class ReservationDetails {
     }
 
     public void setDate(String date) {
-        this.date = date; // date 필드가 시간 정보를 포함하는 문자열을 받음
+        this.date = date; 
     }
 
     public void setDay(String day) {
@@ -94,7 +94,7 @@ public class ReservationDetails {
     }
 
     public String getDate() {
-        return date; // 시간 정보가 포함된 문자열 반환
+        return date;
     }
 
     public String getDay() {
@@ -117,7 +117,6 @@ public class ReservationDetails {
         return purpose;
     }
 
-    // 예약 변경용 Getters
     public String getOldReserveInfo() {
         return oldReserveInfo;
     }

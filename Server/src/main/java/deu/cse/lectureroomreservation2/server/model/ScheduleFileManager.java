@@ -24,7 +24,7 @@ public class ScheduleFileManager {
 
     private final String filePath;
 
-    // 기본 생성자 (기본 경로를 지정)
+    // 기본 생성자
     public ScheduleFileManager() {
         this.filePath = receiveController.getScheduleInfoFileName(); // 기본 시간표 파일 경로
     }
@@ -70,7 +70,7 @@ public class ScheduleFileManager {
     public boolean backupFile(String backupFileName) {
         try {
             // 원본: 현재 사용 중인 시간표 파일 (ScheduleInfo.txt)
-            Path source = Paths.get(filePath);   // 예: .../Server/src/main/resources/ScheduleInfo.txt
+            Path source = Paths.get(filePath); 
 
             // 백업 파일: 서버 데이터 폴더 + 백업 이름
             Path target = Paths.get(receiveController.getFilepath(), backupFileName);
@@ -90,13 +90,13 @@ public class ScheduleFileManager {
     // 백업 파일을 ScheduleInfo.txt 로 복원하는 기능
     public boolean restoreFile(String backupFileName) {
         try {
-            // 원본 시간표 파일 경로 (ScheduleInfo.txt)
+            // 원본 시간표 파일 경로 
             Path target = Paths.get(filePath);
 
-            // 원본 파일이 있는 폴더 (src/main/resources)
-            Path resourcesDir = target.getParent(); // .../src/main/resources
+            // 원본 파일이 있는 폴더
+            Path resourcesDir = target.getParent(); 
 
-            // 그 폴더 안의 백업 파일 (예: ScheduleInfo_backup.txt)
+            // 그 폴더 안의 백업 파일 
             Path source = resourcesDir.resolve(backupFileName);
 
             System.out.println("복원 source 절대경로 = " + source.toAbsolutePath());

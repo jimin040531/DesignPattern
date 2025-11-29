@@ -14,13 +14,12 @@ public class ScheduleManager {
         this.lectureRooms = new HashMap<>();
     }
 
-    // 시간표 추가 (수업 또는 제한)
+    // 시간표 추가
     public void addSchedule(String roomNumber, DaysOfWeek day, String startTime, String endTime, String subject, String type) {
         LectureRoom room = lectureRooms.computeIfAbsent(roomNumber, LectureRoom::new);
         room.addFixedSchedule(day, startTime, endTime, subject, type);
     }
 
-    // 특정 강의실, 요일, 타입(수업/제한)에 해당하는 시간표 반환
     public Map<String, String> getSchedule(String roomNumber, DaysOfWeek day, String type) {
         LectureRoom room = lectureRooms.get(roomNumber);
         if (room == null) return null;

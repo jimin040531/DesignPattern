@@ -80,7 +80,7 @@ public class Client {
 
     // 예약 요청 처리
     public synchronized ReserveResult sendReserveRequest(String id, String role,
-            String buildingName, // [추가됨]
+            String buildingName,
             String roomNumber, String date, String day,
             String startTime, String endTime,
             String purpose, int userCount)
@@ -101,7 +101,7 @@ public class Client {
     }
 
     /**
-     * [신규] 특정 강의실/월/시간대에 예약된 날짜(day) 목록을 서버에 요청합니다. (ObjectStream 버전에 맞게 수정됨)
+     * 특정 강의실/월/시간대에 예약된 날짜(day) 목록을 서버에 요청합니다. 
      */
     @SuppressWarnings("unchecked")
     public synchronized List<String> getMonthlyReservedDates(String buildingName, String roomNum, int year, int month, String startTime)
@@ -144,22 +144,6 @@ public class Client {
         return (ReserveResult) in.readObject();
     }
 
-    // 클라이언트에서 예약 취소 요청 사용 예시, 응답 예시
-    /*
-     * String id = "20212991";
-     * String reserveInfo = "915 / 2025 / 06 / 03 / 09:00 10:00 / 화요일";
-     * 
-     * ReserveResult result = client.sendCancelReserveRequest(id, reserveInfo);
-     * 
-     * if (result.getResult()) {
-     * System.out.println("예약 취소 성공: " + result.getReason());
-     * } else {
-     * System.out.println("예약 취소 실패: " + result.getReason());
-     * }
-     * // 응답 예시
-     * //예약 취소 성공: 예약이 취소되었습니다.
-     * //예약 취소 실패: 해당 예약 정보를 찾을 수 없습니다.
-     */
     // 예약 변경 요청 처리(사용자 id, 기존 예약 정보, 새로운 강의실 번호, 새로운 날짜, 새로운 요일)
     public synchronized ReserveResult sendModifyReserveRequest(
             String id,
@@ -181,7 +165,6 @@ public class Client {
         out.writeUTF(oldReserveInfo);
         out.flush();
 
-        // [추가된 데이터 전송]
         out.writeUTF(buildingName);
         out.flush();
 
@@ -192,7 +175,6 @@ public class Client {
         out.writeUTF(newDay);
         out.flush();
 
-        // [추가된 데이터 전송]
         out.writeUTF(purpose);
         out.flush();
         out.writeInt(userCount);
@@ -204,28 +186,6 @@ public class Client {
         return (ReserveResult) in.readObject();
     }
 
-    // 클라이언트에서 예약 변경 요청 사용 예시, 응답 예시
-    /*
-     * // 예약 변경 요청 예시
-     * String id = "20212991";
-     * String oldReserveInfo = "915 / 2025 / 06 / 03 / 09:00 10:00 / 화요일";
-     * String newRoomNumber = "916";
-     * String newDate = "2025 / 06 / 04 / 10:00 11:00";
-     * String newDay = "수요일";
-     * String role = "S"; // 학생이면 "S", 교수면 "P"
-     * 
-     * ReserveResult result = client.sendModifyReserveRequest(id, oldReserveInfo,
-     * newRoomNumber, newDate, newDay, role);
-     * 
-     * if (result.getResult()) {
-     * System.out.println("예약 변경 성공: " + result.getReason());
-     * } else {
-     * System.out.println("예약 변경 실패: " + result.getReason());
-     * }
-     * // 응답 예시
-     * //예약 변경 성공: 예약 성공
-     * //예약 변경 실패: 해당 예약 정보를 찾을 수 없습니다.
-     */
     // 공지사항 수신 및 확인 처리
     public void checkAndShowNotices(javax.swing.JFrame parentFrame) {
         while (true) {
@@ -292,28 +252,6 @@ public class Client {
         return (List<String>) in.readObject();
     }
 
-    // 클라이언트에서 사용예시, 응답예시
-    /*
-     * // id만 지정
-     * List<String> myReserves = client.retrieveMyReserveInfo("20212991", null,
-     * null);
-     * // room만 지정
-     * List<String> roomReserves = client.retrieveMyReserveInfo(null, "915", null);
-     * // date만 지정
-     * List<String> dateReserves = client.retrieveMyReserveInfo(null, null,
-     * "2025 / 06 / 03");
-     * 
-     * for (String reserve : myReserves) {
-     * System.out.println(reserve);
-     * }
-     * // 예시 출력
-     * // id만 지정하고 나머지는 null인 경우
-     *  915 / 2025 / 06 / 03 / 09:00 10:00 / 화요일
-     * 
-     * // room만 지정하거나 date만 지정하고 나머지는 null인 경우
-     * // 20212991 / 915 / 2025 / 06 / 03 / 09:00 10:00 / 화요일
-     * // 20212991 / 916 / 2025 / 06 / 04 / 10:00 11:00 / 수요일
-     */
     // 예약 정보로 예약한 총 사용자 수 요청 처리
     public synchronized int requestReserveUserCount(String reserveInfo) throws IOException {
         out.writeUTF("COUNT_RESERVE_USERS");
@@ -323,12 +261,6 @@ public class Client {
         return in.readInt();
     }
 
-    // 클라이언트에서 사용예시, 응답예시
-    /*
-     * String reserveInfo = "915 / 2025 / 05 / 21 / 00:00 01:00 / 화요일";
-     * int userCount = client.requestReserveUserCount(reserveInfo);
-     * System.out.println("해당 예약 정보로 예약한 사용자 수: " + userCount);
-     */
     // 예약 정보로 예약한 사용자 id 목록 요청 처리 (6번 기능)
     @SuppressWarnings("unchecked")
 
@@ -341,14 +273,6 @@ public class Client {
         return (List<String>) in.readObject();
     }
 
-    // 사용 예시
-    /*
-     * String reserveInfo = "915 / 2025 / 05 / 21 / 00:00 01:00 / 화요일";
-     * List<String> userIds = client.getUserIdsByReserveInfo(reserveInfo);
-     * for (String userId : userIds) {
-     * System.out.println("예약자 ID: " + userId);
-     * }
-     */
     // 예약 정보로 교수 예약 여부 조회 요청 처리
     public synchronized boolean hasProfessorReserve(String reserveInfo) throws IOException {
         out.writeUTF("FIND_PROFESSOR_BY_RESERVE");
@@ -358,17 +282,6 @@ public class Client {
         return in.readBoolean();
     }
 
-    // 클라이언트에서 사용예시, 응답예시
-    /*
-     * String reserveInfo = "915 / 2025 / 06 / 03 / 00:00 01:00 / 화요일";
-     * boolean isReservedByProfessor = client.hasProfessorReserve(reserveInfo);
-     * 
-     * if (isReservedByProfessor) {
-     * System.out.println("해당 시간대에 교수 예약이 있습니다.");
-     * } else {
-     * System.out.println("해당 시간대에 교수 예약이 없습니다.");
-     * }
-     */
     public synchronized ScheduleResult sendScheduleRequest(ScheduleRequest req)
             throws IOException, ClassNotFoundException {
         // 1. 명령 문자열 "SCHEDULE"을 먼저 전송하여 서버 측에서 시간표 관리 관련 요청임을 알림
@@ -410,7 +323,7 @@ public class Client {
     }
 
     /**
-     * [신규] 건물 목록 조회
+     * 건물 목록 조회
      */
     public synchronized List<String> getBuildingList() throws IOException, ClassNotFoundException {
         out.writeUTF("GET_BUILDINGS");
@@ -419,7 +332,7 @@ public class Client {
     }
 
     /**
-     * [신규] 층 목록 조회
+     * 층 목록 조회
      */
     public synchronized List<String> getFloorList(String buildingName) throws IOException, ClassNotFoundException {
         out.writeUTF("GET_FLOORS");
@@ -430,7 +343,7 @@ public class Client {
     }
 
     /**
-     * [신규] 강의실 목록 조회 (반환 타입: List<String[]>)
+     * 강의실 목록 조회
      */
     public synchronized List<String[]> getRoomList(String buildingName, String floorName) throws IOException, ClassNotFoundException {
         out.writeUTF("GET_ROOMS");
@@ -443,7 +356,7 @@ public class Client {
     }
 
     /**
-     * [신규] 주별 현황 API 호출
+     * 주별 현황 API 호출
      */
     public synchronized Map<String, List<String[]>> getWeeklySchedule(String buildingName, String roomNum, LocalDate monday)
             throws IOException, ClassNotFoundException {
@@ -460,7 +373,7 @@ public class Client {
     }
 
     /**
-     * [신규] 월별 현황 API 호출
+     * 월별 현황 API 호출
      */
     public synchronized Map<Integer, String> getMonthlySchedule(String roomNum, int year, int month)
             throws IOException, ClassNotFoundException {
@@ -494,21 +407,6 @@ public class Client {
         return in.readUTF();
     }
 
-    // 클라이언트에서 사용예시, 응답예시
-    /*
-     * String room = "908";
-     * String day = "월";
-     * String start = "09:00";
-     * String end = "09:50";
-     * String date = "2025 / 05 / 21 / 09:00 09:50";
-     * 
-     * String state = client.getRoomState(room, day, start, end, date);
-     * 
-     * System.out.println("해당 시간대 상태: " + state);
-     * 
-     * // 응답 예시
-     * // 정규수업, 교수예약, 예약 가능, 예약 초과
-     */
     // 강의실 예약 가능 시간대 조회 요청 처리
     public synchronized java.util.List<String[]> getRoomSlots(String room, String day) throws IOException {
         out.writeUTF("GET_ROOM_SLOTS");
@@ -527,9 +425,6 @@ public class Client {
         return slots;
     }
 
-    // ---------------------------------------------------------
-    // 예약 현황 통계 요청 (건물이름, 강의실, 날짜, 시작시간)
-    // ---------------------------------------------------------
     public synchronized int[] getReservationStats(String buildingName, String room, String date, String startTime) {
         try {
             out.writeUTF("GET_RESERVATION_STATS");
@@ -554,16 +449,6 @@ public class Client {
         }
     }
 
-    // 클라이언트에서 사용예시, 응답예시
-    /*
-     * java.util.List<String[]> slots = client.getRoomSlots(selectedRoom,
-     * dayOfWeek);
-     * for (String[] slot : slots) {
-     * String start = slot[0];
-     * String end = slot[1];
-     * // ...
-     * }
-     */
     /**
      * [신규] 시간표 파일 백업 요청 서버에 "SCHEDULE_BACKUP" 명령과 백업 파일 이름을 보내고, ScheduleResult
      * 로 성공/실패 메시지를 돌려받는다.
@@ -589,7 +474,7 @@ public class Client {
      * [신규] 시간표 파일 복원 요청 서버에 "SCHEDULE_RESTORE" 명령과 사용할 백업 파일 이름을 보내고,
      * ScheduleResult 로 성공/실패 메시지를 돌려받는다.
      *
-     * @param backupName 사용할 백업 파일 이름 (예: "ScheduleInfo_backup.txt")
+     * @param backupName 사용할 백업 파일 이름
      */
     public synchronized ScheduleResult sendScheduleRestoreRequest(String backupName)
             throws IOException, ClassNotFoundException {

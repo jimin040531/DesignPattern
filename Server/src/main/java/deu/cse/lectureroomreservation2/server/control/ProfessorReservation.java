@@ -33,7 +33,7 @@ public class ProfessorReservation implements ReservationBehavior {
         String room = details.getRoomNumber();
         String buildingName = details.getBuildingName();
         
-        // 1. 날짜 데이터 정규화 (핵심 수정 사항: 공백 제거 추가)
+        // 1. 날짜 데이터 정규화
         // details.getDate()가 "2025 - 12 - 01" 같이 들어올 수 있으므로 공백 제거 필수
         // 예: "2025 - 12 - 01" -> "2025/12/01"
         String dateOnly = details.getDate().replace("-", "/").replace(" ", "").trim(); 
@@ -71,9 +71,7 @@ public class ProfessorReservation implements ReservationBehavior {
             return new ReserveResult(false, "인원 초과");
         }
 
-        // ============================================================
         // [Iterator Pattern] 겹치는 학생 예약 탐색 및 취소
-        // ============================================================
         List<String> allLines = ReserveManager.getAllReservations();
         ReservationAggregate reservationList = new StudentReservationList(allLines);
         ReservationIterator iterator = reservationList.iterator();

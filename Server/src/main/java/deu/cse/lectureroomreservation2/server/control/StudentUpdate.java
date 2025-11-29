@@ -41,10 +41,7 @@ public class StudentUpdate implements ReservationUpdateBehavior {
 
         // (2) 40명 인원 제한 확인
         int currentCount = ReserveManager.countUsersByReserveInfo(tempReserveCheck);
-        // 본인이 수정해서 다시 들어가는 것이므로, 기존 인원에서 내 인원(userCount)을 더했을 때를 가정해야 함
-        // 하지만 일단 단순 합산 로직 유지 (엄밀히는 기존 예약을 뺀 상태에서 계산해야 정확하나, 여기선 간략히)
-        if (currentCount + userCount > 40) { 
-             // (기존 로직 유지, 필요시 정원 체크 로직 보강)
+        if (currentCount + userCount > 40) {
              // return new ReserveResult(false, "인원 초과");
         }
 

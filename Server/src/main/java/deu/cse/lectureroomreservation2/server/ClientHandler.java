@@ -66,23 +66,8 @@ public class ClientHandler implements Runnable, Observer {
             pendingNotices.add(message); // 즉시 전송하지 않고 큐에 쌓음
         }
         System.out.println(">> [ClientHandler] 알림 큐에 저장됨: " + message);
-    }
-
-    // [Observer 패턴] 4. 알림 수신 시 실행될 메서드 구현
-    /*@Override
-    public void update(String message) {
-        try {
-            if (out != null) {
-                // 클라이언트(Client.java)의 checkAndShowNotices 메서드가 "NOTICE" 헤더를 기다림
-                out.writeUTF("NOTICE");
-                out.flush();
-                out.writeUTF(message);
-                out.flush();
-            }
-        } catch (IOException e) {
-            System.err.println("알림 전송 실패: " + e.getMessage());
-        }
-    }*/
+    }  
+    
     @Override
     public void run() {
         boolean acquired = false;
@@ -137,7 +122,7 @@ public class ClientHandler implements Runnable, Observer {
                             // 소켓으로 바로 보내지 말고, 대기열에 추가!
                             pendingNotices.add(notice);
 
-                            // (선택) 파일에서 읽은 공지는 삭제 처리
+                            // 파일에서 읽은 공지는 삭제 처리
                             noticeController.removeNotice(id, notice);
                         }
                     }
@@ -164,7 +149,7 @@ public class ClientHandler implements Runnable, Observer {
                                 // 전송 후 비우기
                                 pendingNotices.clear();
                             }
-                            continue; // 중요: 아래 다른 로직을 실행하지 않고 루프 처음으로 돌아감
+                            continue;
                         }
 
                         if ("CHECK_SYSTEM_STATUS".equals(command)) {
@@ -227,7 +212,6 @@ public class ClientHandler implements Runnable, Observer {
                             out.writeUTF(result); // 예: "SUCCESS" 또는 오류 메시지
                             out.flush();
                         }
-                        // ClientHandler.java (RESERVE 명령 처리 부분)
                         if ("RESERVE".equals(command)) {
                             try {
                                 // 클라이언트로부터 예약 요청 객체를 받음
@@ -235,15 +219,14 @@ public class ClientHandler implements Runnable, Observer {
                                 // 예약 처리 결과를 받아옴
                                 ReserveResult result = new receiveController().handleReserve(req);
 
-                                // 결과를 클라이언트에 전송 (성공 또는 ReserveManager에서 생성한 실패 결과)
+                                // 결과를 클라이언트에 전송
                                 out.writeObject(result);
                                 out.flush();
 
                             } catch (IllegalArgumentException | IllegalStateException e) {
-                                // Builder 검증 실패 시 (예: 당일 예약 불가, 2시간 초과)
                                 System.out.println(">> 예약 검증 실패: " + e.getMessage());
                                 ReserveResult error = new ReserveResult(false, "예약 실패: " + e.getMessage());
-                                out.writeObject(error); // 오류 결과를 클라이언트에 전송
+                                out.writeObject(error); 
                                 out.flush();
                             } catch (Exception e) {
                                 e.printStackTrace();
@@ -252,7 +235,6 @@ public class ClientHandler implements Runnable, Observer {
                                 out.flush();
                             }
                         }
-                        // CHECK_MAX_TIME 명령 처리 추가
                         if ("CHECK_MAX_TIME".equals(command)) {
                             CheckMaxTimeRequest req = (CheckMaxTimeRequest) in.readObject();
                             boolean exceeded = new CheckMaxTime(req.getId()).check();
@@ -263,7 +245,6 @@ public class ClientHandler implements Runnable, Observer {
                             out.writeObject(result);
                             out.flush();
                         }
-                        // 클라이언트 요청 - id 또는 강의실 또는 날짜로 예약 정보 조회 요청 받는 부분
                         if ("RETRIEVE_MY_RESERVE_ADVANCED".equals(command)) {
                             String userid = (String) in.readObject();
                             String room = (String) in.readObject();
@@ -343,19 +324,19 @@ public class ClientHandler implements Runnable, Observer {
                                 // 1. 빌더 생성 (ID, Role 주입)
                                 ReservationBuilder builder = new ConcreteReservationBuilder(userId, giverole);
 
-                                // 2. 빌더에 필수 정보 주입 (여기서 검증될 날짜와 시간을 넣습니다)
+                                // 2. 빌더에 필수 정보 주입
                                 builder.buildBaseInfo(buildingName, newRoomNumber, newDateOnly, newDay, newStartTime, newEndTime);
 
                                 // 3. 선택 정보 주입
                                 builder.buildPurpose(purpose);
                                 builder.buildUserCount(userCount);
 
-                                // 4. 객체 생성 및 검증 (여기서 2시간 초과나 당일 예약이면 예외 발생!)
+                                // 4. 객체 생성 및 검증
                                 ReservationDetails details = builder.getReservationDetails();
 
-                                // 5. '예약 변경'에만 필요한 추가 정보 설정 (Details에 Setter가 있어야 함)
+                                // 5. '예약 변경'에만 필요한 추가 정보 설정 
                                 details.setOldReserveInfo(oldReserveInfo);
-                                details.setNewDate(newDate);        // 전체 날짜 문자열 (StudentUpdate 등에서 사용)
+                                details.setNewDate(newDate);      
                                 details.setNewRoomNumber(newRoomNumber);
                                 details.setNewDay(newDay);
 
@@ -368,7 +349,7 @@ public class ClientHandler implements Runnable, Observer {
                                 }
 
                             } catch (IllegalArgumentException | IllegalStateException e) {
-                                // [중요] 빌더 검증 실패 시 에러 메시지를 클라이언트에게 전송
+                                // 빌더 검증 실패 시 에러 메시지를 클라이언트에게 전송
                                 System.out.println(">> 예약 변경 검증 실패: " + e.getMessage());
                                 ReserveResult error = new ReserveResult(false, "변경 실패: " + e.getMessage());
                                 synchronized (this) {
@@ -391,22 +372,17 @@ public class ClientHandler implements Runnable, Observer {
                             out.writeBoolean(found);
                             out.flush();
                         }
-                        // [신규 API] 건물 목록 요청
                         if ("GET_BUILDINGS".equals(command)) {
                             List<String> buildings = buildingManager.getBuildingList();
                             out.writeObject(buildings);
                             out.flush();
                         }
-
-                        // [신규 API] 층 목록 요청
                         if ("GET_FLOORS".equals(command)) {
                             String buildingName = in.readUTF();
                             List<String> floors = buildingManager.getFloorList(buildingName);
                             out.writeObject(floors);
                             out.flush();
                         }
-
-                        // [신규 API] 강의실 목록 요청
                         if ("GET_ROOMS".equals(command)) {
                             String buildingName = in.readUTF();
                             String floorName = in.readUTF();
@@ -414,20 +390,15 @@ public class ClientHandler implements Runnable, Observer {
                             out.writeObject(rooms);
                             out.flush();
                         }
-
-                        // 클라이언트가 이 요청을 보내고 오류가 났으므로, 응답을 추가하여 연결을 유지합니다.
                         if ("GET_WEEKLY_SCHEDULE".equals(command)) {
                             String buildingName = in.readUTF();
                             String roomNum = in.readUTF();
-                            // 클라이언트가 LocalDate 객체를 보내는지 확인 (주간 현황은 보통 주 시작 날짜를 보냅니다)
                             try {
                                 @SuppressWarnings("unchecked")
                                 LocalDate monday = (LocalDate) in.readObject(); // 주 시작일 (LocalDate)
-                                // ReserveManager.getWeeklySchedule(roomNum, monday) 호출 (ClassCastException 방지 위해 Map 전송)
                                 Map<String, List<String[]>> weeklySchedule = ReserveManager.getWeeklySchedule(buildingName, roomNum, monday);
                                 out.writeObject(weeklySchedule);
                             } catch (Exception e) {
-                                // 파라미터가 잘못되거나 ReserveManager의 메서드가 없으면 빈 Map 응답
                                 System.err.println("GET_WEEKLY_SCHEDULE 처리 중 오류: " + e.getMessage());
                                 out.writeObject(new HashMap<String, List<String[]>>());
                             }
@@ -440,11 +411,11 @@ public class ClientHandler implements Runnable, Observer {
 
                             String buildingName = in.readUTF();
                             String room = in.readUTF();
-                            int year = in.readInt(); // 이 부분에서 int 대신 String(915)을 읽으려다 오류날 수 있음
+                            int year = in.readInt();
                             int month = in.readInt();
                             String startTime = in.readUTF();
 
-                            // 템플릿 메서드 호출: "월별로 예약 상태를 조회한다"
+                            // 템플릿 메서드 호출
                             List<String> result = ReserveManager.getReservationStatusForMonth(buildingName, room, year, month, startTime);
 
                             out.writeObject(result);
@@ -542,15 +513,15 @@ public class ClientHandler implements Runnable, Observer {
                                 case "UPDATE" -> {
                                     // 시간표 수정
                                     boolean updated = controller.updateSchedule(
-                                            req.getYear(), // 🚨 추가됨
-                                            req.getSemester(), // 🚨 추가됨
-                                            req.getBuilding(), // 🚨 추가됨
+                                            req.getYear(),
+                                            req.getSemester(), 
+                                            req.getBuilding(), 
                                             req.getRoom(),
                                             req.getDay(),
                                             req.getStart(),
                                             req.getEnd(),
                                             req.getSubject(),
-                                            req.getProfessor(), // 🚨 추가됨
+                                            req.getProfessor(), 
                                             req.getType()
                                     );
                                     result = new ScheduleResult(updated, updated ? "수정 성공" : "수정 실패", null);
@@ -660,8 +631,6 @@ public class ClientHandler implements Runnable, Observer {
                                         );
                                         result = new ReserveManageResult(deleteRes.getResult(), deleteRes.getReason(), null);
                                     }
-
-                                    // 승인(APPROVE) 및 거절(REJECT) 기능 추가
                                     case "APPROVE" -> {
                                         result = ReserveManager.approveOrReject(
                                                 "APPROVE",
@@ -684,7 +653,7 @@ public class ClientHandler implements Runnable, Observer {
                                         result = new ReserveManageResult(false, "알 수 없는 명령입니다", null);
                                 }
 
-                                // 결과 전송 (SEARCH / UPDATE / DELETE)
+                                // 결과 전송
                                 out.writeObject(result);
                                 out.flush();
 
@@ -696,10 +665,7 @@ public class ClientHandler implements Runnable, Observer {
                                 out.flush();
                             }
                         }
-
-                        // ===========================
                         // 📁 강의실 시간표 백업 요청
-                        // ===========================
                         if ("SCHEDULE_BACKUP".equals(command)) {
                             System.out.println(">> SCHEDULE_BACKUP 명령 수신됨");
 
@@ -717,15 +683,12 @@ public class ClientHandler implements Runnable, Observer {
                             out.writeObject(result);
                             out.flush();
                         }
-
-                        // ===========================
                         // 🔄 강의실 시간표 복원 요청
-                        // ===========================
                         if ("SCHEDULE_RESTORE".equals(command)) {
                             System.out.println(">> SCHEDULE_RESTORE 명령 수신됨");
 
                             // 클라이언트에서 보낸 백업 파일 이름 받기
-                            String backupName = in.readUTF();    // 예: "ScheduleInfo_backup.txt"
+                            String backupName = in.readUTF();
 
                             TimeTableController controller = new TimeTableController();
                             boolean ok = controller.restoreSchedule(backupName);
@@ -738,15 +701,12 @@ public class ClientHandler implements Runnable, Observer {
                             out.writeObject(result);
                             out.flush();
                         }
-
-                        // ===========================
                         // 📁 예약 내역 백업 요청
-                        // ===========================
                         if ("RESERVE_BACKUP".equals(command)) {
                             System.out.println(">> RESERVE_BACKUP 명령 수신됨");
 
                             // 클라이언트에서 보낸 백업 파일 이름 받기
-                            String backupName = in.readUTF();    // 예: "ReservationInfo_backup.txt"
+                            String backupName = in.readUTF();
 
                             boolean ok = ReserveManager.backupReservationFile(backupName);
 
@@ -759,10 +719,7 @@ public class ClientHandler implements Runnable, Observer {
                             out.writeObject(result);
                             out.flush();
                         }
-
-                        // ===========================
                         // 🔄 예약 내역 복원 요청
-                        // ===========================
                         if ("RESERVE_RESTORE".equals(command)) {
                             System.out.println(">> RESERVE_RESTORE 명령 수신됨");
 
@@ -801,7 +758,6 @@ public class ClientHandler implements Runnable, Observer {
                 synchronized (server.getLoggedInUsers()) {
                     server.getLoggedInUsers().remove(id); // 로그아웃 처리
                 }
-                //연결 종료시 알림 구독 해지
                 NotificationService.getInstance().removeObserver(this.userId);
             }
 

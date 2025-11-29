@@ -35,7 +35,6 @@ public class RoomController {
     private String startR, endR, roomR, stateR, dayR, choosedDate;
     private boolean isProgrammaticChange = false;
 
-    // [수정] 'currentlyReservedDays' 멤버 변수 선언
     private Set<Integer> currentlyReservedDays = new HashSet<>();
 
     public RoomController(ViewRoom view, Client client) {
@@ -47,7 +46,6 @@ public class RoomController {
      * View의 이벤트 리스너를 초기화합니다.
      */
     public void initController() {
-        // ... (기존 필터 및 테이블 리스너 코드는 위와 동일하게 유지) ...
         view.getBuildingComboBox().addActionListener(e -> loadFloors());
         view.getFloorComboBox().addActionListener(e -> loadRooms());
 
@@ -90,9 +88,7 @@ public class RoomController {
                     dayR = String.valueOf(view.getViewTimeTable().getValueAt(row, 4));
                     updateChoosedDate(); // 날짜 갱신
 
-                    // -------------------------------------------------------
-                    // [신규 기능] 클릭 시 서버에 실시간 인원 현황 요청 및 UI 업데이트
-                    // -------------------------------------------------------
+                    // 클릭 시 서버에 실시간 인원 현황 요청 및 UI 업데이트
                     if (choosedDate != null) {
                         String[] dateParts = choosedDate.split("/");
                         String dateSimple = dateParts[0].trim() + "/" + dateParts[1].trim() + "/" + dateParts[2].trim();
@@ -102,9 +98,9 @@ public class RoomController {
                         int[] stats = client.getReservationStats(selectedBuilding, roomR, dateSimple, startR);
                         
                         int currentCount = stats[0]; // 현재 예약 인원
-                        int maxCapacity = stats[1];  // 전체 수용 인원 (예: 50)
+                        int maxCapacity = stats[1];  // 전체 수용 인원
                         
-                        // 1. 기본 텍스트: "35 / 50 명"
+                        // 1. 기본 텍스트
                         String statusText = String.format("예약 현황: %d / %d 명", currentCount, maxCapacity);
                         String color = "blue"; // 기본 색상
 
@@ -149,9 +145,7 @@ public class RoomController {
             else if (index == 2 && view.getMainTabbedPane().isEnabledAt(2)) loadMonthlyView();
         });
 
-        // ============================================================
-        // ★ [핵심 수정] 월별 달력 완전 잠금 (클릭 반응 X, 색상 O) ★
-        // ============================================================
+        // 월별 달력 완전 잠금 (클릭 반응 X, 색상 O)
         
         // 1. 월/년 변경 감지 -> 데이터 새로고침 & 버튼 다시 잠그기
         view.getMonthlyCalendar().addPropertyChangeListener("calendar", evt -> {
@@ -167,7 +161,7 @@ public class RoomController {
                 
                 loadMonthlyView();
                 
-                // ★ 중요: 달력이 다시 그려질 때 버튼 리스너가 재생성될 수 있으므로 다시 제거해줌
+                // 중요: 달력이 다시 그려질 때 버튼 리스너가 재생성될 수 있으므로 다시 제거해줌
                 javax.swing.SwingUtilities.invokeLater(this::lockCalendarButtons);
             }
         });
@@ -188,10 +182,10 @@ public class RoomController {
         view.getMonthlyCalendar().getDayChooser().setDecorationBackgroundVisible(false);
         view.getMonthlyCalendar().getDayChooser().setDecorationBordersVisible(false);
         
-        // ★ [최초 실행] 버튼 잠그기 실행
+        // 버튼 잠그기 실행
         lockCalendarButtons();
         
-        // [추가] ★ 조교(관리자) 권한 처리 로직 ★
+        // 조교(관리자) 권한 처리 로직
         if ("A".equals(view.getRole())) {
             // 1. 예약 버튼 숨기기 (추천 방법)
             view.getReservationButton().setVisible(false); 
@@ -203,7 +197,7 @@ public class RoomController {
     }
 
     /**
-     * [신규] 주차 이동 (이전/다음 주)
+     * 주차 이동 (이전/다음 주)
      */
     private void navigateWeek(int daysToMove) {
         LocalDate currentDate = getSelectedDateFromComboBox();
@@ -340,7 +334,7 @@ public class RoomController {
         ((DefaultTableModel) view.getViewTimeTable().getModel()).setRowCount(0);
         this.selectedRoom = null;
 
-        // [신규] 강의실 선택이 해제되었으므로 탭 비활성화
+        // 강의실 선택이 해제되었으므로 탭 비활성화
         view.getMainTabbedPane().setEnabledAt(1, false);
         view.getMainTabbedPane().setEnabledAt(2, false);
 
@@ -404,7 +398,7 @@ public class RoomController {
             updateChoosedDate();
             loadRoomTimetable();
         } catch (Exception ex) {
-            /* 무시 */ }
+            }
     }
 
     private void updateDateByDayOfWeek() {
@@ -443,7 +437,7 @@ public class RoomController {
             updateChoosedDate();
             loadRoomTimetable();
         } catch (Exception ex) {
-            /* 무시 */ }
+             }
     }
 
     private void updateDayComboBoxItems() {
@@ -469,7 +463,6 @@ public class RoomController {
         }
     }
 
-    // --- 버튼 핸들러 ---
     private void handleGoBackButton() {
         // 학생이면 학생 메인으로
         if (view.getRole().equals("S")) {
@@ -479,7 +472,7 @@ public class RoomController {
         else if (view.getRole().equals("P")) {
             new ProfessorMainMenu(view.getUserid(), client).setVisible(true);
         }
-        // [추가] 조교(관리자)면 관리자 메인으로 이동
+        // 조교(관리자)면 관리자 메인으로 이동
         else if (view.getRole().equals("A")) {
             new AdminMainView(view.getUserid(), client).setVisible(true);
         }
@@ -548,10 +541,6 @@ public class RoomController {
         }
     }
 
-    /**
-     * [사용 안 함] '월별 현황' 탭의 캘린더에서 날짜를 클릭했을 때 호출됩니다. [주의] 이 기능은 initController()에서
-     * 리스너가 제거되어 현재 사용되지 않습니다.
-     */
     private void handleCalendarDateClick() {
         if (isProgrammaticChange) {
             return;
@@ -575,9 +564,8 @@ public class RoomController {
         view.getMainTabbedPane().setSelectedIndex(0);
     }
 
-    // --- 탭 변경 핸들러 ---
     /**
-     * '주별 현황' 탭의 데이터를 로드합니다. (이전 코드와 동일)
+     * '주별 현황' 탭의 데이터를 로드합니다. 
      */
     private void loadWeeklyView() {
         if (this.selectedRoom == null) {
@@ -601,7 +589,7 @@ public class RoomController {
             }
         }
 
-        // 🚨 [수정된 부분 1]: SwingWorker 제네릭 타입을 서버 반환 타입에 맞춥니다.
+        // 🚨SwingWorker 제네릭 타입을 서버 반환 타입에 맞춥니다.
         new SwingWorker<Map<String, List<String[]>>, Void>() {
             @Override
             protected Map<String, List<String[]>> doInBackground() throws Exception {
@@ -612,17 +600,17 @@ public class RoomController {
             @Override
             protected void done() {
                 try {
-                    // 🚨 [수정된 부분 2]: get() 메서드의 반환 타입을 정확히 캐스팅합니다.
+                    // get() 메서드의 반환 타입을 정확히 캐스팅합니다.
                     Map<String, List<String[]>> weekData = get();
 
-                    // 🚨 [수정된 부분 3]: 서버가 보낸 실제 키 형식 (시간대 + 50분 단위)에 맞춥니다.
+                    // 서버가 보낸 실제 키 형식 (시간대 + 50분 단위)에 맞춥니다.
                     // 서버에서 '09:00~09:50' 형태로 보낸다고 가정하고 키를 정의합니다.
                     String[] timeKeys = {
                         "09:00~09:50", "10:00~10:50", "11:00~11:50", "12:00~12:50", "13:00~13:50",
                         "14:00~14:50", "15:00~15:50", "16:00~16:50", "17:00~17:50"
                     };
 
-                    // 🚨 [수정된 부분 4]: 테이블 데이터 매핑 로직 수정
+                    // 테이블 데이터 매핑 로직 수정
                     for (int r = 0; r < timeKeys.length; r++) {
                         // Map에서 해당 시간대의 5일치 상태 목록 (List<String[]>)을 가져옵니다.
                         List<String[]> dailyStatusList = weekData.get(timeKeys[r]);
@@ -650,12 +638,12 @@ public class RoomController {
     }
 
     /**
-     * [신규] '월별 현황' 탭의 캘린더 색상 평가기를 설정합니다.
+     * '월별 현황' 탭의 캘린더 색상 평가기를 설정합니다.
      */
     private void setupCalendarEvaluators() {
         JCalendar calendar = view.getMonthlyCalendar();
 
-        // 1. [예약됨] (빨간색) 평가기
+        // 1. [예약됨]
         IDateEvaluator reservedEvaluator = new IDateEvaluator() {
             @Override
             public boolean isSpecial(Date date) {
@@ -700,24 +688,21 @@ public class RoomController {
 
             @Override
             public Color getSpecialBackroundColor() {
-                // UnsupportedOperationException 수정: getSpecialBackgroudColor와 동일한 색상 반환
                 return new Color(255, 182, 193);
             }
 
             @Override
             public Color getInvalidBackroundColor() {
-                // UnsupportedOperationException 수정: null 반환
                 return null;
             }
 
             @Override
             public String getInvalidTooltip() {
-                // UnsupportedOperationException 수정: null 반환
                 return null;
             }
         };
 
-        // 2. [예약 가능] (초록색) 평가기
+        // 2. [예약 가능]
         IDateEvaluator availableEvaluator = new IDateEvaluator() {
             @Override
             public boolean isSpecial(Date date) {
@@ -766,19 +751,16 @@ public class RoomController {
 
             @Override
             public Color getSpecialBackroundColor() {
-                // UnsupportedOperationException 수정: getSpecialBackgroudColor와 동일한 색상 반환
                 return new Color(144, 238, 144);
             }
 
             @Override
             public Color getInvalidBackroundColor() {
-                // UnsupportedOperationException 수정: null 반환
                 return null;
             }
 
             @Override
             public String getInvalidTooltip() {
-                // UnsupportedOperationException 수정: null 반환
                 return null;
             }
         };
@@ -790,7 +772,7 @@ public class RoomController {
     
     
     /**
-     * '월별 현황' 탭의 데이터를 로드하고 캘린더에 색칠합니다. [대폭 수정됨]
+     * '월별 현황' 탭의 데이터를 로드하고 캘린더에 색칠합니다.
      */
     private void loadMonthlyView() {
         if (this.selectedRoom == null) {
@@ -813,7 +795,7 @@ public class RoomController {
         new SwingWorker<List<String>, Void>() { // <--- Set<Integer> -> List<String>으로 변경
             @Override
             protected List<String> doInBackground() throws Exception {
-                // [중요] Client.java 내부의 getMonthlyReservedDates는 이제 List<String>을 반환해야 함.
+                // Client.java 내부의 getMonthlyReservedDates는 이제 List<String>을 반환해야 함.
                 return client.getMonthlyReservedDates(selectedBuilding, roomNum, year, month, startTime);
             }
 
@@ -841,7 +823,7 @@ public class RoomController {
                     }
 
                     // 5. 멤버 변수 갱신
-                    currentlyReservedDays = reservedDays; // <--- Set<Integer> 타입이 됨
+                    currentlyReservedDays = reservedDays; 
 
                     // 6. UI 갱신 (repaint)
                     isProgrammaticChange = true;
@@ -1003,12 +985,12 @@ public class RoomController {
             if (comp instanceof javax.swing.JButton) {
                 javax.swing.JButton btn = (javax.swing.JButton) comp;
                 
-                // 1. 마우스 리스너 제거 (클릭해도 반응 안 함 -> 회색 안 바뀜)
+                // 1. 마우스 리스너 제거
                 for (java.awt.event.MouseListener ml : btn.getMouseListeners()) {
                     btn.removeMouseListener(ml);
                 }
                 
-                // 2. 키보드 리스너 제거 (엔터 쳐도 반응 안 함)
+                // 2. 키보드 리스너 제거
                 for (java.awt.event.KeyListener kl : btn.getKeyListeners()) {
                     btn.removeKeyListener(kl);
                 }
@@ -1016,7 +998,6 @@ public class RoomController {
                 // 3. 포커스 및 호버 효과 제거
                 btn.setFocusable(false);       // 선택 테두리 제거
                 btn.setRolloverEnabled(false); // 마우스 올렸을 때 색 변화 제거
-                // btn.setEnabled(false); // <-- 이걸 쓰면 색깔이 흐려지므로 쓰지 않습니다!
             }
         }
     }

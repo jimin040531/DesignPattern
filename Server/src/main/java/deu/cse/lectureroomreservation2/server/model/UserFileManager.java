@@ -13,7 +13,7 @@ import deu.cse.lectureroomreservation2.server.control.receiveController;
  * @author Jimin
  */
 /**
- * 사용자 정보를 .txt 파일 기반으로 관리 저장 형식: role,name,id,password (CSV)
+ * 사용자 정보를 .txt 파일 기반으로 관리 저장 형식
  */
 public class UserFileManager {
 
@@ -38,7 +38,7 @@ public class UserFileManager {
         try (BufferedReader br = new BufferedReader(new FileReader(filePath))) {
             String line;
             while ((line = br.readLine()) != null) {
-                String[] parts = line.split(",", 5);  // 최대 5개까지만 자름 (예약정보까지 포함 가능)
+                String[] parts = line.split(",", 5);  // 최대 5개까지만 자름
 
                 if (parts.length < 4) {
                     continue;

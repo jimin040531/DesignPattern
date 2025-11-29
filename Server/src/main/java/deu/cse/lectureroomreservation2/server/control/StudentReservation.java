@@ -30,17 +30,13 @@ public class StudentReservation implements ReservationBehavior {
         int requestCount = details.getUserCount();
         String purpose = details.getPurpose();
 
-        // -----------------------------------------
         // 1. 날짜 및 시간 파싱
-        // -----------------------------------------
         String dateStr = dateOnly.replace("/", "-").trim(); // 날짜비교용
         
         // LocalDate 변환
         LocalDate reserveDate = LocalDate.parse(dateStr, DateTimeFormatter.ofPattern("yyyy-MM-dd"));
 
-        // -----------------------------------------
         // 2. 제약 조건 검사
-        // -----------------------------------------
 
         // (1) 당일 예약 불가 (최소 하루 전)
         if (!reserveDate.isAfter(LocalDate.now())) {
@@ -76,9 +72,7 @@ public class StudentReservation implements ReservationBehavior {
                 currentReservedCount, requestCount, limitCount));
         }
         
-        // -----------------------------------------
         // 3. 파일 저장
-        // -----------------------------------------
         
         // 포맷: 건물이름,강의실,예약날짜,요일,시작,끝,학번,권한(S),사용목적,사용인원,WAIT,-
         String csvLine = String.format("%s,%s,%s,%s,%s,%s,%s,%s,%s,%d,%s,%s",
@@ -134,7 +128,7 @@ public class StudentReservation implements ReservationBehavior {
     }
     
     /**
-     * [수정됨] 헬퍼 메서드: 날짜와 상관없이 해당 학생이 가진 총 유효 예약 건수 반환
+     * 헬퍼 메서드: 날짜와 상관없이 해당 학생이 가진 총 유효 예약 건수 반환
      */
     private int getTotalReservedCount(String userId) {
         int count = 0;

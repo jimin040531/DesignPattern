@@ -10,7 +10,7 @@ package deu.cse.lectureroomreservation2.server.control;
  */
 public class ReservationDirector {
     
-    // AbstractBuilder에 대한 연관(Composition 아님)
+    // AbstractBuilder에 대한 연관
     private ReservationBuilder builder; 
     
     public void setBuilder(ReservationBuilder builder) {
