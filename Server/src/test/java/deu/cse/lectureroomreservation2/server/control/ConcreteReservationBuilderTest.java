@@ -44,7 +44,7 @@ public class ConcreteReservationBuilderTest { // 기존 프로토타입 클래�
 
         assertEquals("공학관", result.getBuildingName());
         assertEquals(4, result.getUserCount());
-        System.out.println(">> 결과: 정상 예약 — 객체 생성 성공\n");
+        System.out.println(">> 결과: 성공 — 객체 생성 성공\n");
     }
 
     /**
@@ -53,7 +53,7 @@ public class ConcreteReservationBuilderTest { // 기존 프로토타입 클래�
     @Test
     @DisplayName("TC-02: 학생 최대 시간(120분) 초과 시 예외 발생")
     public void testStudentTimeLimitExceeded() {
-        System.out.println("========== [TC-02] 학생 최대 시간(2시간) 초과 검증 ==========");
+        System.out.println("========== [TC-02] 학생 최대 시간(2시간) 제한 검증 ==========");
 
         String tomorrow = LocalDate.now().plusDays(1).format(DateTimeFormatter.ofPattern("yyyy/MM/dd"));
         ConcreteReservationBuilder builder = new ConcreteReservationBuilder("student02", STUDENT_ROLE);
@@ -68,7 +68,7 @@ public class ConcreteReservationBuilderTest { // 기존 프로토타입 클래�
 
         // [수정됨] 실제 애플리케이션 코드가 던지는 메시지와 정확히 일치하도록 수정
         assertEquals("학생은 1회 최대 2시간(120분)까지만 예약 가능합니다.", exception.getMessage());
-        System.out.println(">> 결과: 실패 — 학생은 1회 최대 2시간까지만 예약 가능\n");
+        System.out.println(">> 결과: 실패 — 학생은 최대 2시간까지 예약 가능\n");
     }
 
     /**
@@ -92,7 +92,7 @@ public class ConcreteReservationBuilderTest { // 기존 프로토타입 클래�
 
         // [수정] "학생은"을 포함하도록 메시지 수정
         assertEquals("학생은 당일 예약이 불가능합니다. 최소 하루 전에 예약해주세요.", exception.getMessage());
-        System.out.println(">> 결과: 실패 — 당일 예약은 불가능함\n");
+        System.out.println(">> 결과: 실패 — 학생은 당일 예약 불가능\n");
     }
 
     /**
@@ -114,7 +114,7 @@ public class ConcreteReservationBuilderTest { // 기존 프로토타입 클래�
                 "교수는 3시간 이내의 예약에 성공해야 합니다.");
 
         assertEquals(PROFESSOR_ROLE, result.getRole());
-        System.out.println(">> 결과: 정상 예약 — 교수가 허용된 시간 내 예약 성공\n");
+        System.out.println(">> 결과: 성공 — 교수는 최대 3시간까지 예약 가능\n");
     }
 
     /**
@@ -144,15 +144,13 @@ public class ConcreteReservationBuilderTest { // 기존 프로토타입 클래�
     @Test
     @DisplayName("TC-06: 교수 당일 예약 성공 검증")
     public void testProfessorSameDayReservation() {
-        System.out.println("========== [TC-06] 교수 당일 예약 검증 (성공 케이스) ==========");
+        System.out.println("========== [TC-06] 교수 당일 예약 검증 ==========");
 
         String today = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy/MM/dd"));
         ConcreteReservationBuilder builder = new ConcreteReservationBuilder("prof02", PROFESSOR_ROLE);
 
-        // 오늘 날짜로 예약 시도
         builder.buildBaseInfo(BUILDING, ROOM, today, "금요일", "10:00", "11:00");
 
-        // 예외가 발생하지 않고(assertDoesNotThrow), 객체가 정상 생성되어야 함
         ReservationDetails result = assertDoesNotThrow(() -> builder.getReservationDetails(),
                 "교수는 당일 예약이 가능해야 합니다.");
 
