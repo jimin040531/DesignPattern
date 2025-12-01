@@ -47,7 +47,14 @@ public class Main {
                 }
                 new LoginFrame(args[0]).setVisible(true);
             } else {
-                new LoginFrame().setVisible(true);
+                String ip = javax.swing.JOptionPane.showInputDialog(null, "접속할 서버의 IP 주소를 입력하세요:", "localhost");
+
+                // 취소 버튼을 누르거나 빈 값을 입력하면 프로그램 종료
+                if (ip == null || ip.trim().isEmpty()) {
+                    System.exit(0);
+                }
+                
+                new LoginFrame(ip).setVisible(true);
             }
         });
     }

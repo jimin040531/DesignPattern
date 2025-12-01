@@ -667,5 +667,13 @@ public class Client {
             return new ReserveManageResult(false, "예약 복원 중 오류 발생: " + e.getMessage(), null);
         }
     }
-
+    
+    
+    public String getServerIp() {
+        if (socket != null && socket.getInetAddress() != null) {
+            return socket.getInetAddress().getHostAddress();
+        }
+        return "localhost"; // 기본값
+    }
+    
 }

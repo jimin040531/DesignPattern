@@ -66,7 +66,7 @@ public class UserFileManager {
      *
      * @param user 저장할 사용자 객체
      */
-    public void saveUser(UserManage user) {
+    public synchronized void saveUser(UserManage user) {
         try (BufferedWriter writer = new BufferedWriter(new FileWriter(filePath, true))) {
             writer.write(String.join(",", user.getRole(), user.getName(), user.getId(), user.getPassword()));
             writer.newLine();
@@ -82,7 +82,7 @@ public class UserFileManager {
      * @param id 대상 ID
      * @return 삭제 성공 여부
      */
-    public boolean deleteUser(String role, String id) {
+    public synchronized boolean deleteUser(String role, String id) {
         if (role.equals("A")) {
             return false;
         }

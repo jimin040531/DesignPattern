@@ -47,7 +47,7 @@ public class ScheduleFileManager {
         return list;
     }
 
-    public void appendLine(String line) {
+    public synchronized void appendLine(String line) {
         try (BufferedWriter writer = new BufferedWriter(new FileWriter(filePath, true))) {
             writer.write(line);
             writer.newLine();
@@ -56,7 +56,7 @@ public class ScheduleFileManager {
         }
     }
 
-    public void overwriteAll(List<String> newLines) {
+    public synchronized void overwriteAll(List<String> newLines) {
         try (BufferedWriter writer = new BufferedWriter(new FileWriter(filePath))) {
             for (String line : newLines) {
                 writer.write(line);

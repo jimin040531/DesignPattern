@@ -139,11 +139,17 @@ public class StudentMainMenu extends javax.swing.JFrame {
         int choice = javax.swing.JOptionPane.showConfirmDialog(this, "로그아웃 하시겠습니까?", "로그아웃", javax.swing.JOptionPane.YES_NO_OPTION);
 
         if (choice == javax.swing.JOptionPane.YES_OPTION) {
+            String currentIp = "localhost"; // 기본값
             if (client != null) {
+                // 1. 연결 끊기 전에 IP 저장
+                currentIp = client.getServerIp();
+                // 2. 로그아웃 요청 전송
                 client.logout();
             }
             this.dispose();  // 현재 창 닫기
-            new LoginFrame().setVisible(true); // 로그인 화면 띄우기
+            
+            // 3. 저장해둔 IP로 로그인 창 다시 열기
+            new LoginFrame(currentIp).setVisible(true); 
         }
     }//GEN-LAST:event_stu_logoutActionPerformed
 

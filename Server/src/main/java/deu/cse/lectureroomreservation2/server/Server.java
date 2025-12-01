@@ -68,6 +68,16 @@ public class Server {
 
     // 서버 시작
     public void start() {
+        
+        try {
+            java.net.InetAddress local = java.net.InetAddress.getLocalHost();
+            System.out.println("\n------------------------------------------------");
+            System.out.println(">>> 현재 서버 컴퓨터의 IP 주소: " + local.getHostAddress());
+            System.out.println("------------------------------------------------\n");
+        } catch (Exception e) {
+            System.out.println("IP 주소를 가져올 수 없습니다.");
+        }
+        
         int port = 5000;
         printServerHealthCheck();
 

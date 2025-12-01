@@ -214,10 +214,11 @@ public class LoginFrame extends javax.swing.JFrame {
         // 사용될 변수들을 final 또는 effectively final로 사용하기 위해 로컬 변수에 할당
         final String finalRole = role;
         final String serverIp = this.server_ip; // LoginFrame의 멤버변수
-
+        System.out.println(">>> [로그인 시도] 접속하려는 서버 IP: " + serverIp);
         // 3.별도의 스레드에서 서버 접속 시도
         new Thread(() -> {
             try {
+
                 // (1) TCP  서버 연결 시도
                 deu.cse.lectureroomreservation2.client.Client client = new deu.cse.lectureroomreservation2.client.Client(serverIp, 5000);
                 
@@ -322,6 +323,15 @@ public class LoginFrame extends javax.swing.JFrame {
         /* Create and display the form */
         java.awt.EventQueue.invokeLater(new Runnable() {
             public void run() {
+                // 프로그램 시작 시 서버 IP를 먼저 물어봄
+                String ip = javax.swing.JOptionPane.showInputDialog(null, "접속할 서버의 IP 주소를 입력하세요:", "localhost");
+                
+                // 취소 버튼을 누르거나 빈 값을 입력하면 프로그램 종료
+                if (ip == null || ip.trim().isEmpty()) {
+                    System.exit(0);
+                }
+
+                // 입력받은 IP를 가지고 로그인 화면을 띄웁니다.
                 new LoginFrame().setVisible(true);
             }
         });

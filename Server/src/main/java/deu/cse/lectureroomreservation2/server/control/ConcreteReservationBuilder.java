@@ -77,7 +77,7 @@ public class ConcreteReservationBuilder implements ReservationBuilder {
                     throw new IllegalArgumentException("학생은 1회 최대 2시간(120분)까지만 예약 가능합니다.");
                 }
             } else if ("P".equals(role)) {
-                // 교수: 최대 3시간 (180분) - SFR 205, 206 반영
+                // 교수: 최대 3시간 (180분) 
                 if (durationMinutes > 180) {
                     throw new IllegalArgumentException("교수는 1회 최대 3시간(180분)까지만 예약 가능합니다.");
                 }

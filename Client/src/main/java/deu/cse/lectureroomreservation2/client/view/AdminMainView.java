@@ -173,11 +173,13 @@ public class AdminMainView extends javax.swing.JFrame {
         int choice = javax.swing.JOptionPane.showConfirmDialog(this, "로그아웃 하시겠습니까?", "로그아웃", javax.swing.JOptionPane.YES_NO_OPTION);
 
         if (choice == javax.swing.JOptionPane.YES_OPTION) {
+            String currentIp = "localhost";
             if (client != null) {
+                currentIp = client.getServerIp(); // IP 저장
                 client.logout();
             }
-            this.dispose();  // 현재 창 닫기
-            new LoginFrame().setVisible(true); // 로그인 화면 띄우기
+            this.dispose();
+            new LoginFrame(currentIp).setVisible(true); // IP 전달
         }
     }//GEN-LAST:event_prof_LogOutActionPerformed
 

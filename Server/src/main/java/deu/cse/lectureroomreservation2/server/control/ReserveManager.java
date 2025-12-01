@@ -106,19 +106,21 @@ public class ReserveManager {
     // ---------------------------------------------------------
     // 3. 일별 상태 조회 (getRoomState) 수정
     public static String getRoomState(String buildingName, String room, String day, String start, String end, String date) { // buildingName 추가
-        try {
-            String[] parts = date.split("/");
-            String year = parts[0].trim();
-            String month = parts[1].trim();
-            String d = parts[2].trim();
-            LocalDate targetDate = LocalDate.of(Integer.parseInt(year), Integer.parseInt(month), Integer.parseInt(d));
+        synchronized (FILE_LOCK) {
+            try {
+                String[] parts = date.split("/");
+                String year = parts[0].trim();
+                String month = parts[1].trim();
+                String d = parts[2].trim();
+                LocalDate targetDate = LocalDate.of(Integer.parseInt(year), Integer.parseInt(month), Integer.parseInt(d));
 
-            // [수정] buildingName 전달
-            String status = checkReservationStatus(buildingName, room, targetDate, start);
-            return convertStatusToKorean(status);
-        } catch (Exception e) {
-            e.printStackTrace();
-            return "오류";
+                // buildingName 전달
+                String status = checkReservationStatus(buildingName, room, targetDate, start);
+                return convertStatusToKorean(status);
+            } catch (Exception e) {
+                e.printStackTrace();
+                return "오류";
+            }
         }
     }
 
